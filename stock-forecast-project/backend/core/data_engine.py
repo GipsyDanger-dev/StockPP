@@ -77,6 +77,8 @@ class DataEngine:
         except Exception as e:
             logger.error(f"Error preparing data: {str(e)}")
             raise
+        
+        return self.scaled_data, self.scaler
     
     def create_sequences(self, data: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """

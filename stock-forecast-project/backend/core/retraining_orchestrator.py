@@ -128,7 +128,8 @@ class RetrainingOrchestrator:
                 saved = self.model_manager.save_model(
                     model.model,
                     ticker_upper,
-                    new_metrics
+                    new_metrics,
+                    scaler
                 )
                 
                 result["model_saved"] = saved

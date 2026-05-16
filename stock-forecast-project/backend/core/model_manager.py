@@ -1,22 +1,35 @@
+"""
+Model Manager - Handles model persistence, loading, saving, and versioning
+"""
+
 import logging
 import os
 import json
-import pickle  
 from datetime import datetime
 from pathlib import Path
 import numpy as np
-from typing import Dict, Optional, Tuple, Any
+from typing import Dict, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
+
 class ModelManager:
+    """Manages model lifecycle including loading, saving, and validation"""
+    
     def __init__(self, model_dir: str = "saved_models"):
+        """
+        Initialize model manager
+        
+        Args:
+            model_dir: Directory to store models
+        """
         self.model_dir = Path(model_dir)
         self.model_dir.mkdir(parents=True, exist_ok=True)
         self.metadata_file = self.model_dir / "model_metadata.json"
         self.metadata = self._load_metadata()
         
     def _load_metadata(self) -> Dict:
+        """Load metadata about saved models"""
         if self.metadata_file.exists():
             try:
                 with open(self.metadata_file, 'r') as f:
@@ -27,83 +40,91 @@ class ModelManager:
         return {}
     
     def _save_metadata(self) -> None:
+        """Save metadata about models"""
         try:
             with open(self.metadata_file, 'w') as f:
                 json.dump(self.metadata, f, indent=2, default=str)
         except Exception as e:
             logger.error(f"Error saving metadata: {str(e)}")
     
-    def get_paths(self, ticker: str, version: str = "current") -> Tuple[Path, Path]:
-        """Mendapatkan path untuk file Model dan Scaler"""
-        ticker = ticker.upper()
-        model_path = self.model_dir / f"{ticker}_{version}.keras"
-        scaler_path = self.model_dir / f"{ticker}_{version}_scaler.pkl"
-        return model_path, scaler_path
+    def get_model_path(self, ticker: str, version: str = "current") -> Path:
+        """Get path for a model"""
+        return self.model_dir / f"{ticker.upper()}_{version}.keras"
     
-    def save_model(self, model, ticker: str, metrics: Dict, scaler: Any) -> bool:
-        """Menyimpan model DAN scaler"""
+    def save_model(self, model, ticker: str, metrics: Dict) -> bool:
+        """
+        Save a model with metadata
+        
+        Args:
+            model: TensorFlow model to save
+            ticker: Stock ticker symbol
+            metrics: Dictionary with model metrics (loss, rmse, mae, etc.)
+            
+        Returns:
+            True if saved successfully
+        """
         try:
             ticker = ticker.upper()
-            model_path, scaler_path = self.get_paths(ticker, "current")
+            model_path = self.get_model_path(ticker, "current")
             
-            # 1. Simpan Model TensorFlow
+            # Save model
             model.save(str(model_path))
+            logger.info(f"Saved model for {ticker} to {model_path}")
             
-            # 2. Simpan Scaler menggunakan Pickle
-            with open(scaler_path, 'wb') as f:
-                pickle.dump(scaler, f)
-                
-            logger.info(f"Saved model & scaler for {ticker}")
-            
-            # Update metadata (Sama seperti kode Anda sebelumnya)
+            # Update metadata
             if ticker not in self.metadata:
-                self.metadata[ticker] = {"versions": []}
+                self.metadata[ticker] = {
+                    "versions": []
+                }
             
+            # Create version info
             version_info = {
                 "timestamp": datetime.now().isoformat(),
-                "model_path": str(model_path),
-                "scaler_path": str(scaler_path),
+                "path": str(model_path),
                 "metrics": metrics
             }
             
             self.metadata[ticker]["current"] = version_info
             self.metadata[ticker]["versions"].append(version_info)
+            
+            # Keep only last 5 versions
             if len(self.metadata[ticker]["versions"]) > 5:
                 self.metadata[ticker]["versions"] = self.metadata[ticker]["versions"][-5:]
             
             self._save_metadata()
             return True
+            
         except Exception as e:
-            logger.error(f"Error saving model for {ticker}: {str(e)}")
+            logger.error(f"Error saving model for {ticker}: {str(e)}", exc_info=True)
             return False
     
-    def load_model_and_scaler(self, ticker: str) -> Tuple[Optional[Any], Optional[Any]]:
-        """Memuat model dan scaler sekaligus"""
-        try:
-            try:
-                from tensorflow import keras
-            except Exception:
-                # Try standalone keras as a fallback (some environments use keras package)
-                try:
-                    import keras
-                    keras = keras
-                except Exception as ie:
-                    logger.error(f"TensorFlow/Keras not available: {ie}")
-                    return None, None
-            ticker = ticker.upper()
-            model_path, scaler_path = self.get_paths(ticker, "current")
+    def load_model(self, ticker: str) -> Optional[object]:
+        """
+        Load a model if it exists
+        
+        Args:
+            ticker: Stock ticker symbol
             
-            if not model_path.exists() or not scaler_path.exists():
-                return None, None
+        Returns:
+            Loaded model or None if not found
+        """
+        try:
+            from tensorflow import keras
+            
+            ticker = ticker.upper()
+            model_path = self.get_model_path(ticker, "current")
+            
+            if not model_path.exists():
+                logger.warning(f"Model not found for {ticker} at {model_path}")
+                return None
             
             model = keras.models.load_model(str(model_path))
-            with open(scaler_path, 'rb') as f:
-                scaler = pickle.load(f)
-                
-            return model, scaler
+            logger.info(f"Loaded model for {ticker} from {model_path}")
+            return model
+            
         except Exception as e:
-            logger.error(f"Error loading model/scaler for {ticker}: {str(e)}")
-            return None, None
+            logger.error(f"Error loading model for {ticker}: {str(e)}", exc_info=True)
+            return None
     
     def get_model_metrics(self, ticker: str) -> Optional[Dict]:
         """
@@ -205,7 +226,7 @@ class ModelManager:
     def model_exists(self, ticker: str) -> bool:
         """Check if model exists for ticker"""
         ticker = ticker.upper()
-        model_path = self.get_path(ticker, "current")
+        model_path = self.get_model_path(ticker, "current")
         return model_path.exists()
     
     def get_all_model_info(self) -> Dict:

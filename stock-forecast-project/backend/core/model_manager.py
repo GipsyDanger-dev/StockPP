@@ -1,7 +1,7 @@
 import logging
 import os
 import json
-import pickle  # Ditambahkan untuk menyimpan scaler
+import pickle  
 from datetime import datetime
 from pathlib import Path
 import numpy as np
@@ -80,7 +80,16 @@ class ModelManager:
     def load_model_and_scaler(self, ticker: str) -> Tuple[Optional[Any], Optional[Any]]:
         """Memuat model dan scaler sekaligus"""
         try:
-            from tensorflow import keras
+            try:
+                from tensorflow import keras
+            except Exception:
+                # Try standalone keras as a fallback (some environments use keras package)
+                try:
+                    import keras
+                    keras = keras
+                except Exception as ie:
+                    logger.error(f"TensorFlow/Keras not available: {ie}")
+                    return None, None
             ticker = ticker.upper()
             model_path, scaler_path = self.get_paths(ticker, "current")
             
@@ -196,7 +205,7 @@ class ModelManager:
     def model_exists(self, ticker: str) -> bool:
         """Check if model exists for ticker"""
         ticker = ticker.upper()
-        model_path = self.get_model_path(ticker, "current")
+        model_path = self.get_path(ticker, "current")
         return model_path.exists()
     
     def get_all_model_info(self) -> Dict:

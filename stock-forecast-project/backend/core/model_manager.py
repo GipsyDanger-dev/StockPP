@@ -5,6 +5,7 @@ Model Manager - Handles model persistence, loading, saving, and versioning
 import logging
 import os
 import json
+import pickle
 from datetime import datetime
 from pathlib import Path
 import numpy as np
@@ -16,17 +17,31 @@ logger = logging.getLogger(__name__)
 class ModelManager:
     """Manages model lifecycle including loading, saving, and validation"""
     
-    def __init__(self, model_dir: str = "saved_models"):
+    def __init__(self, model_dir: str = "saved_models", use_cloud_storage: bool = True):
         """
         Initialize model manager
         
         Args:
-            model_dir: Directory to store models
+            model_dir: Directory to store models locally
+            use_cloud_storage: Whether to upload to Supabase Storage
         """
         self.model_dir = Path(model_dir)
         self.model_dir.mkdir(parents=True, exist_ok=True)
         self.metadata_file = self.model_dir / "model_metadata.json"
         self.metadata = self._load_metadata()
+        self.use_cloud_storage = use_cloud_storage
+        
+        # Initialize Supabase client if cloud storage is enabled
+        self.supabase_client = None
+        if self.use_cloud_storage:
+            try:
+                from core.supabase_client import SupabaseClient, insert_training_log
+                self.supabase_client = SupabaseClient
+                self.insert_training_log = insert_training_log
+                logger.info("✅ Supabase client initialized for ModelManager")
+            except Exception as e:
+                logger.warning(f"⚠️  Supabase not configured, using local storage only: {str(e)}")
+                self.use_cloud_storage = False
         
     def _load_metadata(self) -> Dict:
         """Load metadata about saved models"""
@@ -92,10 +107,56 @@ class ModelManager:
                 self.metadata[ticker]["versions"] = self.metadata[ticker]["versions"][-5:]
             
             self._save_metadata()
+            
+            # Upload to Supabase Cloud Storage if enabled
+            if self.use_cloud_storage:
+                self._upload_to_supabase(ticker, model_path, metrics)
+            
             return True
             
         except Exception as e:
             logger.error(f"Error saving model for {ticker}: {str(e)}", exc_info=True)
+            return False
+    
+    def _upload_to_supabase(self, ticker: str, model_path: Path, metrics: Dict) -> bool:
+        """
+        Upload model file to Supabase Storage and log training metadata
+        
+        Args:
+            ticker: Stock ticker symbol
+            model_path: Path to the model file
+            metrics: Model metrics dictionary
+            
+        Returns:
+            True if uploaded successfully
+        """
+        try:
+            if not self.supabase_client:
+                logger.warning("Supabase client not available, skipping cloud upload")
+                return False
+            
+            storage = self.supabase_client.get_storage()
+            
+            # Upload model file
+            with open(model_path, "rb") as f:
+                path = f"{ticker}/model.keras"
+                storage.from_("models").upload(path, f, {"content-type": "application/octet-stream"})
+                logger.info(f"✅ Uploaded model to Supabase: {path}")
+            
+            # Insert training log into database
+            self.insert_training_log(
+                ticker=ticker,
+                report_name=f"AI Training {ticker} - {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+                rmse=float(metrics.get("rmse", 0)),
+                mae=float(metrics.get("mae", 0)),
+                status="Completed"
+            )
+            logger.info(f"✅ Training log recorded in Supabase for {ticker}")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Error uploading to Supabase: {str(e)}")
             return False
     
     def load_model(self, ticker: str) -> Optional[object]:

@@ -58,6 +58,18 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.env
+venv/
+__pycache__/
+*.keras
+*.pkl
+backend/venv/
+backend/.env
+backend/__pycache__/
+backend/saved_models/*.keras
+backend/saved_models/*.pkl
+backend/*.db
+
 
 # Spyder project settings
 .spyderproject

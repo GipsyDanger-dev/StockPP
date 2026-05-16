@@ -10,4 +10,6 @@ pydantic==2.4.2
 python-multipart==0.0.6
 aiofiles==23.2.1
 schedule==1.2.0
+supabase==2.0.3
+python-dotenv==1.0.0
 

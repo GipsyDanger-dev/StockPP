@@ -359,3 +359,154 @@ async def trigger_batch_retrain(
         logger.error(f"Error in batch retrain: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
+# ============== New Endpoints: Market & Reports (Supabase Integration) ==============
+
+@router.get("/market/summary")
+async def get_market_summary():
+    """
+    Get market summary with all active tickers and latest data
+    
+    Returns:
+        List of tickers with current price and trend info
+    """
+    try:
+        from core.supabase_client import get_all_tickers, SupabaseClient
+        import yfinance as yf
+        
+        # Get tickers from Supabase
+        tickers_data = get_all_tickers()
+        
+        if not tickers_data:
+            logger.warning("No tickers found in database, returning empty list")
+            return {
+                "tickers": [],
+                "total": 0,
+                "timestamp": datetime.now().isoformat()
+            }
+        
+        market_data = []
+        
+        for ticker_info in tickers_data:
+            try:
+                ticker = ticker_info.get("symbol")
+                
+                # Fetch real-time price from yfinance
+                data = yf.Ticker(ticker)
+                history = data.history(period="5d")
+                
+                if history.empty:
+                    continue
+                
+                current_price = float(history["Close"].iloc[-1])
+                prev_price = float(history["Close"].iloc[-2]) if len(history) > 1 else current_price
+                change_percent = ((current_price - prev_price) / prev_price * 100) if prev_price > 0 else 0
+                
+                market_data.append({
+                    "ticker": ticker,
+                    "name": ticker_info.get("name", ticker),
+                    "sector": ticker_info.get("sector", "Unknown"),
+                    "price": round(current_price, 2),
+                    "change_percent": round(change_percent, 2),
+                    "is_active": ticker_info.get("is_active", True),
+                    "last_trained": ticker_info.get("last_trained_at")
+                })
+                
+            except Exception as e:
+                logger.warning(f"Error fetching data for {ticker}: {str(e)}")
+                continue
+        
+        return {
+            "tickers": market_data,
+            "total": len(market_data),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in market summary: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error fetching market data")
+
+@router.get("/reports/history")
+async def get_reports_history(
+    ticker: Optional[str] = Query(None, description="Filter by ticker"),
+    limit: int = Query(50, ge=1, le=500, description="Maximum records to return"),
+    status: Optional[str] = Query(None, description="Filter by status (Completed, Processing, Failed)")
+):
+    """
+    Get training history and reports from Supabase
+    
+    Args:
+        ticker: Optional ticker to filter by
+        limit: Maximum number of records
+        status: Optional status filter
+        
+    Returns:
+        List of training reports
+    """
+    try:
+        from core.supabase_client import get_training_logs, SupabaseClient
+        
+        # Get training logs from Supabase
+        logs = get_training_logs(ticker=ticker, limit=limit)
+        
+        # Filter by status if provided
+        if status:
+            logs = [log for log in logs if log.get("status") == status]
+        
+        # Format response
+        reports = []
+        for log in logs:
+            reports.append({
+                "id": log.get("id"),
+                "ticker": log.get("ticker"),
+                "report_name": log.get("report_name"),
+                "rmse": round(float(log.get("rmse", 0)), 4),
+                "mae": round(float(log.get("mae", 0)), 4),
+                "r_square": round(float(log.get("r_square", 0)), 4) if log.get("r_square") else None,
+                "accuracy": round(float(log.get("accuracy", 0)), 4) if log.get("accuracy") else None,
+                "status": log.get("status"),
+                "created_at": log.get("created_at"),
+                "training_samples": log.get("training_samples")
+            })
+        
+        return {
+            "reports": reports,
+            "total": len(reports),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in reports history: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error fetching reports")
+
+@router.get("/health/database")
+async def health_check_database():
+    """
+    Check if Supabase database connection is healthy
+    
+    Returns:
+        Database health status
+    """
+    try:
+        from core.supabase_client import SupabaseClient
+        
+        client = SupabaseClient.get_client()
+        
+        # Simple query to test connection
+        result = client.table("tickers").select("count").limit(1).execute()
+        
+        return {
+            "database": "connected",
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Database health check failed: {str(e)}")
+        return {
+            "database": "disconnected",
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+# ============== End of Supabase Integration Routes ==============

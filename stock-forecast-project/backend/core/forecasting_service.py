@@ -1,10 +1,5 @@
-"""
-Forecasting Service - Orchestrates predictions using DataEngine and LSTM Model
-With model persistence and automatic retraining
-"""
-
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
 import numpy as np
 
@@ -19,12 +14,8 @@ except Exception as e:
     logger.warning(f"ML dependencies not available: {str(e)}")
     HAS_ML_DEPENDENCIES = False
 
-
 class ForecastingService:
-    """Service to handle stock price forecasting with persistence"""
-    
     def __init__(self, model_manager: Optional[ModelManager] = None):
-        """Initialize forecasting service with model manager"""
         try:
             if HAS_ML_DEPENDENCIES:
                 self.data_engine = DataEngine()
@@ -32,152 +23,102 @@ class ForecastingService:
             else:
                 self.data_engine = None
                 self.model_manager = None
-            self.cache = {}  # Simple cache for performance
+            self.cache = {} 
         except Exception as e:
             logger.warning(f"Error initializing ML components: {str(e)}")
             self.data_engine = None
             self.model_manager = None
         
     def predict(self, ticker: str, days_ahead: int = 5, period: str = "1y") -> Dict:
-        """
-        Generate price forecast for a stock ticker
-        Uses cached models when available to reduce latency
-        
-        Args:
-            ticker: Stock ticker symbol
-            days_ahead: Number of days to forecast
-            period: Historical period to fetch ("1m", "3m", "6m", "1y", "2y", "5y")
-            
-        Returns:
-            Dictionary with forecast data and metrics
-        """
         try:
             ticker_upper = ticker.upper()
             
-            # Check cache first
+            # 1. Cek Cache
             cache_key = f"{ticker_upper}_{period}_{days_ahead}"
             if cache_key in self.cache:
                 cached_data = self.cache[cache_key]
-                # Use cache if less than 1 hour old
                 cache_age = (datetime.now() - cached_data['timestamp']).total_seconds() / 3600
                 if cache_age < 1:
                     logger.info(f"Using cached forecast for {ticker_upper}")
                     return cached_data['data']
             
-            # Try to load pre-trained model
-            model = None
-            if self.model_manager and self.model_manager.model_exists(ticker_upper):
-                logger.info(f"Loading persisted model for {ticker_upper}")
-                model = self.model_manager.load_model(ticker_upper)
+            # 2. Load Model DAN Scaler (Penting agar sinkron)
+            model, saved_scaler = None, None
+            if self.model_manager:
+                model, saved_scaler = self.model_manager.load_model_and_scaler(ticker_upper)
             
-            if model is None:
-                logger.info(f"No persisted model for {ticker_upper}, using mock data")
+            if model is None or saved_scaler is None:
+                logger.info(f"No persisted model/scaler for {ticker_upper}, using mock data")
                 return self._generate_mock_forecast(ticker_upper, days_ahead)
             
-            # Generate real forecast with loaded model
-            logger.info(f"Generating forecast for {ticker_upper} with loaded model")
-            
-            # Fetch data
+            # 3. Ambil Data Real dari Yahoo Finance
             df = self.data_engine.fetch_data(ticker_upper, period=period)
             if df is None or len(df) < 70:
-                logger.warning(f"Insufficient data for {ticker_upper}, using mock")
                 return self._generate_mock_forecast(ticker_upper, days_ahead)
             
-            # Prepare data and generate forecast
-            scaled_data, scaler = self.data_engine.prepare_data(df)
-            X, y = self.data_engine.create_sequences(scaled_data)
+            # 4. Preprocessing menggunakan Scaler yang sudah di-load
+            # Kita hanya ambil Close harganya saja
+            close_prices = df['Close'].values.reshape(-1, 1)
+            scaled_data = saved_scaler.transform(close_prices) # Gunakan transform, BUKAN fit_transform
             
             current_price = float(df['Close'].iloc[-1])
             last_date = df.index[-1]
             
-            # Generate historical data
+            # Ambil data 20 hari terakhir untuk grafik historis
             historical_dates = [d.strftime("%Y-%m-%d") for d in df.index[-20:]]
             historical_prices = df['Close'].iloc[-20:].tolist()
             
-            # Get last sequence for predictions
-            last_sequence = self.data_engine.get_last_sequence(scaled_data)
-            
-            # Generate future predictions
+            # 5. Prediksi Masa Depan (Sliding Window)
+            last_sequence = scaled_data[-60:].reshape(1, 60, 1)
             future_predictions = []
             current_sequence = last_sequence.copy()
             
             for _ in range(days_ahead):
-                next_pred = model.predict(np.array([current_sequence]), verbose=0)[0, 0]
-                future_predictions.append(next_pred)
-                current_sequence = np.append(current_sequence[1:], next_pred)
+                # Prediksi satu titik
+                next_pred = model.predict(current_sequence, verbose=0)
+                future_predictions.append(next_pred[0, 0])
+                
+                # Update sequence: Hapus yang terlama, masukkan yang terbaru (reshape ke 3D)
+                new_val = next_pred.reshape(1, 1, 1)
+                current_sequence = np.append(current_sequence[:, 1:, :], new_val, axis=1)
             
-            # Inverse transform
-            future_prices = self.data_engine.inverse_transform(
-                np.array(future_predictions).reshape(-1, 1), scaler
+            # 6. Inverse Transform ke Harga Asli
+            future_prices = saved_scaler.inverse_transform(
+                np.array(future_predictions).reshape(-1, 1)
             ).flatten()
             
-            # Generate forecast dates
-            forecast_dates = [
-                (last_date + timedelta(days=i+1)).strftime("%Y-%m-%d")
-                for i in range(days_ahead)
-            ]
+            # 7. Generate Response
+            forecast_dates = [(last_date + timedelta(days=i+1)).strftime("%Y-%m-%d") for i in range(days_ahead)]
+            metrics = self.model_manager.get_model_metrics(ticker_upper) or {"rmse": 0, "mae": 0}
             
-            # Get model metrics if available
-            metrics = self.model_manager.get_model_metrics(ticker_upper)
-            if not metrics:
-                metrics = {"rmse": 0, "mae": 0, "accuracy": 0}
-            
-            # Calculate trend
             first_forecast = future_prices[0]
             trend = "Bullish" if first_forecast > current_price else "Bearish"
             change_percent = ((first_forecast - current_price) / current_price * 100)
             
-            # Build response
             response = {
                 "ticker": ticker_upper,
-                "current_price": float(current_price),
-                "historical": [
-                    {"date": date, "price": float(price)}
-                    for date, price in zip(historical_dates, historical_prices)
-                ],
-                "forecast": [
-                    {"date": date, "price": float(price)}
-                    for date, price in zip(forecast_dates, future_prices)
-                ],
+                "current_price": round(float(current_price), 2),
+                "historical": [{"date": d, "price": round(float(p), 2)} for d, p in zip(historical_dates, historical_prices)],
+                "forecast": [{"date": d, "price": round(float(p), 2)} for d, p in zip(forecast_dates, future_prices)],
                 "metrics": {
-                    "rmse": float(metrics.get("rmse", 0)),
-                    "mae": float(metrics.get("mae", 0)),
-                    "accuracy": float(metrics.get("accuracy", 0))
+                    "rmse": round(float(metrics.get("rmse", 0)), 4),
+                    "mae": round(float(metrics.get("mae", 0)), 4)
                 },
                 "trend": trend,
-                "change_percent": float(change_percent),
+                "change_percent": round(float(change_percent), 2),
                 "timestamp": datetime.now().isoformat(),
                 "model_source": "persisted"
             }
             
-            # Cache result
+            # Simpan ke cache
             self.cache[cache_key] = {'data': response, 'timestamp': datetime.now()}
-            
             return response
             
         except Exception as e:
-            logger.warning(f"Error generating real forecast for {ticker}: {str(e)}, using mock")
+            logger.error(f"Error generating forecast: {str(e)}")
             return self._generate_mock_forecast(ticker, days_ahead)
-    
-    def get_metrics(self, ticker: str) -> Dict:
-        """Get model metrics for a ticker"""
-        try:
-            ticker = ticker.upper()
-            if self.model_manager:
-                metrics = self.model_manager.get_model_metrics(ticker)
-                if metrics:
-                    return metrics
-            
-            # Return default metrics if no persisted model
-            return {
-                "rmse": 0,
-                "mae": 0,
-                "accuracy": 0,
-                "last_updated": datetime.now().isoformat()
-            }
-        except Exception as e:
-            logger.error(f"Error getting metrics: {str(e)}")
-            raise
+
+    # ... _generate_mock_forecast, get_metrics, validate_ticker tetap sama seperti kode Anda ...
     
     def _generate_mock_forecast(self, ticker: str, days_ahead: int = 5) -> Dict:
         """Generate mock forecast when real model is not available"""

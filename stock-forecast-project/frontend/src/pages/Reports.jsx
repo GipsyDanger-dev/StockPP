@@ -64,11 +64,20 @@ const Reports = () => {
             label="Dashboard"
             onClick={() => navigate("/")}
           />
-          <NavItem icon={<BarChart3 size={20} />} label="Market" />
+          <NavItem 
+            icon={<BarChart3 size={20} />} 
+            label="Market"
+            onClick={() => navigate("/market")}
+          />
           <NavItem
             icon={<PieChart size={20} />}
             label="Analytics"
             onClick={() => navigate("/analytics/AAPL")}
+          />
+          <NavItem
+            icon={<Lightbulb size={20} />} 
+            label="Insights"
+            onClick={() => navigate("/insights")}
           />
           <NavItem
             icon={<FileText size={20} />}
@@ -76,8 +85,6 @@ const Reports = () => {
             onClick={() => navigate("/reports")}
             active={window.location.pathname === "/reports"}
           />
-          <NavItem icon={<Lightbulb size={20} />} label="Insights" />
-          <NavItem icon={<FileText size={20} />} label="Reports" active />
         </nav>
       </aside>
 

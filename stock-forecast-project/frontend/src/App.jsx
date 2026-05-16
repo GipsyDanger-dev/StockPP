@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Dashboard from './pages/Dashboard';
 import Analytics from './pages/Analytics';
 import Reports from './pages/Reports';
+import Insights from './pages/Insights';
+import Market from './pages/Market';
 
 const queryClient = new QueryClient();
 
@@ -15,6 +17,8 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/analytics/:ticker" element={<Analytics />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/insights" element={<Insights />} />
+          <Route path="/market" element={<Market />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

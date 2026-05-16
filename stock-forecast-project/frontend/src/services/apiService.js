@@ -119,4 +119,49 @@ export const checkHealth = async () => {
   }
 };
 
+/**
+ * Get market summary - all active tickers with current prices
+ * (NEW: Supabase integration)
+ */
+export const getMarketSummary = async () => {
+  try {
+    const response = await apiClient.get('/market/summary');
+    return response.data;
+  } catch (error) {
+    console.warn('Market summary not available, using fallback data');
+    throw error.response?.data || { error: 'Failed to fetch market summary' };
+  }
+};
+
+/**
+ * Get training reports history from database
+ * (NEW: Supabase integration)
+ */
+export const getReportsHistory = async (ticker = null, limit = 50, status = null) => {
+  try {
+    const params = { limit };
+    if (ticker) params.ticker = ticker.toUpperCase();
+    if (status) params.status = status;
+    
+    const response = await apiClient.get('/reports/history', { params });
+    return response.data;
+  } catch (error) {
+    console.warn('Reports history not available');
+    throw error.response?.data || { error: 'Failed to fetch reports' };
+  }
+};
+
+/**
+ * Check database health
+ * (NEW: Supabase integration)
+ */
+export const checkDatabaseHealth = async () => {
+  try {
+    const response = await apiClient.get('/health/database');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: 'Database health check failed' };
+  }
+};
+
 export default apiClient;

@@ -61,3 +61,45 @@ export const useHealth = () => {
     staleTime: 30 * 1000, // 30 seconds
   });
 };
+
+/**
+ * Custom hook for fetching market summary (NEW - Supabase)
+ * Returns all active tickers with current prices from database
+ */
+export const useMarketSummary = (enabled = true) => {
+  return useQuery({
+    queryKey: ['marketSummary'],
+    queryFn: apiService.getMarketSummary,
+    enabled: enabled,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    retry: 1,
+    keepPreviousData: true,
+  });
+};
+
+/**
+ * Custom hook for fetching training reports history (NEW - Supabase)
+ * Returns training logs from database
+ */
+export const useReportsHistory = (ticker = null, limit = 50, enabled = true) => {
+  return useQuery({
+    queryKey: ['reportsHistory', ticker, limit],
+    queryFn: () => apiService.getReportsHistory(ticker, limit),
+    enabled: enabled,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
+  });
+};
+
+/**
+ * Custom hook for checking database health (NEW - Supabase)
+ */
+export const useDatabaseHealth = (enabled = true) => {
+  return useQuery({
+    queryKey: ['databaseHealth'],
+    queryFn: apiService.checkDatabaseHealth,
+    enabled: enabled,
+    staleTime: 60 * 1000, // 1 minute
+    retry: 1,
+  });
+};

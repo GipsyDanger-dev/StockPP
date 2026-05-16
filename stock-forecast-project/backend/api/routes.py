@@ -152,7 +152,8 @@ async def validate_ticker(ticker: str = Path(..., description="Stock ticker symb
         
         return {
             "ticker": ticker,
-            "is_valid": is_valid,
+            "is_valid": validation_result["valid"], 
+            "message": validation_result["message"], 
             "timestamp": datetime.now().isoformat()
         }
         

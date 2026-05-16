@@ -117,8 +117,6 @@ class ForecastingService:
         except Exception as e:
             logger.error(f"Error generating forecast: {str(e)}")
             return self._generate_mock_forecast(ticker, days_ahead)
-
-    # ... _generate_mock_forecast, get_metrics, validate_ticker tetap sama seperti kode Anda ...
     
     def _generate_mock_forecast(self, ticker: str, days_ahead: int = 5) -> Dict:
         """Generate mock forecast when real model is not available"""

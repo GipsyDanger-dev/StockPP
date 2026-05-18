@@ -220,19 +220,48 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* LATEST SIGNALS TABLE — TODO: Integrate with real API data */}
+          {/* LATEST SIGNALS TABLE */}
           <div className="bg-white border-2 border-[#C6C6CD] rounded-2xl overflow-hidden shadow-sm">
             <div className="bg-[#F2F4F6] p-6 border-b border-[#C6C6CD] flex justify-between items-center">
               <h3 className="font-bold tracking-widest text-[#45464D]">
-                LATEST SIGNALS
+                7-DAY FORECAST
               </h3>
               <Activity size={20} className="text-[#45464D]" />
             </div>
-            <div className="p-12 flex flex-col items-center justify-center text-[#45464D]">
-              <Activity size={40} className="mb-4 text-slate-300" />
-              <p className="text-lg font-medium">Market signals akan muncul di sini</p>
-              <p className="text-sm text-slate-400 mt-2">Data tersedia setelah training model dan integrasi sinyal selesai.</p>
-            </div>
+            {data.forecast && data.forecast.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-[#C6C6CD]">
+                      <th className="text-left p-4 text-[#45464D] font-bold text-sm tracking-widest">DATE</th>
+                      <th className="text-right p-4 text-[#45464D] font-bold text-sm tracking-widest">PREDICTED PRICE</th>
+                      <th className="text-right p-4 text-[#45464D] font-bold text-sm tracking-widest">CHANGE</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.forecast.map((point, i) => {
+                      const prevPrice = i === 0 ? data.current_price : data.forecast[i - 1].price;
+                      const change = ((point.price - prevPrice) / prevPrice) * 100;
+                      return (
+                        <tr key={i} className="border-b border-slate-100 last:border-0">
+                          <td className="p-4 font-medium">{point.date}</td>
+                          <td className="p-4 text-right font-bold">{formatCurrency(point.price)}</td>
+                          <td className={`p-4 text-right font-bold ${change >= 0 ? 'text-[#16A34A]' : 'text-rose-500'}`}>
+                            {change >= 0 ? '+' : ''}{change.toFixed(2)}%
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="p-12 flex flex-col items-center justify-center text-[#45464D]">
+                <Activity size={40} className="mb-4 text-slate-300" />
+                <p className="text-lg font-medium">No forecast data available</p>
+                <p className="text-sm text-slate-400 mt-2">Search for a ticker to generate predictions.</p>
+              </div>
+            )}
           </div>
         </div>
       </main>

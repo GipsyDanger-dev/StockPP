@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import * as apiService from '../services/apiService';
 
 /**
@@ -100,6 +100,20 @@ export const useDatabaseHealth = (enabled = true) => {
     queryFn: apiService.checkDatabaseHealth,
     enabled: enabled,
     staleTime: 60 * 1000, // 1 minute
+    retry: 1,
+  });
+};
+
+/**
+ * Custom hook for fetching AI-driven market insights (NEW)
+ * Returns featured article, insight cards, and summary
+ */
+export const useInsights = (enabled = true) => {
+  return useQuery({
+    queryKey: ['insights'],
+    queryFn: apiService.getInsights,
+    enabled: enabled,
+    staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
   });
 };

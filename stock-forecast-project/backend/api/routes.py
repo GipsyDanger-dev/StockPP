@@ -514,4 +514,44 @@ async def health_check_database():
             "timestamp": datetime.now().isoformat()
         }
 
-# ============== End of Supabase Integration Routes ==============
+# ============== Insights Endpoint ==============
+
+@router.get("/insights")
+async def get_insights():
+    """
+    Get AI-driven market insights based on trained models and market data
+    
+    Returns:
+        Dynamic insights with featured article, insight cards, and summary
+    """
+    try:
+        service = get_forecasting_service()
+        
+        from core.insight_engine import InsightEngine
+        engine = InsightEngine(service.model_manager)
+        
+        insights = engine.get_all_insights()
+        
+        return insights
+        
+    except Exception as e:
+        logger.error(f"Error generating insights: {str(e)}", exc_info=True)
+        return {
+            "featured": {
+                "title": "Insights Temporarily Unavailable",
+                "summary": "We're experiencing issues generating insights. Please try again later.",
+                "category": "System",
+                "date": datetime.now().strftime("%b %d, %Y"),
+                "read_time": "1 min read"
+            },
+            "insights": [],
+            "summary": {
+                "total_models": 0,
+                "models_needing_retrain": 0,
+                "avg_rmse": 0,
+                "recommendation": "System recovering"
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+
+# ============== End of Routes ==============

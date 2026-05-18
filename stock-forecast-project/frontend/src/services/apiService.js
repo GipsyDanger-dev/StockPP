@@ -164,4 +164,18 @@ export const checkDatabaseHealth = async () => {
   }
 };
 
+/**
+ * Get AI-driven market insights (NEW)
+ * Returns featured article, insight cards, and summary
+ */
+export const getInsights = async () => {
+  try {
+    const response = await apiClient.get('/insights');
+    return response.data;
+  } catch (error) {
+    console.warn('Insights not available, using fallback data');
+    throw error.response?.data || { error: 'Failed to fetch insights' };
+  }
+};
+
 export default apiClient;

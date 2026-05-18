@@ -190,6 +190,118 @@ export const checkDatabaseHealth = async () => {
 };
 
 /**
+ * Get all models status
+ */
+export const getModelsStatus = async () => {
+  try {
+    const response = await apiClient.get('/models/status');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: 'Failed to fetch models status' };
+  }
+};
+
+/**
+ * Get all articles
+ */
+export const getArticles = async (status = null, limit = 50) => {
+  try {
+    const params = { limit };
+    if (status) params.status = status;
+    const response = await apiClient.get('/articles', { params });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: 'Failed to fetch articles' };
+  }
+};
+
+/**
+ * Get single article by ID
+ */
+export const getArticle = async (articleId) => {
+  try {
+    const response = await apiClient.get(`/articles/${articleId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: 'Failed to fetch article' };
+  }
+};
+
+/**
+ * Create new article
+ */
+export const createArticle = async (articleData) => {
+  try {
+    const response = await apiClient.post('/articles', articleData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: 'Failed to create article' };
+  }
+};
+
+/**
+ * Update existing article
+ */
+export const updateArticle = async (articleId, updates) => {
+  try {
+    const response = await apiClient.put(`/articles/${articleId}`, updates);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: 'Failed to update article' };
+  }
+};
+
+/**
+ * Delete article
+ */
+export const deleteArticle = async (articleId) => {
+  try {
+    const response = await apiClient.delete(`/articles/${articleId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: 'Failed to delete article' };
+  }
+};
+
+/**
+ * Get article statistics
+ */
+export const getArticleStats = async () => {
+  try {
+    const response = await apiClient.get('/articles/stats');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: 'Failed to fetch article stats' };
+  }
+};
+
+/**
+ * Upload article image
+ * @param {File} file - Image file to upload
+ * @param {string} articleId - Optional article ID
+ * @param {string} imageType - Image type: header, thumbnail, inline, general
+ */
+export const uploadArticleImage = async (file, articleId = null, imageType = 'general') => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const params = new URLSearchParams();
+    if (articleId) params.append('article_id', articleId);
+    params.append('image_type', imageType);
+
+    const response = await apiClient.post(`/articles/upload-image?${params.toString()}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: 'Failed to upload image' };
+  }
+};
+
+/**
  * Get AI-driven market insights (NEW)
  * Returns featured article, insight cards, and summary
  */

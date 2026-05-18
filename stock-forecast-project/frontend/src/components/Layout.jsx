@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, PieChart, Lightbulb, FileText, Activity, Menu, X } from 'lucide-react';
+import { LayoutDashboard, BarChart3, PieChart, Lightbulb, FileText, Activity, Menu, X, Settings } from 'lucide-react';
 
 const navItems = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -8,6 +8,7 @@ const navItems = [
   { path: '/analytics', icon: PieChart, label: 'Analytics' },
   { path: '/insights', icon: Lightbulb, label: 'Insights' },
   { path: '/reports', icon: FileText, label: 'Reports' },
+  { path: '/admin', icon: Settings, label: 'Admin' },
 ];
 
 const SIDEBAR_WIDTH = 256; // w-64 = 16rem = 256px

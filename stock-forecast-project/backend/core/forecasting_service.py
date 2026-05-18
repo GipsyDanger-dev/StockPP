@@ -199,6 +199,19 @@ class ForecastingService:
                 "model_source": "persisted"
             }
 
+            # Save prediction report to database
+            try:
+                from core.supabase_client import insert_training_log
+                insert_training_log(
+                    ticker=ticker_upper,
+                    report_name=f"Forecast for {ticker_upper}",
+                    rmse=round(float(metrics.get("rmse", 0)), 4),
+                    mae=round(float(metrics.get("mae", 0)), 4),
+                    status="Completed"
+                )
+            except Exception as log_err:
+                logger.warning(f"Could not save prediction log: {str(log_err)}")
+
             # Cache result
             self.cache[cache_key] = {'data': response, 'timestamp': datetime.now()}
             return response

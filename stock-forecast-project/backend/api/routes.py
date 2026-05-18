@@ -2,7 +2,7 @@
 API Routes - Defines FastAPI endpoints for forecasting
 """
 
-from fastapi import APIRouter, HTTPException, Query, Path
+from fastapi import APIRouter, HTTPException, Query, Path, UploadFile, File
 from typing import Optional, List
 from pydantic import BaseModel
 import numpy as np
@@ -589,6 +589,263 @@ async def health_check_database():
             "error": str(e),
             "timestamp": datetime.now().isoformat()
         }
+
+# ============== Article/Insight Endpoints ==============
+
+class ArticleRequest(BaseModel):
+    """Request model for creating/updating articles"""
+    title: str
+    content: str
+    category: str = "Market Analysis"
+    summary: str = ""
+    author: str = "Admin"
+    status: str = "draft"
+    image_url: Optional[str] = None
+    header_image: Optional[str] = None
+    thumbnail: Optional[str] = None
+    tags: Optional[List[str]] = []
+
+class ArticleUpdateRequest(BaseModel):
+    """Request model for updating articles"""
+    title: Optional[str] = None
+    content: Optional[str] = None
+    category: Optional[str] = None
+    summary: Optional[str] = None
+    status: Optional[str] = None
+    image_url: Optional[str] = None
+    header_image: Optional[str] = None
+    thumbnail: Optional[str] = None
+    tags: Optional[List[str]] = None
+
+@router.get("/articles")
+async def get_articles(
+    status: Optional[str] = Query(None, description="Filter by status (draft, published)"),
+    limit: int = Query(50, ge=1, le=200, description="Maximum records")
+):
+    """
+    Get all articles
+
+    Args:
+        status: Optional status filter
+        limit: Maximum records
+
+    Returns:
+        List of articles
+    """
+    try:
+        from core.supabase_client import get_all_articles, get_article_stats
+
+        articles = get_all_articles(status=status, limit=limit)
+        stats = get_article_stats()
+
+        return {
+            "articles": articles,
+            "total": len(articles),
+            "stats": stats,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Error fetching articles: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error fetching articles")
+
+@router.post("/articles/upload-image")
+async def upload_article_image_endpoint(
+    file: UploadFile = File(...),
+    article_id: Optional[str] = Query(None, description="Article ID for organizing images"),
+    image_type: Optional[str] = Query("general", description="Image type: header, thumbnail, inline, general")
+):
+    """
+    Upload an image for an article
+    """
+    try:
+        from core.supabase_client import upload_article_image
+
+        allowed_types = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"]
+        if file.content_type not in allowed_types:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid file type. Allowed: {', '.join(allowed_types)}"
+            )
+
+        file_content = await file.read()
+        if len(file_content) > 5 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="File too large. Max size: 5MB")
+
+        url = upload_article_image(
+            file_content=file_content,
+            file_name=file.filename or "image.jpg",
+            article_id=article_id,
+            image_type=image_type
+        )
+
+        return {
+            "url": url,
+            "filename": file.filename,
+            "image_type": image_type,
+            "size": len(file_content)
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading image: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error uploading image")
+
+@router.get("/articles/{article_id}")
+async def get_article(article_id: str = Path(..., description="Article ID")):
+    """
+    Get a single article by ID
+
+    Args:
+        article_id: Article UUID
+
+    Returns:
+        Article data
+    """
+    try:
+        from core.supabase_client import get_article_by_id
+
+        article = get_article_by_id(article_id)
+
+        if not article:
+            raise HTTPException(status_code=404, detail="Article not found")
+
+        return article
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching article: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error fetching article")
+
+@router.post("/articles")
+async def create_article(request: ArticleRequest):
+    """
+    Create a new article
+
+    Args:
+        request: Article data
+
+    Returns:
+        Created article
+    """
+    try:
+        from core.supabase_client import create_article
+
+        article = create_article(
+            title=request.title,
+            content=request.content,
+            category=request.category,
+            summary=request.summary,
+            author=request.author,
+            status=request.status,
+            image_url=request.image_url,
+            header_image=request.header_image,
+            thumbnail=request.thumbnail,
+            tags=request.tags
+        )
+
+        return article
+
+    except Exception as e:
+        logger.error(f"Error creating article: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error creating article")
+
+@router.put("/articles/{article_id}")
+async def update_article(
+    article_id: str = Path(..., description="Article ID"),
+    request: ArticleUpdateRequest = None
+):
+    """
+    Update an existing article
+
+    Args:
+        article_id: Article UUID
+        request: Fields to update
+
+    Returns:
+        Updated article
+    """
+    try:
+        from core.supabase_client import update_article as db_update, get_article_by_id
+
+        # Check if article exists
+        existing = get_article_by_id(article_id)
+        if not existing:
+            raise HTTPException(status_code=404, detail="Article not found")
+
+        # Build update dict (only non-None fields)
+        updates = {}
+        for field, value in request.dict(exclude_unset=True).items():
+            if value is not None:
+                updates[field] = value
+
+        if not updates:
+            return existing
+
+        updated = db_update(article_id, updates)
+        return updated
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating article: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error updating article")
+
+@router.delete("/articles/{article_id}")
+async def delete_article(article_id: str = Path(..., description="Article ID")):
+    """
+    Delete an article
+
+    Args:
+        article_id: Article UUID
+
+    Returns:
+        Deletion status
+    """
+    try:
+        from core.supabase_client import delete_article as db_delete, get_article_by_id
+
+        # Check if article exists
+        existing = get_article_by_id(article_id)
+        if not existing:
+            raise HTTPException(status_code=404, detail="Article not found")
+
+        success = db_delete(article_id)
+
+        if success:
+            return {"message": "Article deleted successfully", "id": article_id}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to delete article")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting article: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error deleting article")
+
+@router.get("/articles/stats")
+async def get_article_statistics():
+    """
+    Get article statistics
+
+    Returns:
+        Article counts by status
+    """
+    try:
+        from core.supabase_client import get_article_stats
+
+        stats = get_article_stats()
+
+        return {
+            "stats": stats,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Error fetching article stats: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error fetching stats")
 
 # ============== Insights Endpoint ==============
 

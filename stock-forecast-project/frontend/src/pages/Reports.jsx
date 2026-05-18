@@ -4,6 +4,7 @@ import {
   FileText,
   AlertCircle,
   Loader,
+  RefreshCw,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useReportsHistory } from "../hooks/useApi";
@@ -13,7 +14,7 @@ const Reports = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All");
 
-  const { data: reportsData, isLoading, isError, error } = useReportsHistory(null, 50, true);
+  const { data: reportsData, isLoading, isError, error, refetch, isFetching } = useReportsHistory(null, 50, true);
   const reports = reportsData?.reports || [];
 
   const filteredReports = reports.filter(report => {
@@ -30,12 +31,24 @@ const Reports = () => {
   return (
     <div className="bg-white text-[#191C1E]">
       <header className="bg-[#F7F9FB] px-6 lg:px-12 py-10 border-b border-[#E0E3E5]">
-        <h1 className="text-5xl lg:text-7xl font-bold text-black mb-4">
-          Reports Management
-        </h1>
-        <p className="text-[#45464D] text-xl lg:text-2xl">
-          View, download, and manage your analytical reports.
-        </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-5xl lg:text-7xl font-bold text-black mb-4">
+              Reports Management
+            </h1>
+            <p className="text-[#45464D] text-xl lg:text-2xl">
+              View, download, and manage your analytical reports.
+            </p>
+          </div>
+          <button
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-[#C6C6CD] rounded-lg hover:bg-[#F7F9FB] transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
+            <span className="text-sm font-medium">Refresh</span>
+          </button>
+        </div>
       </header>
 
       <div className="p-6 lg:p-12 max-w-7xl mx-auto">
@@ -72,6 +85,13 @@ const Reports = () => {
 
         {/* REPORTS TABLE */}
         <div className="bg-white border-2 border-[#E0E3E5] rounded-xl overflow-hidden shadow-sm">
+          {/* Refetch indicator */}
+          {isFetching && !isLoading && (
+            <div className="bg-blue-50 border-b border-blue-100 px-4 py-2 flex items-center gap-2">
+              <Loader className="w-3 h-3 animate-spin text-blue-500" />
+              <span className="text-blue-600 text-xs">Refreshing data...</span>
+            </div>
+          )}
           {isLoading ? (
             <div className="p-12 flex flex-col items-center justify-center gap-4">
               <Loader className="animate-spin text-indigo-600" size={40} />

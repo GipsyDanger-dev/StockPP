@@ -145,29 +145,32 @@ class ModelManager:
             if not self.supabase_client:
                 logger.warning("Supabase client not available, skipping cloud upload")
                 return False
-            
+
             storage = self.supabase_client.get_storage()
-            
+
             # Upload model file
             with open(model_path, "rb") as f:
                 path = f"{ticker}/model.keras"
                 storage.from_("models").upload(path, f, {"content-type": "application/octet-stream"})
-                logger.info(f"✅ Uploaded model to Supabase: {path}")
-            
+                logger.info(f"Uploaded model to Supabase: {path}")
+
             # Insert training log into database
-            self.insert_training_log(
-                ticker=ticker,
-                report_name=f"AI Training {ticker} - {datetime.now().strftime('%Y-%m-%d %H:%M')}",
-                rmse=float(metrics.get("rmse", 0)),
-                mae=float(metrics.get("mae", 0)),
-                status="Completed"
-            )
-            logger.info(f"✅ Training log recorded in Supabase for {ticker}")
-            
+            try:
+                self.insert_training_log(
+                    ticker=ticker,
+                    report_name=f"AI Training {ticker} - {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+                    rmse=float(metrics.get("rmse", 0)),
+                    mae=float(metrics.get("mae", 0)),
+                    status="Completed"
+                )
+                logger.info(f"Training log recorded for {ticker}")
+            except Exception as log_err:
+                logger.error(f"Failed to save training log for {ticker}: {str(log_err)}")
+
             return True
-            
+
         except Exception as e:
-            logger.error(f"❌ Error uploading to Supabase: {str(e)}")
+            logger.error(f"Error uploading to Supabase: {str(e)}")
             return False
     
     def load_model(self, ticker: str) -> Optional[object]:

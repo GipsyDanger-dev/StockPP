@@ -161,6 +161,82 @@ async def validate_ticker(ticker: str = Path(..., description="Stock ticker symb
         logger.error(f"Error validating ticker: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
+@router.get("/search/{query}")
+async def search_tickers(query: str = Path(..., description="Search query")):
+    """
+    Search for stock tickers using Finnhub
+
+    Args:
+        query: Search query (company name or ticker symbol)
+
+    Returns:
+        List of matching tickers
+    """
+    try:
+        from core.finnhub_client import FinnhubClient
+
+        results = FinnhubClient.search_symbol(query)
+
+        return {
+            "query": query,
+            "results": results,
+            "total": len(results),
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Error searching tickers: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error searching tickers")
+
+
+@router.get("/quote/{ticker}")
+async def get_live_quote(ticker: str = Path(..., description="Stock ticker symbol")):
+    """
+    Get live price quote for any ticker
+
+    Tries Finnhub first, falls back to yfinance for .JK stocks
+
+    Args:
+        ticker: Stock ticker symbol
+
+    Returns:
+        Live price data
+    """
+    try:
+        from core.finnhub_client import FinnhubClient
+
+        ticker_upper = ticker.upper()
+        quote = None
+
+        # Try Finnhub first
+        quote = FinnhubClient.get_quote(ticker_upper)
+
+        # Fallback to yfinance for unsupported tickers (e.g., .JK)
+        if quote is None and ("." in ticker_upper or ticker_upper.endswith(".JK")):
+            quote = FinnhubClient.get_quote_yfinance(ticker_upper)
+
+        if quote is None:
+            raise HTTPException(status_code=404, detail=f"No data found for ticker {ticker_upper}")
+
+        return {
+            "ticker": ticker_upper,
+            "price": round(quote["current_price"], 2),
+            "change": round(quote["change"], 2),
+            "change_percent": round(quote["change_percent"], 2),
+            "high": round(quote["high"], 2),
+            "low": round(quote["low"], 2),
+            "open": round(quote["open"], 2),
+            "prev_close": round(quote["prev_close"], 2),
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting quote for {ticker}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error fetching quote")
+
+
 @router.get("/historical/{ticker}")
 async def get_historical_data(
     ticker: str = Path(..., description="Stock ticker symbol"),
@@ -168,27 +244,27 @@ async def get_historical_data(
 ):
     """
     Get historical price data for a ticker
-    
+
     Args:
         ticker: Stock ticker symbol
         days: Number of days of historical data
-        
+
     Returns:
         Historical price data
     """
     try:
         service = get_forecasting_service()
-        
+
         # Get data by making a prediction and returning just the historical data
         result = service.predict(ticker=ticker, days_ahead=1, period="1y")
-        
+
         return {
             "ticker": ticker,
             "historical": result["historical"],
             "period_days": days,
             "timestamp": datetime.now().isoformat()
         }
-        
+
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -370,17 +446,17 @@ async def trigger_batch_retrain(
 async def get_market_summary():
     """
     Get market summary with all active tickers and latest data
-    
+
     Returns:
         List of tickers with current price and trend info
     """
     try:
-        from core.supabase_client import get_all_tickers, SupabaseClient
-        import yfinance as yf
-        
+        from core.supabase_client import get_all_tickers
+        from core.finnhub_client import FinnhubClient
+
         # Get tickers from Supabase
         tickers_data = get_all_tickers()
-        
+
         if not tickers_data:
             logger.warning("No tickers found in database, returning empty list")
             return {
@@ -388,44 +464,44 @@ async def get_market_summary():
                 "total": 0,
                 "timestamp": datetime.now().isoformat()
             }
-        
+
         market_data = []
-        
+
         for ticker_info in tickers_data:
             try:
                 ticker = ticker_info.get("symbol")
-                
-                # Fetch real-time price from yfinance
-                data = yf.Ticker(ticker)
-                history = data.history(period="5d")
-                
-                if history.empty:
+
+                # Fetch real-time price from Finnhub
+                quote = FinnhubClient.get_quote(ticker)
+
+                if quote is None:
                     continue
-                
-                current_price = float(history["Close"].iloc[-1])
-                prev_price = float(history["Close"].iloc[-2]) if len(history) > 1 else current_price
-                change_percent = ((current_price - prev_price) / prev_price * 100) if prev_price > 0 else 0
-                
+
                 market_data.append({
                     "ticker": ticker,
                     "name": ticker_info.get("name", ticker),
                     "sector": ticker_info.get("sector", "Unknown"),
-                    "price": round(current_price, 2),
-                    "change_percent": round(change_percent, 2),
+                    "price": round(quote["current_price"], 2),
+                    "change": round(quote["change"], 2),
+                    "change_percent": round(quote["change_percent"], 2),
+                    "high": round(quote["high"], 2),
+                    "low": round(quote["low"], 2),
+                    "open": round(quote["open"], 2),
+                    "prev_close": round(quote["prev_close"], 2),
                     "is_active": ticker_info.get("is_active", True),
                     "last_trained": ticker_info.get("last_trained_at")
                 })
-                
+
             except Exception as e:
                 logger.warning(f"Error fetching data for {ticker}: {str(e)}")
                 continue
-        
+
         return {
             "tickers": market_data,
             "total": len(market_data),
             "timestamp": datetime.now().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Error in market summary: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="Error fetching market data")

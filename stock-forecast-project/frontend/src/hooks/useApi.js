@@ -117,3 +117,29 @@ export const useInsights = (enabled = true) => {
     retry: 1,
   });
 };
+
+/**
+ * Custom hook for searching stock tickers via Finnhub
+ */
+export const useTickerSearch = (query, enabled = true) => {
+  return useQuery({
+    queryKey: ['tickerSearch', query],
+    queryFn: () => apiService.searchTickers(query),
+    enabled: enabled && !!query && query.length >= 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
+  });
+};
+
+/**
+ * Custom hook for getting live price quote
+ */
+export const useQuote = (ticker, enabled = true) => {
+  return useQuery({
+    queryKey: ['quote', ticker],
+    queryFn: () => apiService.getQuote(ticker),
+    enabled: enabled && !!ticker,
+    staleTime: 30 * 1000, // 30 seconds (live data)
+    retry: 1,
+  });
+};

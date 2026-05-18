@@ -134,6 +134,30 @@ export const getMarketSummary = async () => {
 };
 
 /**
+ * Search for stock tickers via Finnhub
+ */
+export const searchTickers = async (query) => {
+  try {
+    const response = await apiClient.get(`/search/${encodeURIComponent(query)}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: 'Failed to search tickers' };
+  }
+};
+
+/**
+ * Get live price quote for any ticker
+ */
+export const getQuote = async (ticker) => {
+  try {
+    const response = await apiClient.get(`/quote/${ticker.toUpperCase()}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: 'Failed to fetch quote' };
+  }
+};
+
+/**
  * Get training reports history from database
  * (NEW: Supabase integration)
  */

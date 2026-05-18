@@ -3,7 +3,7 @@
 ## 📋 Getting Started with Development
 
 ### Prerequisites Checklist
-- [ ] Python 3.8 or higher installed
+- [ ] Python 3.9 or higher installed
 - [ ] Node.js 16+ and npm installed
 - [ ] Git installed
 - [ ] A code editor (VS Code recommended)

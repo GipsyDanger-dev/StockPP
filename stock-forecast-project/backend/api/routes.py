@@ -209,7 +209,12 @@ async def get_model_metrics(ticker: str = Path(..., description="Stock ticker sy
     try:
         service = get_forecasting_service()
         
-        metrics = service.get_metrics(ticker)
+        # Akses metrics melalui model_manager, bukan langsung dari forecasting_service
+        ticker_upper = ticker.upper()
+        if service.model_manager:
+            metrics = service.model_manager.get_model_metrics(ticker_upper)
+        else:
+            metrics = None
         
         return {
             "ticker": ticker,

@@ -152,14 +152,19 @@ const Dashboard = () => {
               <div className="flex justify-between items-start mb-8">
                 <div>
                   <p className="text-[#45464D] font-bold text-sm tracking-widest uppercase">
-                    Portfolio Alpha
+                    Current Price
                   </p>
                   <h2 className="text-4xl font-bold mt-1">
-                    {formatCurrency(data.current_price * 1000)}
+                    {formatCurrency(data.current_price)}
                   </h2>
                 </div>
-                <div className="flex items-center gap-2 bg-[#F0FDF4] border-2 border-[#BBF7D0] px-4 py-2 rounded-lg text-[#16A34A] font-bold text-xl">
-                  <TrendingUp size={24} /> +4.2%
+                <div className={`flex items-center gap-2 border-2 px-4 py-2 rounded-lg font-bold text-xl ${
+                  data.change_percent >= 0 
+                    ? 'bg-[#F0FDF4] border-[#BBF7D0] text-[#16A34A]' 
+                    : 'bg-rose-50 border-rose-200 text-rose-600'
+                }`}>
+                  {data.change_percent >= 0 ? <TrendingUp size={24} /> : <TrendingDown size={24} />}
+                  {formatPercent(data.change_percent)}
                 </div>
               </div>
               <div className="h-[400px]">
@@ -182,26 +187,26 @@ const Dashboard = () => {
                       {data.ticker}
                     </div>
                     <div>
-                      <p className="text-xl font-bold">NVIDIA Corp.</p>
-                      <p className="text-[#76859B]">Technology • AI</p>
+                      <p className="text-xl font-bold">{data.ticker}</p>
+                      <p className="text-[#76859B]">{data.ticker === 'AAPL' ? 'Apple Inc.' : data.ticker === 'NVDA' ? 'NVIDIA Corp.' : data.ticker === 'TSLA' ? 'Tesla Inc.' : data.ticker === 'GOOGL' ? 'Alphabet Inc.' : data.ticker === 'MSFT' ? 'Microsoft Corp.' : 'Equity'}</p>
                     </div>
                   </div>
 
                   <div className="space-y-6">
                     <div>
                       <p className="text-[#76859B] text-sm mb-2">
-                        Conviction Score
+                        RMSE (Model Accuracy)
                       </p>
                       <div className="w-full bg-[#3A485C] h-4 rounded-full overflow-hidden">
                         <div className="bg-white h-full w-[92%] rounded-full"></div>
                       </div>
-                      <p className="text-right mt-2 font-bold">92 / 100</p>
+                      <p className="text-right mt-2 font-bold">{data.metrics?.rmse?.toFixed(4) || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-[#76859B] text-sm mb-1">
-                        Target Horizon
+                        Trend
                       </p>
-                      <p className="text-2xl font-bold">30 Days</p>
+                      <p className={`text-2xl font-bold ${data.trend === 'Bullish' ? 'text-emerald-400' : 'text-rose-400'}`}>{data.trend || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
@@ -215,7 +220,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* LATEST SIGNALS TABLE */}
+          {/* LATEST SIGNALS TABLE — TODO: Integrate with real API data */}
           <div className="bg-white border-2 border-[#C6C6CD] rounded-2xl overflow-hidden shadow-sm">
             <div className="bg-[#F2F4F6] p-6 border-b border-[#C6C6CD] flex justify-between items-center">
               <h3 className="font-bold tracking-widest text-[#45464D]">
@@ -223,34 +228,10 @@ const Dashboard = () => {
               </h3>
               <Activity size={20} className="text-[#45464D]" />
             </div>
-            <div className="divide-y divide-[#C6C6CD]">
-              <SignalRow
-                ticker="TSLA"
-                action="SELL"
-                time="10:42 AM"
-                color="text-red-600"
-                bg="bg-red-50"
-                border="border-red-200"
-                dot="bg-red-600"
-              />
-              <SignalRow
-                ticker="MSFT"
-                action="BUY"
-                time="09:15 AM"
-                color="text-emerald-600"
-                bg="bg-emerald-50"
-                border="border-emerald-200"
-                dot="bg-emerald-600"
-              />
-              <SignalRow
-                ticker="AAPL"
-                action="HOLD"
-                time="Yesterday"
-                color="text-slate-600"
-                bg="bg-slate-100"
-                border="border-slate-200"
-                dot="bg-slate-600"
-              />
+            <div className="p-12 flex flex-col items-center justify-center text-[#45464D]">
+              <Activity size={40} className="mb-4 text-slate-300" />
+              <p className="text-lg font-medium">Market signals akan muncul di sini</p>
+              <p className="text-sm text-slate-400 mt-2">Data tersedia setelah training model dan integrasi sinyal selesai.</p>
             </div>
           </div>
         </div>
@@ -268,23 +249,6 @@ const NavItem = ({ icon, label, active = false, onClick }) => (
   >
     {icon}
     <span className="font-bold">{label}</span>
-  </div>
-);
-
-const SignalRow = ({ ticker, action, time, color, bg, border, dot }) => (
-  <div className="flex items-center justify-between p-6 hover:bg-slate-50 transition-colors">
-    <div className="flex items-center gap-6">
-      <div className={`w-3 h-3 rounded-full ${dot}`}></div>
-      <span className="font-bold text-xl">{ticker}</span>
-    </div>
-    <div className="flex items-center gap-12">
-      <div
-        className={`${bg} ${color} ${border} border-2 px-6 py-1 rounded font-bold text-sm`}
-      >
-        {action}
-      </div>
-      <span className="text-[#45464D] font-medium w-24 text-right">{time}</span>
-    </div>
   </div>
 );
 

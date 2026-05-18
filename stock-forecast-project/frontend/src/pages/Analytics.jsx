@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Download, ShieldCheck, Activity, BarChart2, Zap, TrendingUp, TrendingDown } from 'lucide-react';
+import { ChevronLeft, Activity, BarChart2, TrendingUp } from 'lucide-react';
 import { useForecast } from '../hooks/useApi';
 import PriceChart from '../components/PriceChart';
 import { formatCurrency, formatPercent } from '../utils/formatting';
@@ -58,51 +58,62 @@ const Analytics = () => {
           </div>
         </div>
 
-        {/* GRID: CONFIDENCE & TECHNICAL */}
+        {/* MODEL METRICS & INFO */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12">
           
-          {/* MODEL CONFIDENCE */}
+          {/* MODEL METRICS */}
           <div className="bg-white border-2 border-[#E0E3E5] p-10 rounded-xl shadow-sm">
-            <p className="text-[#45464D] font-bold tracking-widest text-sm mb-6">MODEL CONFIDENCE</p>
-            <div className="flex items-baseline gap-4 mb-6">
-              <span className="text-8xl font-bold text-black">92</span>
-              <span className="text-2xl text-[#45464D]">/ 100</span>
+            <p className="text-[#45464D] font-bold tracking-widest text-sm mb-6">MODEL METRICS</p>
+            <div className="space-y-6">
+              <div>
+                <p className="text-[#45464D] text-sm font-medium mb-1">RMSE (Root Mean Square Error)</p>
+                <p className="text-4xl font-bold text-black">{data.metrics?.rmse?.toFixed(4) || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-[#45464D] text-sm font-medium mb-1">MAE (Mean Absolute Error)</p>
+                <p className="text-4xl font-bold text-black">{data.metrics?.mae?.toFixed(4) || 'N/A'}</p>
+              </div>
+              <div className="pt-4 border-t border-[#E0E3E5]">
+                <p className="text-[#45464D] text-sm font-medium mb-1">Model Source</p>
+                <span className={`inline-block px-4 py-1 rounded-lg font-bold text-sm ${
+                  data.model_source === 'persisted' 
+                    ? 'bg-emerald-50 text-emerald-600 border-2 border-emerald-200'
+                    : 'bg-yellow-50 text-yellow-700 border-2 border-yellow-200'
+                }`}>
+                  {data.model_source === 'persisted' ? 'Trained Model' : 'Mock Data'}
+                </span>
+              </div>
             </div>
-            <p className="text-[#45464D] text-xl leading-relaxed">
-              High conviction. Forecast aligns with historical volatility patterns and current macroeconomic indicators detected by our LSTM Engine.
-            </p>
           </div>
 
-          {/* TECHNICAL SETUP */}
+          {/* FORECAST SUMMARY */}
           <div className="bg-white border-2 border-[#E0E3E5] rounded-xl overflow-hidden shadow-sm">
             <div className="bg-[#F2F4F6] p-6 border-b border-[#E0E3E5]">
-              <p className="font-bold text-black tracking-widest text-sm">TECHNICAL SETUP</p>
+              <p className="font-bold text-black tracking-widest text-sm">FORECAST SUMMARY</p>
             </div>
             <div className="divide-y divide-[#E0E3E5]">
-              <TechRow label="MA (50)" value={formatCurrency(data.current_price * 0.96)} />
-              <TechRow label="MA (200)" value={formatCurrency(data.current_price * 0.92)} />
-              <TechRow label="RSI (14)" value="62.4" />
-              <TechRow label="MACD" value="Bullish Cross" isBadge />
+              <div className="flex justify-between items-center p-6 px-10">
+                <span className="text-[#45464D] text-lg font-medium">Current Price</span>
+                <span className="text-xl font-bold text-black">{formatCurrency(data.current_price)}</span>
+              </div>
+              <div className="flex justify-between items-center p-6 px-10">
+                <span className="text-[#45464D] text-lg font-medium">Trend</span>
+                <span className={`text-xl font-bold ${data.trend === 'Bullish' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                  {data.trend}
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-6 px-10">
+                <span className="text-[#45464D] text-lg font-medium">Change %</span>
+                <span className={`text-xl font-bold ${data.change_percent >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                  {formatPercent(data.change_percent)}
+                </span>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* EXPORT BUTTON */}
-        <button className="w-full bg-black text-white py-6 flex items-center justify-center gap-4 rounded-xl font-bold text-2xl hover:bg-slate-800 transition-all">
-          <Download size={28} /> Export Full Dataset
-        </button>
       </main>
     </div>
   );
 };
-
-const TechRow = ({ label, value, isBadge }) => (
-  <div className="flex justify-between items-center p-6 px-10">
-    <span className="text-[#45464D] text-lg font-medium">{label}</span>
-    <span className={`text-xl font-bold ${isBadge ? 'bg-indigo-50 text-indigo-600 px-4 py-1 rounded-lg' : 'text-black'}`}>
-      {value}
-    </span>
-  </div>
-);
 
 export default Analytics;

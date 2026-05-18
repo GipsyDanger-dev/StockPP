@@ -1,4 +1,4 @@
-Stock Price Forecasting Agent Guide (Industrial Standards) - V5 (Final Full-Stack)
+Stock Price Forecasting Agent Guide 
 1. Project Overview
 Sistem prediksi harga saham berbasis Deep Learning (LSTM) dengan arsitektur Full-Stack modern yang memisahkan antara Engine Analisis dan Interface Pengguna. Sistem ini dirancang untuk kebutuhan analisis industrial yang menuntut akurasi, skalabilitas, dan interpretabilitas data.
 
@@ -42,7 +42,7 @@ stock-forecast-project/
 │   └── package.json        # Dependency Node.js (react, recharts, axios)
 └── README.md               # Dokumentasi Proyek
 4. Core Technical Stack
-Backend: Python 3.x, FastAPI, TensorFlow, Scikit-learn, Pandas, Uvicorn.
+Backend: Python 3.9, FastAPI, TensorFlow, Scikit-learn, Pandas, Uvicorn.
 
 Frontend: React.js (Vite), Tailwind CSS, Shadcn/UI, Lightweight Charts (TradingView) atau Recharts, TanStack Query (React Query).
 

@@ -47,9 +47,35 @@ class ForecastingService:
             if self.model_manager:
                 model, saved_scaler = self.model_manager.load_model_and_scaler(ticker_upper)
             
+            # 3. AUTO-TRAINING: Jika model belum ada, train otomatis 70 epoch
             if model is None or saved_scaler is None:
-                logger.info(f"No persisted model/scaler for {ticker_upper}, using mock data")
+                logger.info(f"⚠️  Model untuk {ticker_upper} belum ada. Auto-training 70 epoch...")
+                try:
+                    from .retraining_orchestrator import RetrainingOrchestrator
+                    orchestrator = RetrainingOrchestrator(self.model_manager)
+                    result = orchestrator.retrain_model(
+                        ticker=ticker_upper,
+                        period="5y",
+                        epochs=70,
+                        force_retrain=True
+                    )
+                    if result["status"] == "success":
+                        logger.info(f"✅ Auto-training berhasil untuk {ticker_upper}! RMSE: {result['new_metrics']['rmse']:.4f}")
+                        # Load ulang model + scaler yang baru di-train
+                        model, saved_scaler = self.model_manager.load_model_and_scaler(ticker_upper)
+                    else:
+                        logger.warning(f"⚠️  Auto-training gagal: {result.get('error', 'unknown error')}. Fallback ke mock data.")
+                        return self._generate_mock_forecast(ticker_upper, days_ahead)
+                except Exception as train_error:
+                    logger.error(f"❌ Error saat auto-training {ticker_upper}: {str(train_error)}")
+                    return self._generate_mock_forecast(ticker_upper, days_ahead)
+            
+            # Pastikan model dan scaler siap setelah auto-training
+            if model is None or saved_scaler is None:
+                logger.warning(f"Model/scaler masih None setelah auto-training untuk {ticker_upper}")
                 return self._generate_mock_forecast(ticker_upper, days_ahead)
+            
+            logger.info(f"✅ Model siap untuk {ticker_upper}. Melanjutkan prediksi...")
             
             # 3. Ambil Data Real dari Yahoo Finance
             df = self.data_engine.fetch_data(ticker_upper, period=period)

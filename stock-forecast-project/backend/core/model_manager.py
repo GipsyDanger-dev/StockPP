@@ -9,7 +9,7 @@ import pickle
 from datetime import datetime
 from pathlib import Path
 import numpy as np
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, Any
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,8 @@ class ModelManager:
         self.model_dir = Path(model_dir)
         self.model_dir.mkdir(parents=True, exist_ok=True)
         self.metadata_file = self.model_dir / "model_metadata.json"
+        self.scaler_dir = self.model_dir / "scalers"
+        self.scaler_dir.mkdir(parents=True, exist_ok=True)
         self.metadata = self._load_metadata()
         self.use_cloud_storage = use_cloud_storage
         
@@ -66,14 +68,15 @@ class ModelManager:
         """Get path for a model"""
         return self.model_dir / f"{ticker.upper()}_{version}.keras"
     
-    def save_model(self, model, ticker: str, metrics: Dict) -> bool:
+    def save_model(self, model, ticker: str, metrics: Dict, scaler: Any = None) -> bool:
         """
-        Save a model with metadata
+        Save a model with metadata and optional scaler
         
         Args:
             model: TensorFlow model to save
             ticker: Stock ticker symbol
             metrics: Dictionary with model metrics (loss, rmse, mae, etc.)
+            scaler: Optional MinMaxScaler to persist alongside model
             
         Returns:
             True if saved successfully
@@ -86,6 +89,12 @@ class ModelManager:
             model.save(str(model_path))
             logger.info(f"Saved model for {ticker} to {model_path}")
             
+            # Save scaler if provided
+            scaler_path = None
+            if scaler is not None:
+                scaler_path = self._save_scaler(scaler, ticker)
+                logger.info(f"Saved scaler for {ticker} to {scaler_path}")
+            
             # Update metadata
             if ticker not in self.metadata:
                 self.metadata[ticker] = {
@@ -95,9 +104,11 @@ class ModelManager:
             # Create version info
             version_info = {
                 "timestamp": datetime.now().isoformat(),
-                "path": str(model_path),
+                "model_path": str(model_path),
                 "metrics": metrics
             }
+            if scaler_path:
+                version_info["scaler_path"] = str(scaler_path)
             
             self.metadata[ticker]["current"] = version_info
             self.metadata[ticker]["versions"].append(version_info)
@@ -186,6 +197,37 @@ class ModelManager:
         except Exception as e:
             logger.error(f"Error loading model for {ticker}: {str(e)}", exc_info=True)
             return None
+    
+    def load_model_and_scaler(self, ticker: str) -> Tuple[Optional[object], Optional[Any]]:
+        """
+        Load model and its associated scaler together.
+        Critical: Both must be loaded in sync for correct predictions.
+        
+        Args:
+            ticker: Stock ticker symbol
+            
+        Returns:
+            Tuple of (loaded_model, loaded_scaler) or (None, None) if not found
+        """
+        try:
+            ticker = ticker.upper()
+            model = self.load_model(ticker)
+            scaler = self._load_scaler(ticker)
+            
+            if model is None:
+                logger.warning(f"Model not found for {ticker}")
+                return None, None
+                
+            if scaler is None:
+                logger.warning(f"Scaler not found for {ticker}, model loaded without scaler")
+                return model, None
+            
+            logger.info(f"Loaded model and scaler for {ticker}")
+            return model, scaler
+            
+        except Exception as e:
+            logger.error(f"Error loading model and scaler for {ticker}: {str(e)}", exc_info=True)
+            return None, None
     
     def get_model_metrics(self, ticker: str) -> Optional[Dict]:
         """
@@ -303,3 +345,55 @@ class ModelManager:
                     "last_updated": data["current"]["timestamp"]
                 }
         return info
+    
+    def _save_scaler(self, scaler: Any, ticker: str) -> Path:
+        """
+        Save scaler to disk as pickle file
+        
+        Args:
+            scaler: MinMaxScaler object
+            ticker: Stock ticker symbol
+            
+        Returns:
+            Path to saved scaler file
+        """
+        ticker = ticker.upper()
+        scaler_path = self.scaler_dir / f"{ticker}_scaler.pkl"
+        
+        with open(scaler_path, 'wb') as f:
+            pickle.dump(scaler, f)
+        
+        return scaler_path
+    
+    def _load_scaler(self, ticker: str) -> Optional[Any]:
+        """
+        Load scaler from disk
+        
+        Args:
+            ticker: Stock ticker symbol
+            
+        Returns:
+            Loaded scaler or None if not found
+        """
+        try:
+            ticker = ticker.upper()
+            
+            # Check metadata first for scaler path
+            if ticker in self.metadata and "current" in self.metadata[ticker]:
+                scaler_path_str = self.metadata[ticker]["current"].get("scaler_path")
+                if scaler_path_str and Path(scaler_path_str).exists():
+                    with open(scaler_path_str, 'rb') as f:
+                        return pickle.load(f)
+            
+            # Fallback to default scaler directory
+            scaler_path = self.scaler_dir / f"{ticker}_scaler.pkl"
+            if scaler_path.exists():
+                with open(scaler_path, 'rb') as f:
+                    return pickle.load(f)
+            
+            logger.warning(f"Scaler not found for {ticker}")
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error loading scaler for {ticker}: {str(e)}")
+            return None

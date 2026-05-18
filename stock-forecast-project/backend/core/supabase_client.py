@@ -386,6 +386,131 @@ def get_article_stats() -> dict:
         logger.error(f"Error fetching article stats: {str(e)}")
         return {"total": 0, "published": 0, "draft": 0}
 
+# ============== OTP Operations ==============
+
+import random
+import string
+
+def generate_otp_code(length: int = 6) -> str:
+    """Generate a random numeric OTP code"""
+    return ''.join(random.choices(string.digits, k=length))
+
+def create_otp(email: str, delivery_method: str, phone_number: str = None) -> dict:
+    """
+    Create and store an OTP code
+
+    Args:
+        email: User's email address
+        delivery_method: 'email' or 'whatsapp'
+        phone_number: Required if delivery_method is 'whatsapp'
+
+    Returns:
+        Dict with OTP details including the code
+    """
+    try:
+        client = SupabaseClient.get_client()
+
+        # Invalidate any existing unused OTPs for this email
+        client.table("otp_codes").update({
+            "used": True
+        }).eq("email", email).eq("used", False).execute()
+
+        # Generate new code
+        code = generate_otp_code()
+
+        # Set expiry (5 minutes from now)
+        from datetime import datetime, timedelta, timezone
+        expires_at = (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat()
+
+        # Insert new OTP
+        result = client.table("otp_codes").insert({
+            "email": email,
+            "code": code,
+            "delivery_method": delivery_method,
+            "phone_number": phone_number,
+            "expires_at": expires_at,
+            "used": False
+        }).execute()
+
+        logger.info(f"OTP created for {email} via {delivery_method}")
+        return {
+            "code": code,
+            "email": email,
+            "delivery_method": delivery_method,
+            "expires_at": expires_at
+        }
+
+    except Exception as e:
+        logger.error(f"Error creating OTP: {str(e)}")
+        raise
+
+def verify_otp(email: str, code: str) -> bool:
+    """
+    Verify an OTP code
+
+    Args:
+        email: User's email address
+        code: The OTP code to verify
+
+    Returns:
+        True if code is valid and not expired
+    """
+    try:
+        client = SupabaseClient.get_client()
+
+        from datetime import datetime, timezone
+
+        # Find matching unused OTP
+        result = client.table("otp_codes").select("*").eq(
+            "email", email
+        ).eq(
+            "code", code
+        ).eq(
+            "used", False
+        ).execute()
+
+        if not result.data:
+            logger.warning(f"No matching OTP found for {email}")
+            return False
+
+        otp_record = result.data[0]
+
+        # Check expiry
+        expires_at = datetime.fromisoformat(otp_record["expires_at"].replace("Z", "+00:00"))
+        if datetime.now(timezone.utc) > expires_at:
+            logger.warning(f"OTP expired for {email}")
+            return False
+
+        # Mark as used
+        client.table("otp_codes").update({
+            "used": True
+        }).eq("id", otp_record["id"]).execute()
+
+        logger.info(f"OTP verified successfully for {email}")
+        return True
+
+    except Exception as e:
+        logger.error(f"Error verifying OTP: {str(e)}")
+        return False
+
+def cleanup_expired_otps():
+    """Delete expired OTP codes from database"""
+    try:
+        client = SupabaseClient.get_client()
+
+        from datetime import datetime, timezone
+
+        result = client.table("otp_codes").delete().lt(
+            "expires_at", datetime.now(timezone.utc).isoformat()
+        ).execute()
+
+        logger.info("Expired OTPs cleaned up")
+        return True
+
+    except Exception as e:
+        logger.warning(f"Error cleaning up OTPs: {str(e)}")
+        return False
+
 # ============== Storage Operations ==============
 
 def upload_model_file(ticker: str, file_path: str, bucket_name: str = "models") -> str:

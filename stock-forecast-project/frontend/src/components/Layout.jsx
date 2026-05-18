@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, PieChart, Lightbulb, FileText, Activity, Menu, X, Settings } from 'lucide-react';
+import { LayoutDashboard, BarChart3, PieChart, Lightbulb, FileText, Activity, Menu, X, Settings, LogOut, User } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 const navItems = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -16,6 +17,7 @@ const SIDEBAR_WIDTH = 256; // w-64 = 16rem = 256px
 const Layout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, signOut } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const isActive = (path) => {
@@ -23,11 +25,16 @@ const Layout = ({ children }) => {
     return location.pathname.startsWith(path);
   };
 
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
+
   return (
     <div className="flex min-h-screen bg-white text-[#191C1E]">
       {/* Sidebar */}
       <aside
-        className="fixed inset-y-0 left-0 z-40 bg-[#F7F9FB] border-r border-[#C6C6CD] transition-all duration-300 ease-in-out"
+        className="fixed inset-y-0 left-0 z-40 bg-[#F7F9FB] border-r border-[#C6C6CD] transition-all duration-300 ease-in-out flex flex-col"
         style={{
           width: `${SIDEBAR_WIDTH}px`,
           transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
@@ -40,7 +47,7 @@ const Layout = ({ children }) => {
           <span className="font-bold text-xl tracking-tight">PRECISION</span>
         </div>
 
-        <nav className="px-4 space-y-2">
+        <nav className="px-4 space-y-2 flex-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
@@ -63,6 +70,28 @@ const Layout = ({ children }) => {
             );
           })}
         </nav>
+
+        {/* User Section */}
+        <div className="p-4 border-t border-[#C6C6CD]">
+          <div className="flex items-center gap-3 mb-3 px-2">
+            <div className="w-8 h-8 bg-[#131B2E] rounded-full flex items-center justify-center">
+              <User className="w-4 h-4 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-black truncate">
+                {user?.user_metadata?.full_name || 'User'}
+              </p>
+              <p className="text-xs text-[#45464D] truncate">{user?.email || ''}</p>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-2 text-[#45464D] hover:bg-slate-200 rounded-lg transition-colors"
+          >
+            <LogOut size={18} />
+            <span className="text-sm font-medium">Logout</span>
+          </button>
+        </div>
       </aside>
 
       {/* Mobile backdrop */}

@@ -1,10 +1,10 @@
 """
-API Routes - Defines FastAPI endpoints for forecasting
+API Routes - Defines FastAPI endpoints for forecasting and OTP
 """
 
 from fastapi import APIRouter, HTTPException, Query, Path, UploadFile, File
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 import numpy as np
 import logging
 from datetime import datetime, timedelta
@@ -12,8 +12,25 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from core.forecasting_service import ForecastingService
+from core.supabase_client import create_otp, verify_otp, cleanup_expired_otps
+from core.otp_service import send_otp
 
 logger = logging.getLogger(__name__)
+
+# ============== OTP Request/Response Models ==============
+
+class SendOtpRequest(BaseModel):
+    email: EmailStr
+    delivery_method: str = "email"  # 'email' or 'whatsapp'
+    phone_number: Optional[str] = None  # Required if delivery_method is 'whatsapp'
+
+class VerifyOtpRequest(BaseModel):
+    email: EmailStr
+    code: str
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    new_password: str
 
 # Pydantic models for request/response validation
 class PredictionRequest(BaseModel):
@@ -47,6 +64,114 @@ class ForecastResponse(BaseModel):
 
 # Initialize router
 router = APIRouter(tags=["forecasting"])
+
+# ============== OTP Endpoints ==============
+
+@router.post("/auth/send-otp")
+async def send_otp_endpoint(request: SendOtpRequest):
+    """
+    Send OTP code via email or WhatsApp for password reset
+
+    Args:
+        request: Contains email, delivery_method, and optional phone_number
+
+    Returns:
+        Success message with delivery method used
+    """
+    try:
+        # Validate WhatsApp requires phone number
+        if request.delivery_method == "whatsapp" and not request.phone_number:
+            raise HTTPException(
+                status_code=400,
+                detail="Phone number is required for WhatsApp delivery"
+            )
+
+        # Validate delivery method
+        if request.delivery_method not in ["email", "whatsapp"]:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid delivery method. Use 'email' or 'whatsapp'"
+            )
+
+        # Create OTP in database
+        otp_data = create_otp(
+            email=request.email,
+            delivery_method=request.delivery_method,
+            phone_number=request.phone_number
+        )
+
+        # Send OTP via chosen method
+        success = await send_otp(
+            email=request.email,
+            code=otp_data["code"],
+            delivery_method=request.delivery_method,
+            phone_number=request.phone_number
+        )
+
+        if not success:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to send OTP. Please try again."
+            )
+
+        # Clean up expired OTPs (best effort)
+        try:
+            cleanup_expired_otps()
+        except Exception:
+            pass
+
+        return {
+            "success": True,
+            "message": f"OTP sent via {request.delivery_method}",
+            "delivery_method": request.delivery_method,
+            "expires_in": 300  # 5 minutes in seconds
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in send-otp: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post("/auth/verify-otp")
+async def verify_otp_endpoint(request: VerifyOtpRequest):
+    """
+    Verify OTP code for password reset
+
+    Args:
+        request: Contains email and code
+
+    Returns:
+        Success status if code is valid
+    """
+    try:
+        if len(request.code) != 6 or not request.code.isdigit():
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid OTP format. Must be 6 digits."
+            )
+
+        is_valid = verify_otp(email=request.email, code=request.code)
+
+        if not is_valid:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid or expired OTP code"
+            )
+
+        return {
+            "success": True,
+            "message": "OTP verified successfully",
+            "email": request.email
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in verify-otp: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
 
 # Global forecasting service instance
 _forecasting_service = None

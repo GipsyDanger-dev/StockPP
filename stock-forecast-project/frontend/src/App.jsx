@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Analytics from './pages/Analytics';
@@ -10,35 +12,59 @@ import Market from './pages/Market';
 import Admin from './pages/Admin';
 import ArticleDetail from './pages/ArticleDetail';
 import ArticleEditor from './pages/ArticleEditor';
+import SignIn from './pages/SignIn';
+import SignUp from './pages/SignUp';
+import ForgotPassword from './pages/ForgotPassword';
+import VerifyCode from './pages/VerifyCode';
+import NewPassword from './pages/NewPassword';
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          {/* Standalone pages (no sidebar layout) */}
-          <Route path="/insights/:articleId" element={<ArticleDetail />} />
-          <Route path="/admin/editor" element={<ArticleEditor />} />
-          <Route path="/admin/editor/:articleId" element={<ArticleEditor />} />
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Auth pages (no sidebar, no protection) */}
+            <Route path="/login" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/verify-code" element={<VerifyCode />} />
+            <Route path="/new-password" element={<NewPassword />} />
 
-          {/* Pages with sidebar layout */}
-          <Route path="*" element={
-            <Layout>
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/analytics/:ticker" element={<Analytics />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/insights" element={<Insights />} />
-                <Route path="/market" element={<Market />} />
-                <Route path="/admin" element={<Admin />} />
-              </Routes>
-            </Layout>
-          } />
-        </Routes>
-      </BrowserRouter>
+            {/* Standalone pages (no sidebar layout) */}
+            <Route path="/insights/:articleId" element={<ArticleDetail />} />
+            <Route path="/admin/editor" element={
+              <ProtectedRoute>
+                <ArticleEditor />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/editor/:articleId" element={
+              <ProtectedRoute>
+                <ArticleEditor />
+              </ProtectedRoute>
+            } />
+
+            {/* Pages with sidebar layout (protected) */}
+            <Route path="*" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/analytics" element={<Analytics />} />
+                    <Route path="/analytics/:ticker" element={<Analytics />} />
+                    <Route path="/reports" element={<Reports />} />
+                    <Route path="/insights" element={<Insights />} />
+                    <Route path="/market" element={<Market />} />
+                    <Route path="/admin" element={<Admin />} />
+                  </Routes>
+                </Layout>
+              </ProtectedRoute>
+            } />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

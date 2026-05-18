@@ -178,7 +178,8 @@ class RetrainingOrchestrator:
                     model.model,
                     ticker_upper,
                     new_metrics,
-                    scaler
+                    scaler,
+                    feature_scaler=self.data_engine.feature_scaler
                 )
 
                 result["model_saved"] = saved
@@ -260,7 +261,7 @@ class RetrainingOrchestrator:
         try:
             from .supabase_client import get_all_tickers
             tickers_data = get_all_tickers()
-            return [t["ticker"] for t in tickers_data] if tickers_data else []
+            return [t["symbol"] for t in tickers_data] if tickers_data else []
         except Exception as e:
             logger.warning(f"Cannot fetch tickers from DB: {e}")
             return []

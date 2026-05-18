@@ -5,6 +5,8 @@ import {
   AlertCircle,
   Loader,
   RefreshCw,
+  Download,
+  ChevronRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useReportsHistory } from "../hooks/useApi";
@@ -28,6 +30,28 @@ const Reports = () => {
   const completedReports = reports.filter(r => r.status === "Completed").length;
   const processingReports = reports.filter(r => r.status === "Processing").length;
 
+  const handleDownloadCSV = () => {
+    if (filteredReports.length === 0) return;
+    const headers = ['Report Name', 'Ticker', 'RMSE', 'MAE', 'R²', 'Status', 'Date'];
+    const rows = filteredReports.map(r => [
+      r.report_name,
+      r.ticker,
+      r.rmse?.toFixed(4) || 'N/A',
+      r.mae?.toFixed(4) || 'N/A',
+      r.r_square?.toFixed(4) || 'N/A',
+      r.status,
+      new Date(r.created_at).toLocaleDateString(),
+    ]);
+    const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reports-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="bg-white text-[#191C1E]">
       <header className="bg-[#F7F9FB] px-6 lg:px-12 py-10 border-b border-[#E0E3E5]">
@@ -40,14 +64,24 @@ const Reports = () => {
               View, download, and manage your analytical reports.
             </p>
           </div>
-          <button
-            onClick={() => refetch()}
-            disabled={isFetching}
-            className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-[#C6C6CD] rounded-lg hover:bg-[#F7F9FB] transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
-            <span className="text-sm font-medium">Refresh</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleDownloadCSV}
+              disabled={filteredReports.length === 0}
+              className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-[#C6C6CD] rounded-lg hover:bg-[#F7F9FB] transition-colors disabled:opacity-50"
+            >
+              <Download className="w-4 h-4" />
+              <span className="text-sm font-medium">Export CSV</span>
+            </button>
+            <button
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-[#C6C6CD] rounded-lg hover:bg-[#F7F9FB] transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
+              <span className="text-sm font-medium">Refresh</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -122,7 +156,8 @@ const Reports = () => {
                 {filteredReports.map((report) => (
                   <div
                     key={report.id}
-                    className="grid grid-cols-4 p-6 items-center hover:bg-slate-50 transition-colors"
+                    onClick={() => navigate(`/analytics/${report.ticker}`)}
+                    className="grid grid-cols-4 p-6 items-center hover:bg-slate-50 transition-colors cursor-pointer group"
                   >
                     <div className="col-span-2 md:col-span-1 flex items-center gap-4">
                       <div className="p-3 bg-[#F7F9FB] rounded-lg">
@@ -155,8 +190,9 @@ const Reports = () => {
                         {report.status}
                       </span>
                     </div>
-                    <div className="text-right md:text-left text-sm text-[#45464D]">
-                      {new Date(report.created_at).toLocaleDateString()}
+                    <div className="text-right md:text-left text-sm text-[#45464D] flex items-center gap-2">
+                      <span>{new Date(report.created_at).toLocaleDateString()}</span>
+                      <ChevronRight className="w-4 h-4 text-[#C6C6CD] group-hover:text-indigo-600 transition-colors hidden md:block" />
                     </div>
                   </div>
                 ))}

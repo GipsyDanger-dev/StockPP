@@ -12,7 +12,7 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from core.forecasting_service import ForecastingService
-from core.supabase_client import create_otp, verify_otp, cleanup_expired_otps
+from core.supabase_client import create_otp, verify_otp, cleanup_expired_otps, verify_otp_completed, reset_user_password, set_user_role, list_users
 from core.otp_service import send_otp
 
 logger = logging.getLogger(__name__)
@@ -170,6 +170,55 @@ async def verify_otp_endpoint(request: VerifyOtpRequest):
         raise
     except Exception as e:
         logger.error(f"Error in verify-otp: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post("/auth/reset-password")
+async def reset_password_endpoint(request: ResetPasswordRequest):
+    """
+    Reset user password after OTP verification.
+    Requires that the email has a recently verified OTP (within 15 minutes).
+
+    Args:
+        request: Contains email and new_password
+
+    Returns:
+        Success status if password was reset
+    """
+    try:
+        # Validate password strength
+        if len(request.new_password) < 6:
+            raise HTTPException(
+                status_code=400,
+                detail="Password must be at least 6 characters"
+            )
+
+        # Verify that OTP was recently completed for this email
+        otp_valid = verify_otp_completed(request.email)
+        if not otp_valid:
+            raise HTTPException(
+                status_code=403,
+                detail="OTP verification required or expired. Please verify your code again."
+            )
+
+        # Reset password via Supabase Admin API
+        result = reset_user_password(request.email, request.new_password)
+
+        if not result["success"]:
+            raise HTTPException(
+                status_code=500,
+                detail=result["message"]
+            )
+
+        return {
+            "success": True,
+            "message": "Password reset successfully"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in reset-password: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -1011,5 +1060,27 @@ async def get_insights():
             },
             "timestamp": datetime.now().isoformat()
         }
+
+# ============== User Management Endpoints ==============
+
+class SetRoleRequest(BaseModel):
+    user_id: str
+    role: str  # 'admin' or 'user'
+
+@router.get("/users")
+async def get_users():
+    """List all users (admin only)"""
+    result = list_users()
+    if not result["success"]:
+        raise HTTPException(status_code=500, detail=result["message"])
+    return result
+
+@router.post("/users/set-role")
+async def set_role(request: SetRoleRequest):
+    """Set a user's role (admin only)"""
+    result = set_user_role(request.user_id, request.role)
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result["message"])
+    return result
 
 # ============== End of Routes ==============

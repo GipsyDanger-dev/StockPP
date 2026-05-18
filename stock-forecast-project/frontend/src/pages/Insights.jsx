@@ -1,14 +1,15 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Activity, LayoutDashboard, BarChart3, Lightbulb, TrendingUp,
   RefreshCw, CheckCircle, AlertCircle, Loader, FileText, Clock,
-  ChevronRight, BookOpen, Tag
+  ChevronRight, BookOpen, Tag, X
 } from 'lucide-react';
 import { useInsights, useArticles } from '../hooks/useApi';
 
 const Insights = () => {
   const navigate = useNavigate();
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const { data: insightsData, isLoading, isError, error } = useInsights(true);
   const { data: articlesData, isLoading: articlesLoading } = useArticles('published', 20, true);
 
@@ -16,6 +17,16 @@ const Insights = () => {
   const insightCards = insightsData?.insights || [];
   const summary = insightsData?.summary;
   const articles = articlesData?.articles || [];
+
+  const categories = useMemo(() => {
+    const cats = [...new Set(articles.map(a => a.category).filter(Boolean))];
+    return cats;
+  }, [articles]);
+
+  const filteredArticles = useMemo(() => {
+    if (!selectedCategory) return articles;
+    return articles.filter(a => a.category === selectedCategory);
+  }, [articles, selectedCategory]);
 
   const getIcon = (iconName) => {
     switch(iconName) {
@@ -88,7 +99,7 @@ const Insights = () => {
         </div>
       ) : isError ? (
         <div className="p-6 lg:p-12 max-w-7xl mx-auto">
-          <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-12 text-center">
+          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-12 text-center">
             <AlertCircle size={48} className="text-red-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-red-700 mb-2">Unable to load insights</h2>
             <p className="text-red-600">{error?.message || 'Please ensure the backend server is running.'}</p>
@@ -98,7 +109,7 @@ const Insights = () => {
         <div className="p-6 lg:p-12 max-w-7xl mx-auto space-y-12">
           {/* Featured AI Insight */}
           {featured && (
-            <div className="bg-white border-2 border-[#C6C6CD] rounded-2xl overflow-hidden shadow-sm">
+            <div className="bg-white border-2 border-[#C6C6CD] rounded-xl overflow-hidden shadow-sm">
               <div className="bg-gradient-to-r from-[#0D1C2F] to-indigo-900 p-10 lg:p-14">
                 <span className="inline-block bg-white/10 backdrop-blur text-white border border-white/20 px-4 py-1 rounded-lg font-bold text-sm mb-6">
                   {featured.category}
@@ -121,16 +132,46 @@ const Insights = () => {
           {/* Admin Published Articles */}
           {articles.length > 0 && (
             <div>
-              <div className="flex items-center gap-3 mb-8">
+              <div className="flex items-center gap-3 mb-4">
                 <BookOpen className="w-6 h-6 text-[#45464D]" />
                 <h2 className="text-3xl font-bold text-black">Latest Articles</h2>
               </div>
+
+              {/* Category Filter */}
+              {categories.length > 1 && (
+                <div className="flex flex-wrap gap-2 mb-8">
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      !selectedCategory
+                        ? 'bg-[#131B2E] text-white'
+                        : 'bg-[#F7F9FB] text-[#45464D] border border-[#C6C6CD] hover:bg-[#E8EAED]'
+                    }`}
+                  >
+                    All
+                  </button>
+                  {categories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                        selectedCategory === cat
+                          ? 'bg-[#131B2E] text-white'
+                          : 'bg-[#F7F9FB] text-[#45464D] border border-[#C6C6CD] hover:bg-[#E8EAED]'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {articles.map((article) => (
+                {filteredArticles.map((article) => (
                   <div
                     key={article.id}
                     onClick={() => navigate(`/insights/${article.id}`)}
-                    className="bg-white border-2 border-[#C6C6CD] rounded-2xl overflow-hidden hover:shadow-lg hover:border-indigo-200 transition-all cursor-pointer group"
+                    className="bg-white border-2 border-[#C6C6CD] rounded-xl overflow-hidden hover:shadow-lg hover:border-indigo-200 transition-all cursor-pointer group"
                   >
                     {/* Thumbnail */}
                     {(article.thumbnail || article.header_image) && (
@@ -144,7 +185,13 @@ const Insights = () => {
                     )}
                     <div className="p-8">
                       <div className="flex items-center gap-3 mb-4">
-                        <span className={`px-3 py-1 rounded-md font-bold text-xs border-2 ${getCategoryColor(article.category)}`}>
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedCategory(selectedCategory === article.category ? null : article.category);
+                          }}
+                          className={`px-3 py-1 rounded-md font-bold text-xs border-2 cursor-pointer hover:opacity-80 transition-opacity ${getCategoryColor(article.category)}`}
+                        >
                           {article.category}
                         </span>
                         <div className="flex items-center gap-1 text-slate-400 text-sm">
@@ -199,7 +246,7 @@ const Insights = () => {
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {insightCards.map((card) => (
-                  <div key={card.id} className="bg-white border-2 border-[#C6C6CD] rounded-2xl p-8 hover:shadow-md transition-shadow">
+                  <div key={card.id} className="bg-white border-2 border-[#C6C6CD] rounded-xl p-8 hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-4 mb-6">
                       <div className="p-3 bg-[#F7F9FB] rounded-lg text-[#45464D]">
                         {getIcon(card.icon)}
@@ -219,7 +266,7 @@ const Insights = () => {
 
           {/* Empty State */}
           {articles.length === 0 && insightCards.length === 0 && (
-            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-12 text-center">
+            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-12 text-center">
               <Lightbulb size={48} className="text-yellow-600 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-yellow-800 mb-2">No insights available yet</h2>
               <p className="text-yellow-700 text-lg">Train a model or publish an article to see insights here.</p>
@@ -233,7 +280,7 @@ const Insights = () => {
           )}
 
           {/* CTA Section */}
-          <div className="bg-black text-white rounded-2xl p-10 lg:p-12 flex flex-col lg:flex-row justify-between items-center gap-8 shadow-2xl">
+          <div className="bg-black text-white rounded-xl p-10 lg:p-12 flex flex-col lg:flex-row justify-between items-center gap-8 shadow-2xl">
             <div className="max-w-2xl">
               <span className="px-4 py-1 border-2 border-white/20 rounded-md font-bold text-white mb-4 inline-block uppercase text-xs">AI Engine</span>
               <h2 className="text-4xl lg:text-5xl font-bold mb-4">Train More Models</h2>
@@ -247,7 +294,7 @@ const Insights = () => {
                 <LayoutDashboard size={24} /> Start Training
               </button>
             </div>
-            <div className="w-40 h-40 bg-slate-800 rounded-2xl flex items-center justify-center border-2 border-slate-700">
+            <div className="w-40 h-40 bg-slate-800 rounded-xl flex items-center justify-center border-2 border-slate-700">
               <Activity size={64} className="text-slate-600" />
             </div>
           </div>

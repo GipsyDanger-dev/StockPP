@@ -511,6 +511,225 @@ def cleanup_expired_otps():
         logger.warning(f"Error cleaning up OTPs: {str(e)}")
         return False
 
+
+def verify_otp_completed(email: str) -> bool:
+    """
+    Check if an OTP was recently verified (used=True) for this email.
+    Used to authorize password reset without requiring a Supabase session.
+
+    Args:
+        email: User's email address
+
+    Returns:
+        True if a verified OTP exists within the last 15 minutes
+    """
+    try:
+        client = SupabaseClient.get_client()
+        from datetime import datetime, timedelta, timezone
+
+        cutoff = (datetime.now(timezone.utc) - timedelta(minutes=15)).isoformat()
+
+        result = client.table("otp_codes").select("id").eq(
+            "email", email
+        ).eq(
+            "used", True
+        ).gte(
+            "created_at", cutoff
+        ).limit(1).execute()
+
+        return len(result.data) > 0
+
+    except Exception as e:
+        logger.error(f"Error checking OTP completion: {str(e)}")
+        return False
+
+
+def reset_user_password(email: str, new_password: str) -> dict:
+    """
+    Reset a user's password using Supabase Admin API.
+    Requires the service_role key.
+
+    Args:
+        email: User's email address
+        new_password: New password to set
+
+    Returns:
+        Dict with success status and message
+    """
+    try:
+        import httpx
+
+        supabase_url = os.getenv("SUPABASE_URL")
+        service_key = os.getenv("SUPABASE_KEY")
+
+        if not supabase_url or not service_key:
+            return {"success": False, "message": "Supabase not configured"}
+
+        # Step 1: Find user by email using Admin API
+        headers = {
+            "apikey": service_key,
+            "Authorization": f"Bearer {service_key}",
+            "Content-Type": "application/json"
+        }
+
+        # List users and find by email
+        with httpx.Client() as http:
+            # Search for user by email
+            response = http.get(
+                f"{supabase_url}/auth/v1/admin/users",
+                headers=headers,
+                params={"email": email}
+            )
+
+            if response.status_code != 200:
+                logger.error(f"Failed to list users: {response.text}")
+                return {"success": False, "message": "Failed to find user"}
+
+            users = response.json().get("users", [])
+            user = None
+            for u in users:
+                if u.get("email", "").lower() == email.lower():
+                    user = u
+                    break
+
+            if not user:
+                return {"success": False, "message": "User not found with this email"}
+
+            user_id = user["id"]
+
+            # Step 2: Update password
+            update_response = http.put(
+                f"{supabase_url}/auth/v1/admin/users/{user_id}",
+                headers=headers,
+                json={"password": new_password}
+            )
+
+            if update_response.status_code == 200:
+                logger.info(f"Password reset successfully for {email}")
+                return {"success": True, "message": "Password reset successfully"}
+            else:
+                logger.error(f"Failed to update password: {update_response.text}")
+                return {"success": False, "message": "Failed to update password"}
+
+    except Exception as e:
+        logger.error(f"Error resetting password: {str(e)}")
+        return {"success": False, "message": "Internal server error"}
+
+
+def set_user_role(user_id: str, role: str) -> dict:
+    """
+    Set a user's role via Supabase Admin API.
+    Updates user_metadata.role field.
+
+    Args:
+        user_id: Supabase user UUID
+        role: 'admin' or 'user'
+
+    Returns:
+        Dict with success status and message
+    """
+    try:
+        import httpx
+
+        supabase_url = os.getenv("SUPABASE_URL")
+        service_key = os.getenv("SUPABASE_KEY")
+
+        if not supabase_url or not service_key:
+            return {"success": False, "message": "Supabase not configured"}
+
+        if role not in ("admin", "user"):
+            return {"success": False, "message": "Invalid role. Must be 'admin' or 'user'"}
+
+        headers = {
+            "apikey": service_key,
+            "Authorization": f"Bearer {service_key}",
+            "Content-Type": "application/json"
+        }
+
+        with httpx.Client() as http:
+            # Get current user metadata
+            response = http.get(
+                f"{supabase_url}/auth/v1/admin/users/{user_id}",
+                headers=headers
+            )
+
+            if response.status_code != 200:
+                logger.error(f"Failed to get user: {response.text}")
+                return {"success": False, "message": "User not found"}
+
+            current_metadata = response.json().get("user_metadata", {})
+            current_metadata["role"] = role
+
+            update_response = http.put(
+                f"{supabase_url}/auth/v1/admin/users/{user_id}",
+                headers=headers,
+                json={"user_metadata": current_metadata}
+            )
+
+            if update_response.status_code == 200:
+                logger.info(f"Role set to '{role}' for user {user_id}")
+                return {"success": True, "message": f"Role updated to '{role}'"}
+            else:
+                logger.error(f"Failed to update role: {update_response.text}")
+                return {"success": False, "message": "Failed to update role"}
+
+    except Exception as e:
+        logger.error(f"Error setting user role: {str(e)}")
+        return {"success": False, "message": "Internal server error"}
+
+
+def list_users() -> dict:
+    """
+    List all users via Supabase Admin API.
+
+    Returns:
+        Dict with success status and users list
+    """
+    try:
+        import httpx
+
+        supabase_url = os.getenv("SUPABASE_URL")
+        service_key = os.getenv("SUPABASE_KEY")
+
+        if not supabase_url or not service_key:
+            return {"success": False, "message": "Supabase not configured"}
+
+        headers = {
+            "apikey": service_key,
+            "Authorization": f"Bearer {service_key}",
+            "Content-Type": "application/json"
+        }
+
+        with httpx.Client() as http:
+            response = http.get(
+                f"{supabase_url}/auth/v1/admin/users",
+                headers=headers
+            )
+
+            if response.status_code == 200:
+                users_data = response.json().get("users", [])
+                users = [
+                    {
+                        "id": u["id"],
+                        "email": u.get("email", ""),
+                        "full_name": u.get("user_metadata", {}).get("full_name", ""),
+                        "role": u.get("user_metadata", {}).get("role", "user"),
+                        "created_at": u.get("created_at", ""),
+                    }
+                    for u in users_data
+                ]
+                return {"success": True, "users": users}
+            else:
+                logger.error(f"Failed to list users: {response.text}")
+                return {"success": False, "message": "Failed to list users"}
+
+    except Exception as e:
+        logger.error(f"Error listing users: {str(e)}")
+        return {"success": False, "message": "Internal server error"}
+
+
+
+
 # ============== Storage Operations ==============
 
 def upload_model_file(ticker: str, file_path: str, bucket_name: str = "models") -> str:

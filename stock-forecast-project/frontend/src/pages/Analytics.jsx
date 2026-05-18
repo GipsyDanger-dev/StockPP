@@ -244,7 +244,14 @@ const AnalyticsDetail = ({ ticker }) => {
     return () => clearInterval(interval);
   }, [ticker]);
 
-  if (isLoading) return <div className="flex h-screen items-center justify-center font-bold text-indigo-600">ANALYZING MARKET DATA...</div>;
+  if (isLoading) return (
+    <div className="flex h-screen items-center justify-center bg-white">
+      <div className="text-center">
+        <Loader className="animate-spin text-indigo-600 mx-auto mb-4" size={40} />
+        <p className="text-lg font-bold text-[#191C1E]">ANALYZING MARKET DATA...</p>
+      </div>
+    </div>
+  );
 
   const currentPrice = liveQuote?.price || data.current_price;
   const changePercent = liveQuote?.change_percent || data.change_percent;

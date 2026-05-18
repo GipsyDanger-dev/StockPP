@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Activity, ArrowLeft, Loader, Mail, MessageCircle } from 'lucide-react';
+import { Activity, ArrowLeft, Loader, Mail } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
@@ -12,24 +12,15 @@ const VerifyCode = () => {
   const [resending, setResending] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
   const [email, setEmail] = useState('');
-  const [deliveryMethod, setDeliveryMethod] = useState('email');
-  const [phoneNumber, setPhoneNumber] = useState('');
   const inputRefs = useRef([]);
 
   useEffect(() => {
-    // Get stored data from sessionStorage
     const storedEmail = sessionStorage.getItem('resetEmail');
-    const storedMethod = sessionStorage.getItem('deliveryMethod');
-    const storedPhone = sessionStorage.getItem('phoneNumber');
-
     if (storedEmail) setEmail(storedEmail);
-    if (storedMethod) setDeliveryMethod(storedMethod);
-    if (storedPhone) setPhoneNumber(storedPhone);
   }, []);
 
   const handleChange = (index, value) => {
     if (value.length > 1) {
-      // Handle paste
       const digits = value.replace(/\D/g, '').slice(0, 6).split('');
       const newCode = [...code];
       digits.forEach((digit, i) => {
@@ -80,7 +71,6 @@ const VerifyCode = () => {
       if (!response.ok) {
         setError(data.detail || 'Invalid or expired code.');
       } else {
-        // Store verified status for the new password page
         sessionStorage.setItem('otpVerified', 'true');
         navigate('/new-password');
       }
@@ -102,19 +92,10 @@ const VerifyCode = () => {
     setError('');
 
     try {
-      const payload = {
-        email,
-        delivery_method: deliveryMethod,
-      };
-
-      if (deliveryMethod === 'whatsapp' && phoneNumber) {
-        payload.phone_number = phoneNumber;
-      }
-
       const response = await fetch(`${API_URL}/auth/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ email, delivery_method: 'email' }),
       });
 
       const data = await response.json();
@@ -132,10 +113,7 @@ const VerifyCode = () => {
     }
   };
 
-  // Mask email for display
   const maskedEmail = email ? `${email[0]}${'*'.repeat(Math.min(email.indexOf('@') - 2, 6))}${email.slice(email.indexOf('@'))}` : '';
-  // Mask phone for display
-  const maskedPhone = phoneNumber ? `${phoneNumber.slice(0, 4)}****${phoneNumber.slice(-3)}` : '';
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -153,24 +131,18 @@ const VerifyCode = () => {
         {/* Verify Card */}
         <div className="w-full max-w-md">
           <div className="bg-white py-11 px-10 rounded-xl border border-[#C6C6CD] shadow-sm">
-            {/* Delivery Icon & Message */}
+            {/* Email Icon & Message */}
             <div className="text-center mb-8">
               <div className="w-16 h-16 bg-[#F7F9FB] rounded-full flex items-center justify-center mx-auto mb-4">
-                {deliveryMethod === 'whatsapp' ? (
-                  <MessageCircle className="w-8 h-8 text-green-600" />
-                ) : (
-                  <Mail className="w-8 h-8 text-[#45464D]" />
-                )}
+                <Mail className="w-8 h-8 text-[#45464D]" />
               </div>
-              <h2 className="text-black text-2xl font-bold mb-2">Check Your {deliveryMethod === 'whatsapp' ? 'WhatsApp' : 'Email'}</h2>
+              <h2 className="text-black text-2xl font-bold mb-2">Check Your Email</h2>
               <p className="text-[#45464D] text-sm">
                 We have sent a verification code to
-                {deliveryMethod === 'whatsapp' && phoneNumber ? (
-                  <span className="font-medium text-black"> {maskedPhone}</span>
-                ) : email ? (
+                {email ? (
                   <span className="font-medium text-black"> {maskedEmail}</span>
                 ) : (
-                  ' your account'
+                  ' your email address'
                 )}.
               </p>
             </div>
@@ -217,9 +189,7 @@ const VerifyCode = () => {
 
             {/* Resend & Back Links */}
             <div className="text-center space-y-3">
-              <p className="text-[#45464D] text-sm">
-                Didn't receive the {deliveryMethod === 'whatsapp' ? 'message' : 'email'}?
-              </p>
+              <p className="text-[#45464D] text-sm">Didn't receive the email?</p>
               <button
                 onClick={handleResend}
                 disabled={resending}

@@ -67,10 +67,12 @@ class ForecastingService:
                     logger.info(f"Using cached forecast for {ticker_upper}")
                     return cached_data['data']
 
-            # 2. Load Model AND Scaler
+            # 2. Load Model AND Scalers
             model, saved_scaler = None, None
+            feature_scaler = None
             if self.model_manager:
                 model, saved_scaler = self.model_manager.load_model_and_scaler(ticker_upper)
+                feature_scaler = self.model_manager.load_feature_scaler(ticker_upper)
 
             # 3. AUTO-TRAINING: Train if no model exists
             if model is None or saved_scaler is None:
@@ -87,6 +89,7 @@ class ForecastingService:
                     if result["status"] == "success":
                         logger.info(f"Auto-training success for {ticker_upper}! RMSE: {result['new_metrics']['rmse']:.4f}")
                         model, saved_scaler = self.model_manager.load_model_and_scaler(ticker_upper)
+                        feature_scaler = self.model_manager.load_feature_scaler(ticker_upper)
                     else:
                         msg = result.get('error', 'Auto-training failed')
                         logger.warning(f"Auto-training failed for {ticker_upper}: {msg}")
@@ -97,6 +100,9 @@ class ForecastingService:
 
             if model is None or saved_scaler is None:
                 return _error_response(ticker_upper, "Model not available after training")
+
+            if feature_scaler is None:
+                return _error_response(ticker_upper, "Feature scaler not available. Retrain the model.")
 
             logger.info(f"Model ready for {ticker_upper}. Starting prediction...")
 
@@ -111,9 +117,9 @@ class ForecastingService:
             if len(df_with_indicators) < 25:
                 return _error_response(ticker_upper, f"Insufficient data after computing indicators for {ticker_upper}")
 
-            # Extract features and scale
+            # Extract features and scale using the SAVED feature scaler from training
             feature_data = df_with_indicators[self.data_engine.feature_columns].values
-            scaled_features = self.data_engine.feature_scaler.fit_transform(feature_data)
+            scaled_features = feature_scaler.transform(feature_data)
 
             current_price = float(df_with_indicators['Close'].iloc[-1])
             last_date = df_with_indicators.index[-1]
@@ -152,10 +158,17 @@ class ForecastingService:
                 new_val = new_row.reshape(1, 1, NUM_FEATURES)
                 current_sequence = np.append(current_sequence[:, 1:, :], new_val, axis=1)
 
-            # 7. Inverse transform predictions
-            future_prices = saved_scaler.inverse_transform(
-                np.array(future_predictions).reshape(-1, 1)
-            ).flatten()
+            # 7. Inverse transform predictions using feature_scaler
+            # Model outputs are in feature_scaler space (6 features), not price_scaler space
+            # We need to reconstruct a 6-feature array and inverse transform, then extract Close (column 0)
+            pred_array = np.array(future_predictions)
+            # Create dummy 6-feature rows using last known values, replacing Close with predictions
+            last_known_features = scaled_features[-1].copy()  # shape: (6,)
+            dummy_features = np.tile(last_known_features, (len(pred_array), 1))
+            dummy_features[:, 0] = pred_array  # Replace Close column with predictions
+            # Inverse transform to get original scale
+            original_features = feature_scaler.inverse_transform(dummy_features)
+            future_prices = original_features[:, 0]  # Extract Close price column
 
             # 8. Generate Response
             forecast_dates = [(last_date + timedelta(days=i+1)).strftime("%Y-%m-%d") for i in range(days_ahead)]

@@ -56,13 +56,13 @@ const ArticleDetail = () => {
 
   const getCategoryColor = (category) => {
     const colors = {
-      'Market Analysis': 'bg-blue-50 text-blue-700',
-      'Model Update': 'bg-green-50 text-green-700',
-      'Trading Strategy': 'bg-purple-50 text-purple-700',
-      'Tech Deep Dive': 'bg-orange-50 text-orange-700',
-      'System Report': 'bg-slate-100 text-slate-700',
+      'Market Analysis': 'bg-blue-50 text-blue-700 border-blue-200',
+      'Model Update': 'bg-green-50 text-green-700 border-green-200',
+      'Trading Strategy': 'bg-purple-50 text-purple-700 border-purple-200',
+      'Tech Deep Dive': 'bg-orange-50 text-orange-700 border-orange-200',
+      'System Report': 'bg-slate-100 text-slate-700 border-slate-200',
     };
-    return colors[category] || 'bg-indigo-50 text-indigo-700';
+    return colors[category] || 'bg-indigo-50 text-indigo-700 border-indigo-200';
   };
 
   if (loading) {
@@ -131,7 +131,7 @@ const ArticleDetail = () => {
           <img
             src={article.header_image}
             alt={article.title}
-            className="w-full h-[400px] object-cover rounded-2xl"
+            className="w-full h-[400px] object-cover rounded-xl"
           />
         </div>
       )}
@@ -140,7 +140,7 @@ const ArticleDetail = () => {
       <header className="pt-12 pb-8 px-6">
         <div className="max-w-4xl mx-auto">
           {/* Category Badge */}
-          <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-6 ${getCategoryColor(article.category)}`}>
+          <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-6 border-2 ${getCategoryColor(article.category)}`}>
             {article.category}
           </span>
 

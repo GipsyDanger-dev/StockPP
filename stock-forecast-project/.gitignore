@@ -52,20 +52,25 @@ celerybeat.pid
 
 # Environments
 .env
+.env.*
+!.env.example
 .venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
-.env
-venv/
 __pycache__/
 *.keras
 *.pkl
 backend/venv/
 backend/.env
+backend/.env.*
+!backend/.env.example
 backend/__pycache__/
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
 backend/saved_models/*.keras
 backend/saved_models/*.pkl
 backend/*.db

@@ -25,16 +25,16 @@ const Dashboard = () => {
   // Show error state if API returned an error
   if (data?.status === "error") {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50">
+      <div className="flex h-screen items-center justify-center bg-white">
         <div className="text-center">
-          <Activity size={48} className="text-slate-300 mx-auto mb-4" />
-          <p className="text-lg font-bold text-slate-600">Unable to load forecast</p>
-          <p className="text-sm text-slate-400 mt-2">{data.message}</p>
+          <Activity size={48} className="text-[#C6C6CD] mx-auto mb-4" />
+          <p className="text-lg font-bold text-[#191C1E]">Unable to load forecast</p>
+          <p className="text-sm text-[#45464D] mt-2">{data.message}</p>
           <form onSubmit={handleSearch} className="mt-6">
             <input
               type="text"
               placeholder="Try another ticker..."
-              className="bg-white border border-slate-300 rounded-lg py-2 px-4 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="bg-white border border-[#C6C6CD] rounded-lg py-2 px-4 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
@@ -46,7 +46,7 @@ const Dashboard = () => {
 
   if (isLoading)
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50 font-bold text-slate-400">
+      <div className="flex h-screen items-center justify-center bg-white font-bold text-[#45464D]">
         LOADING AI ENGINE...
       </div>
     );
@@ -67,7 +67,9 @@ const Dashboard = () => {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
-          <Search className="absolute left-3 top-2.5 text-slate-400" size={18} />
+          <button type="submit" className="absolute left-3 top-2.5 text-slate-400 hover:text-indigo-600 transition-colors">
+            <Search size={18} />
+          </button>
         </form>
       </header>
 
@@ -85,7 +87,7 @@ const Dashboard = () => {
         {/* MAIN GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* CHART AREA */}
-          <div className="lg:col-span-2 bg-white border-2 border-[#C6C6CD] rounded-2xl p-8 shadow-sm">
+          <div className="lg:col-span-2 bg-white border-2 border-[#C6C6CD] rounded-xl p-8 shadow-sm">
             <div className="flex justify-between items-start mb-8">
               <div>
                 <p className="text-[#45464D] font-bold text-sm tracking-widest uppercase">
@@ -115,7 +117,7 @@ const Dashboard = () => {
 
           {/* AI PREDICTION CARD */}
           <div className="space-y-8">
-            <div className="bg-[#0D1C2F] text-white rounded-2xl p-8 flex flex-col justify-between h-full shadow-xl">
+            <div className="bg-[#0D1C2F] text-white rounded-xl p-8 flex flex-col justify-between h-full shadow-xl">
               <div>
                 <p className="text-[#76859B] font-bold text-sm tracking-widest mb-6">
                   TOP AI PREDICTION
@@ -161,7 +163,7 @@ const Dashboard = () => {
         </div>
 
         {/* 7-DAY FORECAST TABLE */}
-        <div className="bg-white border-2 border-[#C6C6CD] rounded-2xl overflow-hidden shadow-sm">
+        <div className="bg-white border-2 border-[#C6C6CD] rounded-xl overflow-hidden shadow-sm">
           <div className="bg-[#F2F4F6] p-6 border-b border-[#C6C6CD] flex justify-between items-center">
             <h3 className="font-bold tracking-widest text-[#45464D]">
               7-DAY FORECAST

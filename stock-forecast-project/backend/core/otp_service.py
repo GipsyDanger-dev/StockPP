@@ -1,20 +1,22 @@
 """
 OTP Delivery Service
-Handles sending OTP codes via Email and WhatsApp
+Handles sending OTP codes via Email (Resend) and WhatsApp (Twilio Sandbox)
+Both services are FREE and don't require credit card
 """
 
 import os
 import logging
 import httpx
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# ============== Email OTP via Resend ==============
+# ============== Email OTP via Resend (FREE: 3,000/month) ==============
 
 async def send_otp_email(email: str, code: str) -> bool:
     """
     Send OTP code via email using Resend API
+    Free tier: 3,000 emails/month, 100/day
+    Sign up: https://resend.com (no credit card needed)
 
     Args:
         email: Recipient email address
@@ -26,9 +28,12 @@ async def send_otp_email(email: str, code: str) -> bool:
     resend_api_key = os.getenv("RESEND_API_KEY")
 
     if not resend_api_key:
-        logger.warning("RESEND_API_KEY not configured, using fallback logging")
-        logger.info(f"[OTP EMAIL] Code for {email}: {code}")
-        return True  # Return True for development
+        # Development mode - log the code
+        logger.info(f"[DEV MODE] OTP Email for {email}: {code}")
+        print(f"\n{'='*50}")
+        print(f"[OTP EMAIL] Code for {email}: {code}")
+        print(f"{'='*50}\n")
+        return True
 
     try:
         async with httpx.AsyncClient() as client:
@@ -39,24 +44,27 @@ async def send_otp_email(email: str, code: str) -> bool:
                     "Content-Type": "application/json"
                 },
                 json={
-                    "from": "Precision Analytics <noreply@precision-analytics.com>",
+                    "from": "Precision Analytics <onboarding@resend.dev>",
                     "to": [email],
                     "subject": "Your Verification Code - Precision Analytics",
                     "html": f"""
-                    <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 40px 20px;">
-                        <h2 style="color: #191C1E; margin-bottom: 8px;">Precision Analytics</h2>
-                        <p style="color: #45464D; font-size: 14px; margin-bottom: 32px;">Password Reset Verification</p>
+                    <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 40px 20px; background: #ffffff;">
+                        <div style="text-align: center; margin-bottom: 32px;">
+                            <h2 style="color: #191C1E; margin-bottom: 8px;">Precision Analytics</h2>
+                            <p style="color: #45464D; font-size: 14px;">Password Reset Verification</p>
+                        </div>
 
                         <div style="background: #F7F9FB; border: 1px solid #C6C6CD; border-radius: 8px; padding: 24px; text-align: center; margin-bottom: 24px;">
                             <p style="color: #45464D; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Your Verification Code</p>
                             <h1 style="color: #191C1E; font-size: 36px; letter-spacing: 8px; margin: 0;">{code}</h1>
                         </div>
 
-                        <p style="color: #45464D; font-size: 13px; line-height: 1.5;">
-                            This code will expire in <strong>5 minutes</strong>. If you did not request this, please ignore this email.
+                        <p style="color: #45464D; font-size: 13px; line-height: 1.5; text-align: center;">
+                            This code will expire in <strong>5 minutes</strong>.<br/>
+                            If you did not request this, please ignore this email.
                         </p>
 
-                        <hr style="border: none; border-top: 1px solid #C6C6CD80; margin: 32px 0;" />
+                        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 32px 0;" />
 
                         <p style="color: #76777D; font-size: 10px; text-align: center;">
                             © 2026 PRECISION ANALYTICS SYSTEMS. ALL RIGHTS RESERVED.
@@ -70,7 +78,7 @@ async def send_otp_email(email: str, code: str) -> bool:
                 logger.info(f"OTP email sent to {email}")
                 return True
             else:
-                logger.error(f"Failed to send email: {response.text}")
+                logger.error(f"Failed to send email: {response.status_code} - {response.text}")
                 return False
 
     except Exception as e:
@@ -78,14 +86,22 @@ async def send_otp_email(email: str, code: str) -> bool:
         return False
 
 
-# ============== WhatsApp OTP via Twilio ==============
+# ============== WhatsApp OTP via Twilio Sandbox (FREE: Unlimited testing) ==============
 
 async def send_otp_whatsapp(phone_number: str, code: str) -> bool:
     """
-    Send OTP code via WhatsApp using Twilio API
+    Send OTP code via WhatsApp using Twilio Sandbox
+    FREE: Unlimited messages via sandbox (testing)
+    Sign up: https://www.twilio.com/try-twilio (no credit card for trial)
+
+    SETUP (one-time per phone number):
+    1. Go to Twilio Console > Messaging > Try it out > Send a WhatsApp message
+    2. Send the join code (e.g., "join xxx-yyy") to +1 415 523 8886 via WhatsApp
+    3. You'll get a confirmation message
+    4. Now you can receive messages from the sandbox
 
     Args:
-        phone_number: Recipient phone number (with country code, e.g., +628123456789)
+        phone_number: Recipient phone number with country code (e.g., +628123456789)
         code: The OTP code to send
 
     Returns:
@@ -93,17 +109,23 @@ async def send_otp_whatsapp(phone_number: str, code: str) -> bool:
     """
     account_sid = os.getenv("TWILIO_ACCOUNT_SID")
     auth_token = os.getenv("TWILIO_AUTH_TOKEN")
-    whatsapp_from = os.getenv("TWILIO_WHATSAPP_NUMBER")  # e.g., whatsapp:+14155238886
+    whatsapp_from = os.getenv("TWILIO_WHATSAPP_NUMBER", "whatsapp:+14155238886")
 
-    if not all([account_sid, auth_token, whatsapp_from]):
-        logger.warning("Twilio credentials not configured, using fallback logging")
-        logger.info(f"[OTP WHATSAPP] Code for {phone_number}: {code}")
-        return True  # Return True for development
+    if not all([account_sid, auth_token]):
+        # Development mode - log the code
+        logger.info(f"[DEV MODE] OTP WhatsApp for {phone_number}: {code}")
+        print(f"\n{'='*50}")
+        print(f"[OTP WHATSAPP] Code for {phone_number}: {code}")
+        print(f"{'='*50}\n")
+        return True
+
+    # Format phone number for WhatsApp
+    to_number = f"whatsapp:{phone_number}" if not phone_number.startswith("whatsapp:") else phone_number
+
+    # Build message
+    message_body = f"Your Precision Analytics verification code is: {code}\n\nThis code expires in 5 minutes.\n\nIf you didn't request this, please ignore this message."
 
     try:
-        # Format phone number for WhatsApp
-        to_number = f"whatsapp:{phone_number}" if not phone_number.startswith("whatsapp:") else phone_number
-
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json",
@@ -111,7 +133,7 @@ async def send_otp_whatsapp(phone_number: str, code: str) -> bool:
                 data={
                     "From": whatsapp_from,
                     "To": to_number,
-                    "Body": f"Your Precision Analytics verification code is: {code}\n\nThis code expires in 5 minutes.\n\nIf you didn't request this, please ignore this message."
+                    "Body": message_body
                 }
             )
 
@@ -119,7 +141,7 @@ async def send_otp_whatsapp(phone_number: str, code: str) -> bool:
                 logger.info(f"OTP WhatsApp sent to {phone_number}")
                 return True
             else:
-                logger.error(f"Failed to send WhatsApp: {response.text}")
+                logger.error(f"Failed to send WhatsApp: {response.status_code} - {response.text}")
                 return False
 
     except Exception as e:

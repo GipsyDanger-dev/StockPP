@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Analytics from './pages/Analytics';
@@ -26,27 +27,29 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* Auth pages (no sidebar, no protection) */}
+            {/* Auth pages */}
             <Route path="/login" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/verify-code" element={<VerifyCode />} />
             <Route path="/new-password" element={<NewPassword />} />
 
-            {/* Standalone pages (no sidebar layout) */}
+            {/* Public pages */}
             <Route path="/insights/:articleId" element={<ArticleDetail />} />
+
+            {/* Admin standalone pages (no sidebar) */}
             <Route path="/admin/editor" element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <ArticleEditor />
-              </ProtectedRoute>
+              </AdminRoute>
             } />
             <Route path="/admin/editor/:articleId" element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <ArticleEditor />
-              </ProtectedRoute>
+              </AdminRoute>
             } />
 
-            {/* Pages with sidebar layout (protected) */}
+            {/* Main app pages with sidebar */}
             <Route path="*" element={
               <ProtectedRoute>
                 <Layout>
@@ -57,7 +60,11 @@ function App() {
                     <Route path="/reports" element={<Reports />} />
                     <Route path="/insights" element={<Insights />} />
                     <Route path="/market" element={<Market />} />
-                    <Route path="/admin" element={<Admin />} />
+                    <Route path="/admin" element={
+                      <AdminRoute>
+                        <Admin />
+                      </AdminRoute>
+                    } />
                   </Routes>
                 </Layout>
               </ProtectedRoute>

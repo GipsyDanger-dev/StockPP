@@ -62,13 +62,22 @@ const NewPassword = () => {
     setLoading(true);
 
     try {
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: form.password,
+      const response = await fetch(`${API_URL}/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, new_password: form.password }),
       });
 
-      if (updateError) {
-        setError(updateError.message);
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.detail || 'Failed to reset password. Please try again.');
       } else {
+        // Clear session storage
+        sessionStorage.removeItem('resetEmail');
+        sessionStorage.removeItem('otpVerified');
+        sessionStorage.removeItem('deliveryMethod');
+        sessionStorage.removeItem('phoneNumber');
         navigate('/login');
       }
     } catch (err) {
@@ -86,7 +95,7 @@ const NewPassword = () => {
     );
   }
 
-  if (!hasSession) {
+  if (!isVerified) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
         <div className="flex-1 flex flex-col items-center justify-center px-6">
@@ -99,15 +108,15 @@ const NewPassword = () => {
           <div className="w-full max-w-md">
             <div className="bg-white py-10 px-10 rounded-xl border border-[#C6C6CD] shadow-sm text-center">
               <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-              <h2 className="text-[#191C1E] text-xl font-bold mb-2">Invalid or Expired Link</h2>
+              <h2 className="text-[#191C1E] text-xl font-bold mb-2">Verification Required</h2>
               <p className="text-[#45464D] text-sm mb-6">
-                This password reset link is invalid or has expired. Please request a new one.
+                You need to verify your identity before resetting your password. Please request a new reset link.
               </p>
               <Link
                 to="/forgot-password"
                 className="inline-flex items-center gap-2 bg-black text-white py-3 px-6 rounded font-bold text-sm hover:bg-gray-800 transition-colors"
               >
-                Request New Link
+                Request Reset Link
               </Link>
             </div>
           </div>

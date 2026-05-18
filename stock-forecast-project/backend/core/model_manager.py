@@ -68,32 +68,39 @@ class ModelManager:
         """Get path for a model"""
         return self.model_dir / f"{ticker.upper()}_{version}.keras"
     
-    def save_model(self, model, ticker: str, metrics: Dict, scaler: Any = None) -> bool:
+    def save_model(self, model, ticker: str, metrics: Dict, scaler: Any = None, feature_scaler: Any = None) -> bool:
         """
-        Save a model with metadata and optional scaler
-        
+        Save a model with metadata and optional scalers
+
         Args:
             model: TensorFlow model to save
             ticker: Stock ticker symbol
             metrics: Dictionary with model metrics (loss, rmse, mae, etc.)
-            scaler: Optional MinMaxScaler to persist alongside model
-            
+            scaler: Optional price MinMaxScaler to persist alongside model
+            feature_scaler: Optional feature MinMaxScaler (6 features) for predictions
+
         Returns:
             True if saved successfully
         """
         try:
             ticker = ticker.upper()
             model_path = self.get_model_path(ticker, "current")
-            
+
             # Save model
             model.save(str(model_path))
             logger.info(f"Saved model for {ticker} to {model_path}")
-            
-            # Save scaler if provided
+
+            # Save price scaler if provided
             scaler_path = None
             if scaler is not None:
                 scaler_path = self._save_scaler(scaler, ticker)
-                logger.info(f"Saved scaler for {ticker} to {scaler_path}")
+                logger.info(f"Saved price scaler for {ticker} to {scaler_path}")
+
+            # Save feature scaler if provided
+            feature_scaler_path = None
+            if feature_scaler is not None:
+                feature_scaler_path = self._save_scaler(feature_scaler, ticker, suffix="_feature_scaler")
+                logger.info(f"Saved feature scaler for {ticker} to {feature_scaler_path}")
             
             # Update metadata
             if ticker not in self.metadata:
@@ -109,6 +116,8 @@ class ModelManager:
             }
             if scaler_path:
                 version_info["scaler_path"] = str(scaler_path)
+            if feature_scaler_path:
+                version_info["feature_scaler_path"] = str(feature_scaler_path)
             
             self.metadata[ticker]["current"] = version_info
             self.metadata[ticker]["versions"].append(version_info)
@@ -232,6 +241,40 @@ class ModelManager:
             logger.error(f"Error loading model and scaler for {ticker}: {str(e)}", exc_info=True)
             return None, None
     
+    def load_feature_scaler(self, ticker: str) -> Optional[Any]:
+        """
+        Load the feature scaler (6 features) used during training.
+        Critical: Must use the same scaler for prediction as was used for training.
+
+        Args:
+            ticker: Stock ticker symbol
+
+        Returns:
+            Loaded feature scaler or None if not found
+        """
+        try:
+            ticker = ticker.upper()
+
+            # Check metadata first
+            if ticker in self.metadata and "current" in self.metadata[ticker]:
+                path_str = self.metadata[ticker]["current"].get("feature_scaler_path")
+                if path_str and Path(path_str).exists():
+                    with open(path_str, 'rb') as f:
+                        return pickle.load(f)
+
+            # Fallback to default path
+            scaler_path = self.scaler_dir / f"{ticker}_feature_scaler.pkl"
+            if scaler_path.exists():
+                with open(scaler_path, 'rb') as f:
+                    return pickle.load(f)
+
+            logger.warning(f"Feature scaler not found for {ticker}")
+            return None
+
+        except Exception as e:
+            logger.error(f"Error loading feature scaler for {ticker}: {str(e)}")
+            return None
+
     def get_model_metrics(self, ticker: str) -> Optional[Dict]:
         """
         Get metrics for current model
@@ -349,19 +392,20 @@ class ModelManager:
                 }
         return info
     
-    def _save_scaler(self, scaler: Any, ticker: str) -> Path:
+    def _save_scaler(self, scaler: Any, ticker: str, suffix: str = "_scaler") -> Path:
         """
         Save scaler to disk as pickle file
-        
+
         Args:
             scaler: MinMaxScaler object
             ticker: Stock ticker symbol
-            
+            suffix: Filename suffix (default: "_scaler" for price, "_feature_scaler" for features)
+
         Returns:
             Path to saved scaler file
         """
         ticker = ticker.upper()
-        scaler_path = self.scaler_dir / f"{ticker}_scaler.pkl"
+        scaler_path = self.scaler_dir / f"{ticker}{suffix}.pkl"
         
         with open(scaler_path, 'wb') as f:
             pickle.dump(scaler, f)

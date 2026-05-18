@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Activity, ArrowLeft, Loader, AlertCircle, Mail, MessageCircle, Phone } from 'lucide-react';
+import { Activity, ArrowLeft, Loader, AlertCircle, Mail } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [deliveryMethod, setDeliveryMethod] = useState('email');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -18,24 +16,10 @@ const ForgotPassword = () => {
     setLoading(true);
 
     try {
-      const payload = {
-        email,
-        delivery_method: deliveryMethod,
-      };
-
-      if (deliveryMethod === 'whatsapp') {
-        if (!phoneNumber) {
-          setError('Phone number is required for WhatsApp delivery.');
-          setLoading(false);
-          return;
-        }
-        payload.phone_number = phoneNumber;
-      }
-
       const response = await fetch(`${API_URL}/auth/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ email, delivery_method: 'email' }),
       });
 
       const data = await response.json();
@@ -43,12 +27,8 @@ const ForgotPassword = () => {
       if (!response.ok) {
         setError(data.detail || 'Failed to send OTP. Please try again.');
       } else {
-        // Store email and delivery method for verify page
         sessionStorage.setItem('resetEmail', email);
-        sessionStorage.setItem('deliveryMethod', deliveryMethod);
-        if (deliveryMethod === 'whatsapp') {
-          sessionStorage.setItem('phoneNumber', phoneNumber);
-        }
+        sessionStorage.setItem('deliveryMethod', 'email');
         navigate('/verify-code');
       }
     } catch (err) {
@@ -70,7 +50,7 @@ const ForgotPassword = () => {
           </div>
           <h1 className="text-[#191C1E] text-2xl font-bold mb-2">Reset Access Key</h1>
           <p className="text-[#45464D] text-sm max-w-xs mx-auto">
-            Enter your corporate email and choose how to receive your verification code.
+            Enter your corporate email to receive a verification code.
           </p>
         </div>
 
@@ -105,64 +85,6 @@ const ForgotPassword = () => {
                 </div>
               </div>
 
-              {/* Delivery Method Selection */}
-              <div>
-                <label className="block text-[#45464D] text-xs uppercase tracking-wide mb-3">
-                  Send Code Via
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setDeliveryMethod('email')}
-                    className={`flex items-center justify-center gap-2 py-3 px-4 rounded-lg border-2 transition-all ${
-                      deliveryMethod === 'email'
-                        ? 'border-black bg-black text-white'
-                        : 'border-[#C6C6CD] bg-[#F7F9FB] text-[#45464D] hover:border-gray-400'
-                    }`}
-                  >
-                    <Mail className="w-4 h-4" />
-                    <span className="text-sm font-medium">Email</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeliveryMethod('whatsapp')}
-                    className={`flex items-center justify-center gap-2 py-3 px-4 rounded-lg border-2 transition-all ${
-                      deliveryMethod === 'whatsapp'
-                        ? 'border-black bg-black text-white'
-                        : 'border-[#C6C6CD] bg-[#F7F9FB] text-[#45464D] hover:border-gray-400'
-                    }`}
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    <span className="text-sm font-medium">WhatsApp</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Phone Number (WhatsApp only) */}
-              {deliveryMethod === 'whatsapp' && (
-                <div>
-                  <label className="block text-[#45464D] text-xs uppercase tracking-wide mb-2">
-                    WhatsApp Number
-                  </label>
-                  <div className="flex items-center bg-[#F7F9FB] rounded border border-[#C6C6CD] focus-within:border-indigo-500 transition-colors">
-                    <div className="px-3 py-4">
-                      <Phone className="w-4 h-4 text-[#45464D]" />
-                    </div>
-                    <input
-                      type="tel"
-                      placeholder="+628123456789"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      className="flex-1 bg-transparent text-sm py-4 pr-4 outline-none text-gray-500 placeholder-gray-400"
-                      required={deliveryMethod === 'whatsapp'}
-                    />
-                  </div>
-                  <p className="text-[#76777D] text-[11px] mt-1.5">
-                    Include country code (e.g., +62 for Indonesia)
-                  </p>
-                </div>
-              )}
-
               {/* Submit Button */}
               <button
                 type="submit"
@@ -174,7 +96,7 @@ const ForgotPassword = () => {
                   <Loader className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
-                    {deliveryMethod === 'email' ? 'Send Reset Link' : 'Send WhatsApp Code'}
+                    Send Reset Link
                     <ArrowLeft className="w-4 h-4 rotate-180" />
                   </>
                 )}

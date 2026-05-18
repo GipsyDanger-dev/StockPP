@@ -256,8 +256,14 @@ class RetrainingOrchestrator:
         return results
 
     def _get_default_tickers(self) -> List[str]:
-        """Get default list of tickers to retrain"""
-        return ["AAPL", "GOOGL", "MSFT", "AMZN", "TSLA"]
+        """Get default list of tickers to retrain from database"""
+        try:
+            from .supabase_client import get_all_tickers
+            tickers_data = get_all_tickers()
+            return [t["ticker"] for t in tickers_data] if tickers_data else []
+        except Exception as e:
+            logger.warning(f"Cannot fetch tickers from DB: {e}")
+            return []
 
     def get_retraining_status(self) -> Dict:
         """Get status of all models and retraining info"""

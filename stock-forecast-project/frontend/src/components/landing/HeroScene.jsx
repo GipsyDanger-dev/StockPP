@@ -1,6 +1,6 @@
 import { useRef, useMemo, useCallback } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Float, MeshDistortMaterial } from '@react-three/drei'
+import { Float } from '@react-three/drei'
 import * as THREE from 'three'
 
 function Particles({ count = 400 }) {
@@ -194,12 +194,17 @@ function PulseWave() {
   )
 }
 
-function MouseFollower({ vec }) {
+function MouseFollower() {
   const meshRef = useRef()
+  const target = useRef(new THREE.Vector3(0, 0, 0))
+  const { viewport } = useThree()
 
-  useFrame(() => {
+  useFrame((state) => {
     if (meshRef.current) {
-      meshRef.current.position.lerp(vec.current, 0.05)
+      const mouseX = state.pointer.x * viewport.width * 0.5 * 0.3
+      const mouseY = state.pointer.y * viewport.height * 0.5 * 0.3
+      target.current.set(mouseX, mouseY, 0)
+      meshRef.current.position.lerp(target.current, 0.05)
     }
   })
 
@@ -208,37 +213,6 @@ function MouseFollower({ vec }) {
       <sphereGeometry args={[0.06, 16, 16]} />
       <meshStandardMaterial color="#60A5FA" emissive="#3B82F6" emissiveIntensity={2} transparent opacity={0.6} />
     </mesh>
-  )
-}
-
-function SceneContent() {
-  const vec = useRef(new THREE.Vector3(0, 0, 0))
-  const { viewport } = useThree()
-
-  const handlePointerMove = useCallback((e) => {
-    vec.current.set(
-      (e.point.x) * 0.3,
-      (e.point.y) * 0.3,
-      0
-    )
-  }, [])
-
-  return (
-    <group onPointerMove={handlePointerMove}>
-      <ambientLight intensity={0.3} />
-      <pointLight position={[5, 5, 5]} intensity={0.5} color="#60A5FA" />
-      <pointLight position={[-5, -5, 5]} intensity={0.25} color="#2563EB" />
-      <pointLight position={[0, 3, -3]} intensity={0.15} color="#93C5FD" />
-      <WireframeIcosahedron />
-      <GlowingRing radius={2.4} speed={0.1} />
-      <GlowingRing radius={2.8} color="#3B82F6" speed={-0.06} tilt={0.3} />
-      <GlowingRing radius={3.2} color="#93C5FD" speed={0.04} tilt={-0.2} />
-      <StockChartLine />
-      <DataNodes />
-      <PulseWave />
-      <MouseFollower vec={vec} />
-      <Particles count={350} />
-    </group>
   )
 }
 
@@ -251,7 +225,19 @@ export default function HeroScene() {
         dpr={[1, 2]}
         gl={{ antialias: true, alpha: true }}
       >
-        <SceneContent />
+        <ambientLight intensity={0.3} />
+        <pointLight position={[5, 5, 5]} intensity={0.5} color="#60A5FA" />
+        <pointLight position={[-5, -5, 5]} intensity={0.25} color="#2563EB" />
+        <pointLight position={[0, 3, -3]} intensity={0.15} color="#93C5FD" />
+        <WireframeIcosahedron />
+        <GlowingRing radius={2.4} speed={0.1} />
+        <GlowingRing radius={2.8} color="#3B82F6" speed={-0.06} tilt={0.3} />
+        <GlowingRing radius={3.2} color="#93C5FD" speed={0.04} tilt={-0.2} />
+        <StockChartLine />
+        <DataNodes />
+        <PulseWave />
+        <MouseFollower />
+        <Particles count={350} />
       </Canvas>
     </div>
   )

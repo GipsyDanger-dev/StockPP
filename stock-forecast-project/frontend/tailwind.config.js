@@ -5,6 +5,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        heading: ['Sora', 'sans-serif'],
+      },
       colors: {
         slate: {
           50: '#f8fafc',

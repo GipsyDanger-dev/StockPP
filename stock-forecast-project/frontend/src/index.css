@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -17,3 +19,29 @@ body {
 .btn-secondary {
   @apply px-4 py-2 bg-slate-200 text-slate-900 rounded-lg hover:bg-slate-300 transition-colors;
 }
+
+.font-heading {
+  font-family: 'Sora', sans-serif;
+}
+
+@keyframes float1 {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes float2 {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes float3 {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.float1 { animation: float1 4s ease-in-out infinite; }
+.float2 { animation: float2 5s ease-in-out infinite 0.8s; }
+.float3 { animation: float3 3.5s ease-in-out infinite 1.4s; }
+.pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }

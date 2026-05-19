@@ -19,6 +19,7 @@ import SignUp from './pages/auth/SignUp';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import VerifyCode from './pages/auth/VerifyCode';
 import NewPassword from './pages/auth/NewPassword';
+import Landing from './pages/Landing';
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
+            <Route path="/" element={<Landing />} />
             <Route path="/login" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -51,7 +53,7 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Routes>
-                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/analytics/:ticker" element={<Analytics />} />
                     <Route path="/reports" element={<Reports />} />

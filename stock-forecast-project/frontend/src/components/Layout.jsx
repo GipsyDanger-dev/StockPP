@@ -31,7 +31,7 @@ const Layout = ({ children }) => {
   }, []);
 
   const navItems = [
-    { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/market', icon: BarChart3, label: 'Market' },
     { path: '/analytics', icon: PieChart, label: 'Analytics' },
     { path: '/predictions', icon: Target, label: 'Predictions' },
@@ -44,7 +44,7 @@ const Layout = ({ children }) => {
   ];
 
   const isActive = (path) => {
-    if (path === '/') return location.pathname === '/';
+    if (path === '/dashboard') return location.pathname === '/dashboard' || location.pathname === '/';
     return location.pathname.startsWith(path);
   };
 
@@ -71,7 +71,7 @@ const Layout = ({ children }) => {
         {/* Logo */}
         <div
           className="p-5 flex items-center gap-3 border-b border-[#E0E3E5] cursor-pointer hover:bg-[#E8EAED] transition-colors"
-          onClick={() => handleNav('/')}
+          onClick={() => handleNav('/dashboard')}
         >
           <div className="w-9 h-9 bg-[#131B2E] rounded-lg flex items-center justify-center">
             <Activity className="text-white" size={18} />
@@ -209,7 +209,7 @@ const Layout = ({ children }) => {
           </button>
           <div
             className="flex items-center gap-2 cursor-pointer"
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/dashboard')}
           >
             <span className="text-sm font-bold text-[#191C1E] tracking-wide">PRECISION</span>
             <span className="text-[10px] text-[#76777D] font-medium">ANALYTICS</span>

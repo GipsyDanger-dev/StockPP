@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Loader, ShieldAlert } from 'lucide-react';
 
@@ -32,12 +32,12 @@ const AdminRoute = ({ children }) => {
           <p className="text-[#45464D] text-sm mb-6">
             You do not have permission to access this page. This area is restricted to administrators only.
           </p>
-          <a
-            href="/"
+          <Link
+            to="/dashboard"
             className="inline-flex items-center gap-2 bg-black text-white py-3 px-6 rounded font-bold text-sm hover:bg-gray-800 transition-colors"
           >
             Return to Dashboard
-          </a>
+          </Link>
         </div>
       </div>
     );

@@ -7,7 +7,7 @@ export const useForecast = (ticker, daysAhead = 1, period = '1y', enabled = true
     queryFn: () => apiService.getForecast(ticker, daysAhead, period),
     enabled: enabled && !!ticker,
     staleTime: 2 * 60 * 1000,
-    cacheTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
     retry: 2,
   });
@@ -200,7 +200,7 @@ export const useForecastTracked = (ticker, daysAhead = 1, period = '1y', userId 
     queryFn: () => apiService.getForecastWithUser(ticker, daysAhead, period, userId),
     enabled: enabled && !!ticker,
     staleTime: 2 * 60 * 1000,
-    cacheTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
     retry: 2,
   });

@@ -249,6 +249,16 @@ const AnalyticsDetail = ({ ticker }) => {
     </div>
   );
 
+  if (!data) return (
+    <div className="flex h-screen items-center justify-center bg-white">
+      <div className="text-center">
+        <Activity size={40} className="text-slate-300 mx-auto mb-4" />
+        <p className="text-lg font-bold text-[#191C1E]">Unable to load analysis</p>
+        <p className="text-sm text-[#76777D] mt-2">Please try again or search for a different ticker.</p>
+      </div>
+    </div>
+  );
+
   const currentPrice = liveQuote?.price || data.current_price;
   const changePercent = liveQuote?.change_percent || data.change_percent;
   const isPositive = changePercent >= 0;

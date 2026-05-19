@@ -5,7 +5,8 @@ import {
   Search,
   Activity,
 } from "lucide-react";
-import { useForecast } from "../hooks/useApi";
+import { useForecastTracked } from "../hooks/useApi";
+import { useAuth } from "../contexts/AuthContext";
 import PriceChart from "../components/PriceChart";
 import { formatCurrency, formatPercent } from "../utils/formatting";
 import { useNavigate } from "react-router-dom";
@@ -14,15 +15,15 @@ const Dashboard = () => {
   const [ticker, setTicker] = useState("NVDA");
   const [searchInput, setSearchInput] = useState("");
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const { data, isLoading, error } = useForecast(ticker, 7, "1y");
+  const { data, isLoading, error } = useForecastTracked(ticker, 7, "1y", user?.id);
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchInput) setTicker(searchInput.toUpperCase());
   };
 
-  // Show error state if API returned an error
   if (data?.status === "error") {
     return (
       <div className="flex h-screen items-center justify-center bg-white">
@@ -51,7 +52,6 @@ const Dashboard = () => {
       </div>
     );
 
-  // Dynamic RMSE progress bar (lower RMSE = higher accuracy)
   const rmseValue = data.metrics?.rmse || 0;
   const accuracyPercent = Math.max(0, Math.min(100, 100 - rmseValue * 100));
 

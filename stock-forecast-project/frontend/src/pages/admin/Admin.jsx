@@ -28,8 +28,8 @@ import {
   Crown,
   X,
 } from 'lucide-react';
-import { useModelsStatus, useHealth, useArticles, useArticleStats } from '../hooks/useApi';
-import * as apiService from '../services/apiService';
+import { useModelsStatus, useHealth, useArticles, useArticleStats } from '../../hooks/useApi';
+import * as apiService from '../../services/apiService';
 
 const KPICard = ({ title, value, subtitle, trend, icon: Icon, color = 'blue', loading = false }) => {
   const colorMap = {
@@ -130,6 +130,25 @@ const Admin = () => {
   const articles = articlesData?.articles || [];
   const articleStats = articleStatsData?.stats || { total: 0, published: 0, draft: 0 };
 
+  const q = searchQuery.toLowerCase().trim();
+  const filteredModels = q
+    ? models.filter(m => m.ticker?.toLowerCase().includes(q))
+    : models;
+  const filteredArticles = q
+    ? articles.filter(a =>
+        a.title?.toLowerCase().includes(q) ||
+        a.category?.toLowerCase().includes(q) ||
+        a.summary?.toLowerCase().includes(q)
+      )
+    : articles;
+  const filteredUsers = q
+    ? users.filter(u =>
+        u.email?.toLowerCase().includes(q) ||
+        u.full_name?.toLowerCase().includes(q) ||
+        u.role?.toLowerCase().includes(q)
+      )
+    : users;
+
   const sections = [
     { id: 'model-performance', label: 'Model Performance', icon: BarChart3 },
     { id: 'system-health', label: 'System Health', icon: Server },
@@ -174,7 +193,6 @@ const Admin = () => {
     }
   };
 
-  // Fetch users when switching to users tab
   useEffect(() => {
     if (activeSection === 'users' && users.length === 0) {
       fetchUsers();
@@ -267,7 +285,7 @@ const Admin = () => {
             return (
               <button
                 key={section.id}
-                onClick={() => setActiveSection(section.id)}
+                onClick={() => { setActiveSection(section.id); setSearchQuery(''); }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive
                     ? 'bg-black text-white'
@@ -343,8 +361,8 @@ const Admin = () => {
                     <Loader className="w-6 h-6 text-[#C6C6CD] mx-auto mb-2 animate-spin" />
                     <p className="text-[#45464D] text-sm">Loading models...</p>
                   </div>
-                ) : models.length > 0 ? (
-                  models.map((model, index) => {
+                ) : filteredModels.length > 0 ? (
+                  filteredModels.map((model, index) => {
                     const accuracy = (100 - (model.metrics?.rmse || 0) * 100).toFixed(2);
                     const needsRetrain = model.age_hours > 24;
                     return (
@@ -390,10 +408,10 @@ const Admin = () => {
                   </div>
                 )}
               </div>
-              {models.length > 0 && (
+              {filteredModels.length > 0 && (
                 <div className="flex justify-between items-center bg-[#F2F4F6] py-4 px-4 rounded-b-xl">
                   <span className="text-[#45464D] text-[11px]">
-                    Showing {models.length} model{models.length !== 1 ? 's' : ''}
+                    Showing {filteredModels.length} of {models.length} model{models.length !== 1 ? 's' : ''}
                   </span>
                 </div>
               )}
@@ -540,8 +558,8 @@ const Admin = () => {
                     <Loader className="w-6 h-6 text-[#C6C6CD] mx-auto mb-2 animate-spin" />
                     <p className="text-[#45464D] text-sm">Loading articles...</p>
                   </div>
-                ) : articles.length > 0 ? (
-                  articles.map((article) => (
+                ) : filteredArticles.length > 0 ? (
+                  filteredArticles.map((article) => (
                     <div key={article.id} className="flex items-center border-b border-[#E6E8EA] last:border-0 hover:bg-[#F7F9FB] transition-colors min-w-[700px]">
                       <div className="flex-1 py-4 pl-6 pr-4">
                         <p className="text-black text-sm font-medium truncate">{article.title}</p>
@@ -611,10 +629,10 @@ const Admin = () => {
                   </div>
                 )}
               </div>
-              {articles.length > 0 && (
+              {filteredArticles.length > 0 && (
                 <div className="flex justify-between items-center bg-[#F2F4F6] py-4 px-4 rounded-b-xl">
                   <span className="text-[#45464D] text-[11px]">
-                    Showing {articles.length} article{articles.length !== 1 ? 's' : ''}
+                    Showing {filteredArticles.length} of {articles.length} article{articles.length !== 1 ? 's' : ''}
                   </span>
                 </div>
               )}
@@ -679,8 +697,8 @@ const Admin = () => {
                     <Loader className="w-6 h-6 text-[#C6C6CD] mx-auto mb-2 animate-spin" />
                     <p className="text-[#45464D] text-sm">Loading users...</p>
                   </div>
-                ) : users.length > 0 ? (
-                  users.map((u) => (
+                ) : filteredUsers.length > 0 ? (
+                  filteredUsers.map((u) => (
                     <div key={u.id} className="flex items-center border-b border-[#E6E8EA] last:border-0 hover:bg-[#F7F9FB] transition-colors min-w-[600px]">
                       <div className="flex-1 py-4 pl-6 flex items-center gap-3">
                         <div className="w-8 h-8 bg-[#131B2E] rounded-full flex items-center justify-center flex-shrink-0">
@@ -748,10 +766,10 @@ const Admin = () => {
                   </div>
                 )}
               </div>
-              {users.length > 0 && (
+              {filteredUsers.length > 0 && (
                 <div className="flex justify-between items-center bg-[#F2F4F6] py-4 px-4 rounded-b-xl">
                   <span className="text-[#45464D] text-[11px]">
-                    Showing {users.length} user{users.length !== 1 ? 's' : ''}
+                    Showing {filteredUsers.length} of {users.length} user{users.length !== 1 ? 's' : ''}
                   </span>
                 </div>
               )}

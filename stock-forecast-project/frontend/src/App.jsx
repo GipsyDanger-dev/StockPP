@@ -10,14 +10,15 @@ import Analytics from './pages/Analytics';
 import Reports from './pages/Reports';
 import Insights from './pages/Insights';
 import Market from './pages/Market';
-import Admin from './pages/Admin';
-import ArticleDetail from './pages/ArticleDetail';
-import ArticleEditor from './pages/ArticleEditor';
-import SignIn from './pages/SignIn';
-import SignUp from './pages/SignUp';
-import ForgotPassword from './pages/ForgotPassword';
-import VerifyCode from './pages/VerifyCode';
-import NewPassword from './pages/NewPassword';
+import Admin from './pages/admin/Admin';
+import ArticleDetail from './pages/articles/ArticleDetail';
+import ArticleEditor from './pages/admin/ArticleEditor';
+import PredictionHistory from './pages/PredictionHistory';
+import SignIn from './pages/auth/SignIn';
+import SignUp from './pages/auth/SignUp';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import VerifyCode from './pages/auth/VerifyCode';
+import NewPassword from './pages/auth/NewPassword';
 
 const queryClient = new QueryClient();
 
@@ -27,17 +28,14 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* Auth pages */}
             <Route path="/login" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/verify-code" element={<VerifyCode />} />
             <Route path="/new-password" element={<NewPassword />} />
 
-            {/* Public pages */}
             <Route path="/insights/:articleId" element={<ArticleDetail />} />
 
-            {/* Admin standalone pages (no sidebar) */}
             <Route path="/admin/editor" element={
               <AdminRoute>
                 <ArticleEditor />
@@ -49,7 +47,6 @@ function App() {
               </AdminRoute>
             } />
 
-            {/* Main app pages with sidebar */}
             <Route path="*" element={
               <ProtectedRoute>
                 <Layout>
@@ -60,6 +57,7 @@ function App() {
                     <Route path="/reports" element={<Reports />} />
                     <Route path="/insights" element={<Insights />} />
                     <Route path="/market" element={<Market />} />
+                    <Route path="/predictions" element={<PredictionHistory />} />
                     <Route path="/admin" element={
                       <AdminRoute>
                         <Admin />

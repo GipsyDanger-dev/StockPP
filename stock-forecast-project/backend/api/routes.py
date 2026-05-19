@@ -1,7 +1,3 @@
-"""
-API Routes - Defines FastAPI endpoints for forecasting and OTP
-"""
-
 from fastapi import APIRouter, HTTPException, Query, Path, UploadFile, File
 from typing import Optional, List
 from pydantic import BaseModel, EmailStr
@@ -12,12 +8,11 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from core.forecasting_service import ForecastingService
-from core.supabase_client import create_otp, verify_otp, cleanup_expired_otps, verify_otp_completed, reset_user_password, set_user_role, list_users
+from core.supabase_client import create_otp, verify_otp, cleanup_expired_otps, verify_otp_completed, reset_user_password, set_user_role, list_users, get_user_predictions, get_pending_validations, update_prediction_validation
 from core.otp_service import send_otp
 
 logger = logging.getLogger(__name__)
 
-# ============== OTP Request/Response Models ==============
 
 class SendOtpRequest(BaseModel):
     email: EmailStr
@@ -32,13 +27,13 @@ class ResetPasswordRequest(BaseModel):
     email: EmailStr
     new_password: str
 
-# Pydantic models for request/response validation
 class PredictionRequest(BaseModel):
     """Request model for stock prediction"""
     ticker: str
     days_ahead: int = 1
     period: str = "1y"
-    
+    user_id: Optional[str] = None
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -62,45 +57,30 @@ class ForecastResponse(BaseModel):
     trend: str
     timestamp: str
 
-# Initialize router
 router = APIRouter(tags=["forecasting"])
 
-# ============== OTP Endpoints ==============
 
 @router.post("/auth/send-otp")
 async def send_otp_endpoint(request: SendOtpRequest):
-    """
-    Send OTP code via email or WhatsApp for password reset
-
-    Args:
-        request: Contains email, delivery_method, and optional phone_number
-
-    Returns:
-        Success message with delivery method used
-    """
     try:
-        # Validate WhatsApp requires phone number
         if request.delivery_method == "whatsapp" and not request.phone_number:
             raise HTTPException(
                 status_code=400,
                 detail="Phone number is required for WhatsApp delivery"
             )
 
-        # Validate delivery method
         if request.delivery_method not in ["email", "whatsapp"]:
             raise HTTPException(
                 status_code=400,
                 detail="Invalid delivery method. Use 'email' or 'whatsapp'"
             )
 
-        # Create OTP in database
         otp_data = create_otp(
             email=request.email,
             delivery_method=request.delivery_method,
             phone_number=request.phone_number
         )
 
-        # Send OTP via chosen method
         success = await send_otp(
             email=request.email,
             code=otp_data["code"],
@@ -114,7 +94,6 @@ async def send_otp_endpoint(request: SendOtpRequest):
                 detail="Failed to send OTP. Please try again."
             )
 
-        # Clean up expired OTPs (best effort)
         try:
             cleanup_expired_otps()
         except Exception:
@@ -136,15 +115,6 @@ async def send_otp_endpoint(request: SendOtpRequest):
 
 @router.post("/auth/verify-otp")
 async def verify_otp_endpoint(request: VerifyOtpRequest):
-    """
-    Verify OTP code for password reset
-
-    Args:
-        request: Contains email and code
-
-    Returns:
-        Success status if code is valid
-    """
     try:
         if len(request.code) != 6 or not request.code.isdigit():
             raise HTTPException(
@@ -175,25 +145,13 @@ async def verify_otp_endpoint(request: VerifyOtpRequest):
 
 @router.post("/auth/reset-password")
 async def reset_password_endpoint(request: ResetPasswordRequest):
-    """
-    Reset user password after OTP verification.
-    Requires that the email has a recently verified OTP (within 15 minutes).
-
-    Args:
-        request: Contains email and new_password
-
-    Returns:
-        Success status if password was reset
-    """
     try:
-        # Validate password strength
         if len(request.new_password) < 6:
             raise HTTPException(
                 status_code=400,
                 detail="Password must be at least 6 characters"
             )
 
-        # Verify that OTP was recently completed for this email
         otp_valid = verify_otp_completed(request.email)
         if not otp_valid:
             raise HTTPException(
@@ -201,7 +159,6 @@ async def reset_password_endpoint(request: ResetPasswordRequest):
                 detail="OTP verification required or expired. Please verify your code again."
             )
 
-        # Reset password via Supabase Admin API
         result = reset_user_password(request.email, request.new_password)
 
         if not result["success"]:
@@ -222,7 +179,6 @@ async def reset_password_endpoint(request: ResetPasswordRequest):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-# Global forecasting service instance
 _forecasting_service = None
 
 def get_forecasting_service():
@@ -239,7 +195,6 @@ def get_forecasting_service():
     return _forecasting_service
 
 def initialize_forecasting_service():
-    """Initialize the forecasting service"""
     try:
         svc = get_forecasting_service()
         logger.info("Forecasting service ready")
@@ -251,24 +206,25 @@ def initialize_forecasting_service():
 async def forecast_stock(request: PredictionRequest):
     """
     Get stock price forecast
-    
+
     Args:
         request: PredictionRequest with ticker, days_ahead, period
-        
+
     Returns:
         ForecastResponse with historical, forecast, and metrics
     """
     try:
         service = get_forecasting_service()
-        
+
         result = service.predict(
             ticker=request.ticker,
             days_ahead=request.days_ahead,
-            period=request.period
+            period=request.period,
+            user_id=request.user_id
         )
-        
+
         return result
-        
+
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -282,26 +238,26 @@ async def get_forecast_by_ticker(
 ):
     """
     Get forecast for a specific ticker (simplified endpoint)
-    
+
     Args:
         ticker: Stock ticker symbol
         days: Number of days to forecast (1-30)
-        
+
     Returns:
         Forecast data
     """
     try:
         service = get_forecasting_service()
-        
+
         request = PredictionRequest(ticker=ticker, days_ahead=days, period="1y")
         result = service.predict(
             ticker=ticker,
             days_ahead=days,
             period="1y"
         )
-        
+
         return result
-        
+
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -312,25 +268,25 @@ async def get_forecast_by_ticker(
 async def validate_ticker(ticker: str = Path(..., description="Stock ticker symbol")):
     """
     Validate if ticker exists and data is available
-    
+
     Args:
         ticker: Stock ticker to validate
-        
+
     Returns:
         Validation result
     """
     try:
         service = get_forecasting_service()
-        
+
         validation_result = service.validate_ticker(ticker)
-        
+
         return {
             "ticker": ticker,
-            "is_valid": validation_result["valid"], 
-            "message": validation_result["message"], 
+            "is_valid": validation_result["valid"],
+            "message": validation_result["message"],
             "timestamp": datetime.now().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Error validating ticker: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -382,7 +338,6 @@ async def get_live_quote(ticker: str = Path(..., description="Stock ticker symbo
         ticker_upper = ticker.upper()
         quote = None
 
-        # Try Finnhub first
         quote = FinnhubClient.get_quote(ticker_upper)
 
         # Fallback to yfinance for unsupported tickers (e.g., .JK)
@@ -429,7 +384,6 @@ async def get_historical_data(
     try:
         service = get_forecasting_service()
 
-        # Get data by making a prediction and returning just the historical data
         result = service.predict(ticker=ticker, days_ahead=1, period="1y")
 
         return {
@@ -449,60 +403,56 @@ async def get_historical_data(
 async def get_model_metrics(ticker: str = Path(..., description="Stock ticker symbol")):
     """
     Get model performance metrics for a ticker
-    
+
     Args:
         ticker: Stock ticker symbol
-        
+
     Returns:
         Model evaluation metrics
     """
     try:
         service = get_forecasting_service()
-        
-        # Akses metrics melalui model_manager, bukan langsung dari forecasting_service
+
         ticker_upper = ticker.upper()
         if service.model_manager:
             metrics = service.model_manager.get_model_metrics(ticker_upper)
         else:
             metrics = None
-        
+
         return {
             "ticker": ticker,
             "metrics": metrics,
             "timestamp": datetime.now().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Error getting metrics: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
-# ============== Model Management Endpoints ==============
 
 @router.post("/retrain/{ticker}")
 async def trigger_retrain(ticker: str = Path(..., description="Stock ticker symbol")):
     """
     Manually trigger model retraining for a specific ticker
-    
+
     Args:
         ticker: Stock ticker symbol
-        
+
     Returns:
         Retraining job status
     """
     try:
         service = get_forecasting_service()
-        
-        # Get retraining orchestrator
+
         from core.retraining_orchestrator import RetrainingOrchestrator
         orchestrator = RetrainingOrchestrator(service.model_manager)
-        
-        # Start retraining
+
         result = orchestrator.retrain_model(
             ticker=ticker,
             force_retrain=True,
             epochs=10
         )
-        
+
         return {
             "ticker": ticker,
             "job_started": True,
@@ -510,7 +460,7 @@ async def trigger_retrain(ticker: str = Path(..., description="Stock ticker symb
             "timestamp": datetime.now().isoformat(),
             "details": result
         }
-        
+
     except Exception as e:
         logger.error(f"Error triggering retrain for {ticker}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
@@ -519,21 +469,21 @@ async def trigger_retrain(ticker: str = Path(..., description="Stock ticker symb
 async def get_retrain_status(ticker: str = Path(..., description="Stock ticker symbol")):
     """
     Get retraining status and model info for a ticker
-    
+
     Args:
         ticker: Stock ticker symbol
-        
+
     Returns:
         Model status and metadata
     """
     try:
         service = get_forecasting_service()
-        
+
         ticker_upper = ticker.upper()
         metrics = service.model_manager.get_model_metrics(ticker_upper)
         age = service.model_manager.get_model_age(ticker_upper)
         should_retrain = service.model_manager.should_retrain(ticker_upper)
-        
+
         return {
             "ticker": ticker_upper,
             "model_exists": service.model_manager.model_exists(ticker_upper),
@@ -542,7 +492,7 @@ async def get_retrain_status(ticker: str = Path(..., description="Stock ticker s
             "should_retrain": should_retrain,
             "timestamp": datetime.now().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Error getting retrain status: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -551,22 +501,22 @@ async def get_retrain_status(ticker: str = Path(..., description="Stock ticker s
 async def get_all_models_status():
     """
     Get status of all models
-    
+
     Returns:
         Information about all models
     """
     try:
         service = get_forecasting_service()
-        
+
         if not service.model_manager:
             return {
                 "models": {},
                 "total_models": 0,
                 "timestamp": datetime.now().isoformat()
             }
-        
+
         model_info = service.model_manager.get_all_model_info()
-        
+
         return {
             "models": model_info,
             "total_models": len(model_info),
@@ -576,7 +526,7 @@ async def get_all_models_status():
             ),
             "timestamp": datetime.now().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Error getting models status: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -588,33 +538,32 @@ async def trigger_batch_retrain(
 ):
     """
     Trigger batch retraining for multiple tickers
-    
+
     Args:
         tickers: List of tickers to retrain (optional)
         force: Force retraining even if models are recent
-        
+
     Returns:
         Batch retraining job status
     """
     try:
         service = get_forecasting_service()
-        
+
         from core.retraining_orchestrator import RetrainingOrchestrator
         orchestrator = RetrainingOrchestrator(service.model_manager)
-        
+
         result = orchestrator.batch_retrain(
             tickers=tickers,
             force_retrain=force,
             epochs=10
         )
-        
+
         return result
-        
+
     except Exception as e:
         logger.error(f"Error in batch retrain: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
-# ============== New Endpoints: Market & Reports (Supabase Integration) ==============
 
 @router.get("/market/summary")
 async def get_market_summary():
@@ -628,7 +577,6 @@ async def get_market_summary():
         from core.supabase_client import get_all_tickers
         from core.finnhub_client import FinnhubClient
 
-        # Get tickers from Supabase
         tickers_data = get_all_tickers()
 
         if not tickers_data:
@@ -645,7 +593,6 @@ async def get_market_summary():
             try:
                 ticker = ticker_info.get("symbol")
 
-                # Fetch real-time price from Finnhub
                 quote = FinnhubClient.get_quote(ticker)
 
                 if quote is None:
@@ -688,26 +635,23 @@ async def get_reports_history(
 ):
     """
     Get training history and reports from Supabase
-    
+
     Args:
         ticker: Optional ticker to filter by
         limit: Maximum number of records
         status: Optional status filter
-        
+
     Returns:
         List of training reports
     """
     try:
         from core.supabase_client import get_training_logs, SupabaseClient
-        
-        # Get training logs from Supabase
+
         logs = get_training_logs(ticker=ticker, limit=limit)
-        
-        # Filter by status if provided
+
         if status:
             logs = [log for log in logs if log.get("status") == status]
-        
-        # Format response
+
         reports = []
         for log in logs:
             reports.append({
@@ -722,13 +666,13 @@ async def get_reports_history(
                 "created_at": log.get("created_at"),
                 "training_samples": log.get("training_samples")
             })
-        
+
         return {
             "reports": reports,
             "total": len(reports),
             "timestamp": datetime.now().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Error in reports history: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="Error fetching reports")
@@ -737,24 +681,23 @@ async def get_reports_history(
 async def health_check_database():
     """
     Check if Supabase database connection is healthy
-    
+
     Returns:
         Database health status
     """
     try:
         from core.supabase_client import SupabaseClient
-        
+
         client = SupabaseClient.get_client()
-        
-        # Simple query to test connection
+
         result = client.table("tickers").select("count").limit(1).execute()
-        
+
         return {
             "database": "connected",
             "status": "healthy",
             "timestamp": datetime.now().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Database health check failed: {str(e)}")
         return {
@@ -764,7 +707,6 @@ async def health_check_database():
             "timestamp": datetime.now().isoformat()
         }
 
-# ============== Article/Insight Endpoints ==============
 
 class ArticleRequest(BaseModel):
     """Request model for creating/updating articles"""
@@ -944,12 +886,10 @@ async def update_article(
     try:
         from core.supabase_client import update_article as db_update, get_article_by_id
 
-        # Check if article exists
         existing = get_article_by_id(article_id)
         if not existing:
             raise HTTPException(status_code=404, detail="Article not found")
 
-        # Build update dict (only non-None fields)
         updates = {}
         for field, value in request.dict(exclude_unset=True).items():
             if value is not None:
@@ -981,7 +921,6 @@ async def delete_article(article_id: str = Path(..., description="Article ID")):
     try:
         from core.supabase_client import delete_article as db_delete, get_article_by_id
 
-        # Check if article exists
         existing = get_article_by_id(article_id)
         if not existing:
             raise HTTPException(status_code=404, detail="Article not found")
@@ -1021,26 +960,25 @@ async def get_article_statistics():
         logger.error(f"Error fetching article stats: {str(e)}")
         raise HTTPException(status_code=500, detail="Error fetching stats")
 
-# ============== Insights Endpoint ==============
 
 @router.get("/insights")
 async def get_insights():
     """
     Get AI-driven market insights based on trained models and market data
-    
+
     Returns:
         Dynamic insights with featured article, insight cards, and summary
     """
     try:
         service = get_forecasting_service()
-        
+
         from core.insight_engine import InsightEngine
         engine = InsightEngine(service.model_manager)
-        
+
         insights = engine.get_all_insights()
-        
+
         return insights
-        
+
     except Exception as e:
         logger.error(f"Error generating insights: {str(e)}", exc_info=True)
         return {
@@ -1061,7 +999,6 @@ async def get_insights():
             "timestamp": datetime.now().isoformat()
         }
 
-# ============== User Management Endpoints ==============
 
 class SetRoleRequest(BaseModel):
     user_id: str
@@ -1083,4 +1020,73 @@ async def set_role(request: SetRoleRequest):
         raise HTTPException(status_code=400, detail=result["message"])
     return result
 
-# ============== End of Routes ==============
+
+@router.get("/predictions/history")
+async def get_predictions_history(
+    user_id: str = Query(..., description="User ID"),
+    ticker: Optional[str] = Query(None, description="Filter by ticker"),
+    status: Optional[str] = Query(None, description="Filter by status"),
+    limit: int = Query(50, ge=1, le=200)
+):
+    """Get prediction history for a user"""
+    predictions = get_user_predictions(user_id, ticker=ticker, status=status, limit=limit)
+    return {"predictions": predictions, "total": len(predictions)}
+
+@router.post("/predictions/validate/{prediction_id}")
+async def validate_single_prediction(prediction_id: str):
+    """Validate a single prediction against actual prices"""
+    from core.prediction_validator import validate_prediction
+
+    from core.supabase_client import SupabaseClient
+    client = SupabaseClient.get_client()
+    result = client.table("prediction_history").select("*").eq("id", prediction_id).execute()
+
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Prediction not found")
+
+    prediction = result.data[0]
+    validation = validate_prediction(prediction)
+
+    if "error" in validation:
+        raise HTTPException(status_code=400, detail=validation["error"])
+
+    updated = update_prediction_validation(
+        pred_id=prediction_id,
+        actual_prices=validation["actual_prices"],
+        actual_change_percent=validation["actual_change_percent"],
+        direction_correct=validation["direction_correct"],
+        mean_absolute_error=validation["mean_absolute_error"],
+        mean_percent_error=validation["mean_percent_error"]
+    )
+
+    return {"status": "validated", "validation": validation, "updated": updated}
+
+@router.post("/predictions/validate-all")
+async def validate_all_predictions():
+    """Batch validate all pending predictions"""
+    from core.prediction_validator import batch_validate
+
+    pending = get_pending_validations(limit=50)
+
+    if not pending:
+        return {"status": "no_pending", "message": "No predictions pending validation"}
+
+    results = batch_validate(pending)
+
+    for detail in results["details"]:
+        if detail["status"] == "validated":
+            pred = next((p for p in pending if p["id"] == detail["pred_id"]), None)
+            if pred:
+                from core.prediction_validator import validate_prediction
+                validation = validate_prediction(pred)
+                if "error" not in validation:
+                    update_prediction_validation(
+                        pred_id=detail["pred_id"],
+                        actual_prices=validation["actual_prices"],
+                        actual_change_percent=validation["actual_change_percent"],
+                        direction_correct=validation["direction_correct"],
+                        mean_absolute_error=validation["mean_absolute_error"],
+                        mean_percent_error=validation["mean_percent_error"]
+                    )
+
+    return results

@@ -1,10 +1,5 @@
 import axios from 'axios';
 
-/**
- * API Service - Handles all HTTP requests to Backend API
- * Base URL: http://localhost:8000/api/v1
- */
-
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 const apiClient = axios.create({
@@ -15,33 +10,24 @@ const apiClient = axios.create({
   }
 });
 
-// Request interceptor
 apiClient.interceptors.request.use(
   (config) => {
-    console.log(`📤 Request: ${config.method.toUpperCase()} ${config.url}`);
     return config;
   },
   (error) => {
-    console.error('Request error:', error);
     return Promise.reject(error);
   }
 );
 
-// Response interceptor
 apiClient.interceptors.response.use(
   (response) => {
-    console.log(`📥 Response: ${response.status}`, response.data);
     return response;
   },
   (error) => {
-    console.error('Response error:', error.response?.status, error.message);
     return Promise.reject(error);
   }
 );
 
-/**
- * Get stock price forecast
- */
 export const getForecast = async (ticker, daysAhead = 1, period = '1y') => {
   try {
     const response = await apiClient.post('/forecast', {
@@ -55,9 +41,6 @@ export const getForecast = async (ticker, daysAhead = 1, period = '1y') => {
   }
 };
 
-/**
- * Get forecast by ticker (simplified endpoint)
- */
 export const getForecastByTicker = async (ticker, days = 1) => {
   try {
     const response = await apiClient.get(`/forecast/${ticker.toUpperCase()}`, {
@@ -69,9 +52,6 @@ export const getForecastByTicker = async (ticker, days = 1) => {
   }
 };
 
-/**
- * Validate ticker
- */
 export const validateTicker = async (ticker) => {
   try {
     const response = await apiClient.get(`/validate/${ticker.toUpperCase()}`);
@@ -81,9 +61,6 @@ export const validateTicker = async (ticker) => {
   }
 };
 
-/**
- * Get historical price data
- */
 export const getHistoricalData = async (ticker, days = 365) => {
   try {
     const response = await apiClient.get(`/historical/${ticker.toUpperCase()}`, {
@@ -95,9 +72,6 @@ export const getHistoricalData = async (ticker, days = 365) => {
   }
 };
 
-/**
- * Get model metrics
- */
 export const getMetrics = async (ticker) => {
   try {
     const response = await apiClient.get(`/metrics/${ticker.toUpperCase()}`);
@@ -107,9 +81,6 @@ export const getMetrics = async (ticker) => {
   }
 };
 
-/**
- * Check API health
- */
 export const checkHealth = async () => {
   try {
     const baseUrl = API_BASE_URL.replace('/api/v1', '');
@@ -120,23 +91,15 @@ export const checkHealth = async () => {
   }
 };
 
-/**
- * Get market summary - all active tickers with current prices
- * (NEW: Supabase integration)
- */
 export const getMarketSummary = async () => {
   try {
     const response = await apiClient.get('/market/summary');
     return response.data;
   } catch (error) {
-    console.warn('Market summary not available, using fallback data');
     throw error.response?.data || { error: 'Failed to fetch market summary' };
   }
 };
 
-/**
- * Search for stock tickers via Finnhub
- */
 export const searchTickers = async (query) => {
   try {
     const response = await apiClient.get(`/search/${encodeURIComponent(query)}`);
@@ -146,9 +109,6 @@ export const searchTickers = async (query) => {
   }
 };
 
-/**
- * Get live price quote for any ticker
- */
 export const getQuote = async (ticker) => {
   try {
     const response = await apiClient.get(`/quote/${ticker.toUpperCase()}`);
@@ -158,28 +118,19 @@ export const getQuote = async (ticker) => {
   }
 };
 
-/**
- * Get training reports history from database
- * (NEW: Supabase integration)
- */
 export const getReportsHistory = async (ticker = null, limit = 50, status = null) => {
   try {
     const params = { limit };
     if (ticker) params.ticker = ticker.toUpperCase();
     if (status) params.status = status;
-    
+
     const response = await apiClient.get('/reports/history', { params });
     return response.data;
   } catch (error) {
-    console.warn('Reports history not available');
     throw error.response?.data || { error: 'Failed to fetch reports' };
   }
 };
 
-/**
- * Check database health
- * (NEW: Supabase integration)
- */
 export const checkDatabaseHealth = async () => {
   try {
     const response = await apiClient.get('/health/database');
@@ -189,9 +140,6 @@ export const checkDatabaseHealth = async () => {
   }
 };
 
-/**
- * Get all models status
- */
 export const getModelsStatus = async () => {
   try {
     const response = await apiClient.get('/models/status');
@@ -201,9 +149,6 @@ export const getModelsStatus = async () => {
   }
 };
 
-/**
- * Get all articles
- */
 export const getArticles = async (status = null, limit = 50) => {
   try {
     const params = { limit };
@@ -215,9 +160,6 @@ export const getArticles = async (status = null, limit = 50) => {
   }
 };
 
-/**
- * Get single article by ID
- */
 export const getArticle = async (articleId) => {
   try {
     const response = await apiClient.get(`/articles/${articleId}`);
@@ -227,9 +169,6 @@ export const getArticle = async (articleId) => {
   }
 };
 
-/**
- * Create new article
- */
 export const createArticle = async (articleData) => {
   try {
     const response = await apiClient.post('/articles', articleData);
@@ -239,9 +178,6 @@ export const createArticle = async (articleData) => {
   }
 };
 
-/**
- * Update existing article
- */
 export const updateArticle = async (articleId, updates) => {
   try {
     const response = await apiClient.put(`/articles/${articleId}`, updates);
@@ -251,9 +187,6 @@ export const updateArticle = async (articleId, updates) => {
   }
 };
 
-/**
- * Delete article
- */
 export const deleteArticle = async (articleId) => {
   try {
     const response = await apiClient.delete(`/articles/${articleId}`);
@@ -263,9 +196,6 @@ export const deleteArticle = async (articleId) => {
   }
 };
 
-/**
- * Get article statistics
- */
 export const getArticleStats = async () => {
   try {
     const response = await apiClient.get('/articles/stats');
@@ -275,12 +205,6 @@ export const getArticleStats = async () => {
   }
 };
 
-/**
- * Upload article image
- * @param {File} file - Image file to upload
- * @param {string} articleId - Optional article ID
- * @param {string} imageType - Image type: header, thumbnail, inline, general
- */
 export const uploadArticleImage = async (file, articleId = null, imageType = 'general') => {
   try {
     const formData = new FormData();
@@ -301,16 +225,56 @@ export const uploadArticleImage = async (file, articleId = null, imageType = 'ge
   }
 };
 
-/**
- * Get AI-driven market insights (NEW)
- * Returns featured article, insight cards, and summary
- */
+export const getPredictionHistory = async (userId, ticker = null, status = null, limit = 50) => {
+  try {
+    const params = { user_id: userId, limit };
+    if (ticker) params.ticker = ticker.toUpperCase();
+    if (status) params.status = status;
+    const response = await apiClient.get('/predictions/history', { params });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: 'Failed to fetch prediction history' };
+  }
+};
+
+export const validatePrediction = async (predictionId) => {
+  try {
+    const response = await apiClient.post(`/predictions/validate/${predictionId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: 'Failed to validate prediction' };
+  }
+};
+
+export const validateAllPredictions = async () => {
+  try {
+    const response = await apiClient.post('/predictions/validate-all');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: 'Failed to validate predictions' };
+  }
+};
+
+export const getForecastWithUser = async (ticker, daysAhead = 1, period = '1y', userId = null) => {
+  try {
+    const body = {
+      ticker: ticker.toUpperCase(),
+      days_ahead: daysAhead,
+      period: period,
+    };
+    if (userId) body.user_id = userId;
+    const response = await apiClient.post('/forecast', body);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: 'Failed to fetch forecast' };
+  }
+};
+
 export const getInsights = async () => {
   try {
     const response = await apiClient.get('/insights');
     return response.data;
   } catch (error) {
-    console.warn('Insights not available, using fallback data');
     throw error.response?.data || { error: 'Failed to fetch insights' };
   }
 };

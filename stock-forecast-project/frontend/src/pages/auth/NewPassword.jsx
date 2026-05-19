@@ -20,7 +20,6 @@ const NewPassword = () => {
   const [email, setEmail] = useState('');
 
   useEffect(() => {
-    // Check if user completed OTP verification
     const otpVerified = sessionStorage.getItem('otpVerified');
     const storedEmail = sessionStorage.getItem('resetEmail');
 
@@ -73,7 +72,6 @@ const NewPassword = () => {
       if (!response.ok) {
         setError(data.detail || 'Failed to reset password. Please try again.');
       } else {
-        // Clear session storage
         sessionStorage.removeItem('resetEmail');
         sessionStorage.removeItem('otpVerified');
         sessionStorage.removeItem('deliveryMethod');

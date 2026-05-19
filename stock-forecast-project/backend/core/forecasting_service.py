@@ -1,11 +1,5 @@
-"""
-Forecasting Service - Main prediction orchestrator
-Uses multi-feature LSTM with 20-day window
-Features: Close, Volume, MA20, MA50, RSI, MACD
-"""
-
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Dict, Optional
 from datetime import datetime, timedelta
 import numpy as np
 
@@ -13,7 +7,6 @@ logger = logging.getLogger(__name__)
 
 try:
     from .data_engine import DataEngine, NUM_FEATURES
-    from .model import LSTMModel
     from .model_manager import ModelManager
     HAS_ML_DEPENDENCIES = True
 except Exception as e:
@@ -54,11 +47,11 @@ class ForecastingService:
             self.data_engine = None
             self.model_manager = None
 
-    def predict(self, ticker: str, days_ahead: int = 5, period: str = "1y") -> Dict:
+    def predict(self, ticker: str, days_ahead: int = 5, period: str = "1y", user_id: str = None) -> Dict:
         try:
             ticker_upper = ticker.upper()
 
-            # 1. Check Cache
+            # Check cache (1 hour TTL)
             cache_key = f"{ticker_upper}_{period}_{days_ahead}"
             if cache_key in self.cache:
                 cached_data = self.cache[cache_key]
@@ -67,16 +60,16 @@ class ForecastingService:
                     logger.info(f"Using cached forecast for {ticker_upper}")
                     return cached_data['data']
 
-            # 2. Load Model AND Scalers
             model, saved_scaler = None, None
             feature_scaler = None
             if self.model_manager:
                 model, saved_scaler = self.model_manager.load_model_and_scaler(ticker_upper)
                 feature_scaler = self.model_manager.load_feature_scaler(ticker_upper)
 
-            # 3. AUTO-TRAINING: Train if no model exists
-            if model is None or saved_scaler is None:
-                logger.info(f"Model for {ticker_upper} not found. Auto-training 70 epochs...")
+            needs_retrain = model is None or saved_scaler is None or feature_scaler is None
+            if needs_retrain:
+                reason = "feature scaler missing" if (model and saved_scaler) else "model not found"
+                logger.info(f"Model for {ticker_upper} needs retrain ({reason}). Auto-training 70 epochs...")
                 try:
                     from .retraining_orchestrator import RetrainingOrchestrator
                     orchestrator = RetrainingOrchestrator(self.model_manager)
@@ -106,12 +99,10 @@ class ForecastingService:
 
             logger.info(f"Model ready for {ticker_upper}. Starting prediction...")
 
-            # 4. Fetch fresh data from yfinance
             df = self.data_engine.fetch_data(ticker_upper, period=period)
             if df is None or len(df) < 70:
                 return _error_response(ticker_upper, f"Insufficient data for {ticker_upper}")
 
-            # 5. Add technical indicators and prepare multi-feature data
             df_with_indicators = self.data_engine._add_technical_indicators(df)
 
             if len(df_with_indicators) < 25:
@@ -124,23 +115,20 @@ class ForecastingService:
             current_price = float(df_with_indicators['Close'].iloc[-1])
             last_date = df_with_indicators.index[-1]
 
-            # Historical data for chart (last 20 days)
             historical_dates = [d.strftime("%Y-%m-%d") for d in df_with_indicators.index[-20:]]
             historical_prices = df_with_indicators['Close'].iloc[-20:].tolist()
 
-            # Technical indicators for last 20 days
             historical_rsi = df_with_indicators['RSI'].iloc[-20:].tolist()
             historical_ma20 = df_with_indicators['MA20'].iloc[-20:].tolist()
             historical_ma50 = df_with_indicators['MA50'].iloc[-20:].tolist()
             historical_macd = df_with_indicators['MACD'].iloc[-20:].tolist()
 
-            # Current indicator values (latest)
             current_rsi = float(df_with_indicators['RSI'].iloc[-1])
             current_ma20 = float(df_with_indicators['MA20'].iloc[-1])
             current_ma50 = float(df_with_indicators['MA50'].iloc[-1])
             current_macd = float(df_with_indicators['MACD'].iloc[-1])
 
-            # 6. Multi-step prediction (sliding window with multi-features)
+            # Multi-step prediction (sliding window with multi-features)
             last_sequence = scaled_features[-20:].reshape(1, 20, NUM_FEATURES)
             future_predictions = []
             current_sequence = last_sequence.copy()
@@ -150,27 +138,21 @@ class ForecastingService:
                 pred_price_scaled = next_pred[0, 0]
                 future_predictions.append(pred_price_scaled)
 
-                # Create new feature row (use last known values for non-price features)
                 new_row = current_sequence[0, -1, :].copy()
                 new_row[0] = pred_price_scaled
 
-                # Shift sequence
                 new_val = new_row.reshape(1, 1, NUM_FEATURES)
                 current_sequence = np.append(current_sequence[:, 1:, :], new_val, axis=1)
 
-            # 7. Inverse transform predictions using feature_scaler
-            # Model outputs are in feature_scaler space (6 features), not price_scaler space
-            # We need to reconstruct a 6-feature array and inverse transform, then extract Close (column 0)
+            # Inverse transform: model outputs are in feature_scaler space (6 features),
+            # not price_scaler space. Reconstruct 6-feature array, inverse transform, extract Close (column 0).
             pred_array = np.array(future_predictions)
-            # Create dummy 6-feature rows using last known values, replacing Close with predictions
             last_known_features = scaled_features[-1].copy()  # shape: (6,)
             dummy_features = np.tile(last_known_features, (len(pred_array), 1))
             dummy_features[:, 0] = pred_array  # Replace Close column with predictions
-            # Inverse transform to get original scale
             original_features = feature_scaler.inverse_transform(dummy_features)
             future_prices = original_features[:, 0]  # Extract Close price column
 
-            # 8. Generate Response
             forecast_dates = [(last_date + timedelta(days=i+1)).strftime("%Y-%m-%d") for i in range(days_ahead)]
             metrics = self.model_manager.get_model_metrics(ticker_upper) or {"rmse": 0, "mae": 0}
 
@@ -212,7 +194,6 @@ class ForecastingService:
                 "model_source": "persisted"
             }
 
-            # Save prediction report to database
             try:
                 from core.supabase_client import insert_training_log
                 insert_training_log(
@@ -225,7 +206,22 @@ class ForecastingService:
             except Exception as log_err:
                 logger.warning(f"Could not save prediction log: {str(log_err)}")
 
-            # Cache result
+            # Save to prediction history if user_id provided
+            if user_id:
+                try:
+                    from core.supabase_client import insert_prediction
+                    insert_prediction(
+                        user_id=user_id,
+                        ticker=ticker_upper,
+                        current_price=round(float(current_price), 2),
+                        predicted_prices=[{"date": d, "price": round(float(p), 2)} for d, p in zip(forecast_dates, future_prices)],
+                        trend=trend,
+                        predicted_change_percent=round(float(change_percent), 2),
+                        days_ahead=days_ahead
+                    )
+                except Exception as pred_err:
+                    logger.warning(f"Could not save prediction history: {str(pred_err)}")
+
             self.cache[cache_key] = {'data': response, 'timestamp': datetime.now()}
             return response
 

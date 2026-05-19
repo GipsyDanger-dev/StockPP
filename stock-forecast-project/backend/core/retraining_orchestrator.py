@@ -1,8 +1,3 @@
-"""
-Retraining Orchestrator - Manages the complete model retraining workflow
-Uses walk-forward validation for more realistic performance evaluation
-"""
-
 import logging
 from typing import Optional, List, Dict
 from datetime import datetime
@@ -25,24 +20,14 @@ class RetrainingOrchestrator:
     def _walk_forward_validate(self, X: np.ndarray, y: np.ndarray,
                                 n_splits: int = 5) -> Dict:
         """
-        Walk-forward validation: more realistic than static train/test split
-
+        Walk-forward validation: more realistic than static train/test split.
         Splits data into n_splits folds, trains on expanding window,
         tests on next fold. Returns average metrics.
-
-        Args:
-            X: All sequences
-            y: All targets
-            n_splits: Number of validation folds
-
-        Returns:
-            Dictionary with average RMSE and MAE across folds
         """
         fold_size = len(X) // (n_splits + 1)
         rmses, maes = [], []
 
         for i in range(n_splits):
-            # Expanding training window
             train_end = fold_size * (i + 1)
             test_end = min(train_end + fold_size, len(X))
 
@@ -52,12 +37,10 @@ class RetrainingOrchestrator:
             X_train, y_train = X[:train_end], y[:train_end]
             X_test, y_test = X[train_end:test_end], y[train_end:test_end]
 
-            # Build and train model for this fold
             fold_model = LSTMModel(window_size=20, num_features=NUM_FEATURES)
             fold_model.build_model()
             fold_model.train(X_train, y_train, epochs=10, batch_size=32, validation_split=0.1)
 
-            # Evaluate
             metrics = fold_model.evaluate(X_test, y_test)
             rmses.append(metrics["rmse"])
             maes.append(metrics["mae"])
@@ -79,19 +62,7 @@ class RetrainingOrchestrator:
         batch_size: int = 32,
         force_retrain: bool = False
     ) -> Dict:
-        """
-        Retrain a model with walk-forward validation
-
-        Args:
-            ticker: Stock ticker symbol
-            period: Historical period to fetch data
-            epochs: Number of training epochs
-            batch_size: Training batch size
-            force_retrain: Force retraining even if recent model exists
-
-        Returns:
-            Dictionary with retraining results and status
-        """
+        """Retrain a model with walk-forward validation"""
         ticker_upper = ticker.upper()
         result = {
             "ticker": ticker_upper,
@@ -104,7 +75,6 @@ class RetrainingOrchestrator:
         }
 
         try:
-            # Check if retraining is needed
             if not force_retrain and not self.model_manager.should_retrain(ticker_upper):
                 logger.info(f"Model for {ticker_upper} is recent. Skipping retrain.")
                 result["status"] = "skipped"
@@ -113,7 +83,6 @@ class RetrainingOrchestrator:
 
             logger.info(f"Starting retraining for {ticker_upper}")
 
-            # Fetch new data
             logger.info(f"Fetching data for {ticker_upper}...")
             df = self.data_engine.fetch_data(ticker_upper, period=period)
 
@@ -122,11 +91,9 @@ class RetrainingOrchestrator:
                 logger.error(result["error"])
                 return result
 
-            # Prepare data with technical indicators
             logger.info("Preparing data with technical indicators...")
             scaled_data, scaler = self.data_engine.prepare_data(df)
 
-            # Create sequences
             X, y = self.data_engine.create_sequences(scaled_data)
 
             if len(X) < 50:
@@ -140,14 +107,12 @@ class RetrainingOrchestrator:
             logger.info(f"Walk-forward validation - RMSE: {wf_metrics['rmse']:.4f}, "
                        f"MAE: {wf_metrics['mae']:.4f}, Folds: {wf_metrics.get('folds_used', 0)}")
 
-            # Final train/test split for the actual model
             split_idx = int(len(X) * 0.8)
             X_train, X_test = X[:split_idx], X[split_idx:]
             y_train, y_test = y[:split_idx], y[split_idx:]
 
             logger.info(f"Data split - Train: {len(X_train)}, Test: {len(X_test)}")
 
-            # Build and train final model
             logger.info("Building new model...")
             model = LSTMModel(window_size=20, num_features=NUM_FEATURES)
             model.build_model()
@@ -155,16 +120,13 @@ class RetrainingOrchestrator:
             logger.info(f"Training model ({epochs} epochs)...")
             model.train(X_train, y_train, epochs=epochs, batch_size=batch_size)
 
-            # Evaluate on test set
             logger.info("Evaluating model...")
             new_metrics = model.evaluate(X_test, y_test)
             result["new_metrics"] = new_metrics
 
-            # Get old model metrics for comparison
             old_metrics = self.model_manager.get_model_metrics(ticker_upper)
             result["old_metrics"] = old_metrics
 
-            # Validate improvement
             logger.info("Validating model improvement...")
             is_better = self.model_manager.validate_model_improvement(
                 old_metrics or {},
@@ -172,7 +134,6 @@ class RetrainingOrchestrator:
             )
 
             if is_better:
-                # Save model
                 logger.info(f"Saving improved model for {ticker_upper}...")
                 saved = self.model_manager.save_model(
                     model.model,

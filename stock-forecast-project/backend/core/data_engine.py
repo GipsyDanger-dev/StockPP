@@ -1,10 +1,3 @@
-"""
-Data Engine - Handles stock data ingestion and preprocessing
-Uses yfinance for historical data (training), Finnhub for real-time quotes
-Window size: 20 days (optimized per research findings)
-Features: Close, Volume, MA20, MA50, RSI, MACD
-"""
-
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
@@ -13,7 +6,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Number of features for multi-feature LSTM
 NUM_FEATURES = 6  # Close, Volume, MA20, MA50, RSI, MACD
 
 
@@ -24,12 +16,6 @@ class DataEngine:
     """
 
     def __init__(self, window_size: int = 20):
-        """
-        Initialize DataEngine
-
-        Args:
-            window_size: Number of days for LSTM sequence (default: 20, per research)
-        """
         self.window_size = window_size
         self.feature_scaler = MinMaxScaler(feature_range=(0, 1))
         self.price_scaler = MinMaxScaler(feature_range=(0, 1))
@@ -38,10 +24,7 @@ class DataEngine:
         self.feature_columns = ['Close', 'Volume', 'MA20', 'MA50', 'RSI', 'MACD']
 
     def fetch_data(self, ticker: str, period: str = "5y") -> pd.DataFrame:
-        """
-        Fetch historical stock data using yfinance (reliable for training data)
-        Finnhub free tier doesn't support historical candles
-        """
+        """Fetch historical stock data using yfinance. Finnhub free tier doesn't support historical candles."""
         try:
             import yfinance as yf
 
@@ -52,13 +35,11 @@ class DataEngine:
             if df is None or df.empty:
                 raise ValueError(f"No data found for ticker {ticker}")
 
-            # Ensure required columns exist
             required_cols = ['Open', 'High', 'Low', 'Close', 'Volume']
             for col in required_cols:
                 if col not in df.columns:
                     raise ValueError(f"Missing column: {col}")
 
-            # Keep only OHLCV columns
             df = df[required_cols].copy()
             df.index = pd.to_datetime(df.index)
             df = df.sort_index()
@@ -71,15 +52,10 @@ class DataEngine:
 
     def _add_technical_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Add technical indicators to the dataframe:
-        - MA20: 20-day Moving Average
-        - MA50: 50-day Moving Average
-        - RSI: Relative Strength Index (14-day)
-        - MACD: Moving Average Convergence Divergence
+        Add technical indicators: MA20, MA50, RSI (14-day), MACD (12/26 EMA).
         """
         df = df.copy()
 
-        # Moving Averages
         df['MA20'] = df['Close'].rolling(window=20).mean()
         df['MA50'] = df['Close'].rolling(window=50).mean()
 
@@ -95,35 +71,23 @@ class DataEngine:
         ema26 = df['Close'].ewm(span=26, adjust=False).mean()
         df['MACD'] = ema12 - ema26
 
-        # Normalize Volume separately
         df['Volume'] = df['Volume'].replace(0, 1)  # Avoid division by zero
 
-        # Drop NaN rows (from rolling calculations)
         df = df.dropna()
 
         return df
 
     def prepare_data(self, df: pd.DataFrame) -> Tuple[np.ndarray, Any]:
-        """
-        Preprocess data: add technical indicators, normalize, return data + scaler
-
-        Returns:
-            Tuple of (scaled_data, price_scaler)
-        """
+        """Preprocess data: add technical indicators, normalize, return data + scaler"""
         try:
-            # Add technical indicators
             df = self._add_technical_indicators(df)
 
-            # Store original close prices
             self.original_close_prices = df['Close'].values.copy()
 
-            # Extract features
             feature_data = df[self.feature_columns].values
 
-            # Scale all features together
             self.scaled_data = self.feature_scaler.fit_transform(feature_data)
 
-            # Fit separate price scaler for inverse transform
             self.price_scaler.fit(df['Close'].values.reshape(-1, 1))
 
             logger.info(f"Data normalized with {NUM_FEATURES} features. Shape: {self.scaled_data.shape}")
@@ -135,12 +99,7 @@ class DataEngine:
             raise
 
     def create_sequences(self, data: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Create sequences for LSTM training with multi-features
-
-        Input shape: [samples, time_steps, features]
-        Output: Close price only (index 0)
-        """
+        """Create sequences for LSTM training. Input: [samples, time_steps, features]. Target: Close price (index 0)."""
         X, y = [], []
 
         if len(data) <= self.window_size:
@@ -148,7 +107,6 @@ class DataEngine:
 
         for i in range(len(data) - self.window_size):
             X.append(data[i:i + self.window_size])
-            # Target is the Close price (first column) of the next day
             y.append(data[i + self.window_size, 0])
 
         X = np.array(X)
@@ -158,15 +116,11 @@ class DataEngine:
         return X, y
 
     def inverse_transform_price(self, scaled_prices: np.ndarray) -> np.ndarray:
-        """
-        Convert scaled price predictions back to original scale
-        """
+        """Convert scaled price predictions back to original scale"""
         return self.price_scaler.inverse_transform(scaled_prices.reshape(-1, 1)).flatten()
 
     def get_last_sequence(self, data: np.ndarray) -> np.ndarray:
-        """
-        Get the last 'window_size' days for making next prediction
-        """
+        """Get the last 'window_size' days for making next prediction"""
         if len(data) < self.window_size:
             raise ValueError("Data provided is shorter than window size")
 

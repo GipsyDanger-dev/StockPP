@@ -2,7 +2,6 @@ import React from 'react';
 import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
 
 const PriceChart = ({ historical, forecast, indicators }) => {
-  // Build indicator lookup by date
   const indicatorMap = {};
   if (indicators && indicators.length > 0) {
     indicators.forEach(ind => {
@@ -13,10 +12,8 @@ const PriceChart = ({ historical, forecast, indicators }) => {
     });
   }
 
-  // Build chart data with separate actual/forecast dataKeys
   const chartData = [];
 
-  // Historical data: actual = price, forecast = null
   (historical || []).forEach((d, i) => {
     const isLast = i === (historical || []).length - 1;
     chartData.push({
@@ -30,7 +27,6 @@ const PriceChart = ({ historical, forecast, indicators }) => {
     });
   });
 
-  // Forecast data: actual = null, forecast = price
   (forecast || []).forEach(d => {
     chartData.push({
       date: d.date,
@@ -42,7 +38,6 @@ const PriceChart = ({ historical, forecast, indicators }) => {
     });
   });
 
-  // Find the boundary date for reference line
   const lastHistoricalDate = historical && historical.length > 0
     ? historical[historical.length - 1].date
     : null;
@@ -55,7 +50,7 @@ const PriceChart = ({ historical, forecast, indicators }) => {
           <XAxis
             dataKey="date"
             tick={{ fontSize: 11 }}
-            tickFormatter={(val) => val.slice(5)} // Show MM-DD only
+            tickFormatter={(val) => val.slice(5)}
           />
           <YAxis domain={['auto', 'auto']} tick={{ fontSize: 11 }} />
           <Tooltip
@@ -63,7 +58,6 @@ const PriceChart = ({ historical, forecast, indicators }) => {
           />
           <Legend />
 
-          {/* Vertical divider at forecast boundary */}
           {lastHistoricalDate && (
             <ReferenceLine
               x={lastHistoricalDate}
@@ -73,7 +67,6 @@ const PriceChart = ({ historical, forecast, indicators }) => {
             />
           )}
 
-          {/* Historical / Actual Area (indigo, solid) */}
           <Area
             type="monotone"
             dataKey="actual"
@@ -87,7 +80,6 @@ const PriceChart = ({ historical, forecast, indicators }) => {
             activeDot={{ r: 5, fill: '#6366f1', stroke: '#fff', strokeWidth: 2 }}
           />
 
-          {/* Forecast Line (emerald, dashed) */}
           <Line
             type="monotone"
             dataKey="forecast"
@@ -100,7 +92,6 @@ const PriceChart = ({ historical, forecast, indicators }) => {
             activeDot={{ r: 5, fill: '#10b981', stroke: '#fff', strokeWidth: 2 }}
           />
 
-          {/* MA20 Line (orange, thin) */}
           <Line
             type="monotone"
             dataKey="ma20"
@@ -111,7 +102,6 @@ const PriceChart = ({ historical, forecast, indicators }) => {
             connectNulls
           />
 
-          {/* MA50 Line (sky blue, thin) */}
           <Line
             type="monotone"
             dataKey="ma50"
@@ -127,15 +117,13 @@ const PriceChart = ({ historical, forecast, indicators }) => {
   );
 };
 
-// Custom tooltip showing type (Actual / Forecast)
+// Custom tooltip
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload || payload.length === 0) return null;
 
-  // Filter out null entries
   const items = payload.filter(p => p.value !== null && p.value !== undefined);
   if (items.length === 0) return null;
 
-  // Determine if this point is actual or forecast
   const dataPoint = items[0]?.payload;
   const isForecast = dataPoint?.type === 'forecast';
 

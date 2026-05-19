@@ -55,6 +55,7 @@ Schema files: `documentation/otp-fix.sql`, `documentation/corrected-schema.sql`
 - **Initiative**: Agent harus mengambil inisiatif untuk memperbaiki redundansi kode dan meningkatkan performa tanpa menunggu perintah.
 - **Naming**: Python (snake_case), React (PascalCase components), API (JSON format).
 - **Validation**: Wajib melakukan perbandingan RMSE (2% tolerance) saat retraining.
+- **No Unnecessary Comments**: JANGAN tambahkan komentar yang menjelaskan apa yang kode lakukan (sudah jelas dari kode). Komentar hanya untuk menjelaskan WHY (alasan, constraint, workaround), bukan WHAT. Hindari: docstrings yang mengulang nama fungsi, section dividers (`# ==== Section ====`), komentar inline yang menjelaskan baris berikutnya, emoji di log messages.
 
 ## Non-Obvious Commands
 - Seed Tickers: Run INSERT statements from `backend/schema.sql` lines 52-61 in Supabase SQL Editor.

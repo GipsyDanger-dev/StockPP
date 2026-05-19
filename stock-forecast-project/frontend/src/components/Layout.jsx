@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, BarChart3, PieChart, Lightbulb, FileText,
-  Activity, Menu, X, Settings, LogOut, User, Shield,
+  Activity, Menu, X, Settings, LogOut, User, Shield, Target,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -14,14 +14,12 @@ const Layout = ({ children }) => {
   const { user, signOut, isAdmin } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
 
-  // Close sidebar on route change for mobile
   useEffect(() => {
     if (window.innerWidth < 1024) {
       setSidebarOpen(false);
     }
   }, [location.pathname]);
 
-  // Handle resize
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
@@ -36,6 +34,7 @@ const Layout = ({ children }) => {
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/market', icon: BarChart3, label: 'Market' },
     { path: '/analytics', icon: PieChart, label: 'Analytics' },
+    { path: '/predictions', icon: Target, label: 'Predictions' },
     { path: '/insights', icon: Lightbulb, label: 'Insights' },
     { path: '/reports', icon: FileText, label: 'Reports' },
   ];

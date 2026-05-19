@@ -1,8 +1,3 @@
-"""
-Supabase Client Configuration
-Handles connection to Supabase PostgreSQL and Storage
-"""
-
 import os
 import logging
 from typing import Optional
@@ -11,93 +6,74 @@ from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
 
-# Load environment variables from .env file
 load_dotenv()
 
 class SupabaseClient:
     """Singleton Supabase client wrapper"""
-    
+
     _instance: Optional[Client] = None
-    
+
     @classmethod
     def get_client(cls) -> Client:
         """Get or create Supabase client instance"""
         if cls._instance is None:
             cls._instance = cls._initialize_client()
         return cls._instance
-    
+
     @classmethod
     def _initialize_client(cls) -> Client:
-        """Initialize Supabase client with credentials from environment"""
         try:
             url = os.getenv("SUPABASE_URL")
             key = os.getenv("SUPABASE_KEY")
-            
+
             if not url or not key:
                 raise ValueError(
                     "Missing Supabase credentials. "
                     "Set SUPABASE_URL and SUPABASE_KEY in .env file"
                 )
-            
+
             client = create_client(url, key)
-            logger.info("✅ Supabase client initialized successfully")
+            logger.info("Supabase client initialized successfully")
             return client
-            
+
         except Exception as e:
-            logger.error(f"❌ Error initializing Supabase client: {str(e)}")
+            logger.error(f"Error initializing Supabase client: {str(e)}")
             raise
-    
+
     @classmethod
     def get_db(cls):
         """Get database client for table operations"""
         return cls.get_client()
-    
+
     @classmethod
     def get_storage(cls):
         """Get storage client for file operations"""
         return cls.get_client().storage
 
-# ============== Database Operations ==============
 
 def init_database_tables():
-    """
-    Initialize required database tables (tickers, training_logs)
-    Call this once after setting up Supabase
-    """
+    """Initialize required database tables (tickers, training_logs)"""
     client = SupabaseClient.get_client()
-    
+
     try:
-        # Test connection
         result = client.table("tickers").select("count").execute()
-        logger.info("✅ Database connection successful")
+        logger.info("Database connection successful")
         return True
     except Exception as e:
-        logger.warning(f"⚠️  Database tables may not exist yet: {str(e)}")
+        logger.warning(f"Database tables may not exist yet: {str(e)}")
         logger.info("Please run the SQL schema in Supabase dashboard")
         return False
 
-# ============== Helper Functions ==============
 
 def ensure_ticker_exists(symbol: str, name: str = None) -> bool:
-    """
-    Ensure a ticker exists in the tickers table (upsert if not found)
-
-    Args:
-        symbol: Stock ticker symbol (e.g., AAPL)
-        name: Optional company name
-
-    Returns:
-        True if ticker exists or was created
-    """
+    """Ensure a ticker exists in the tickers table (upsert if not found)"""
     try:
         client = SupabaseClient.get_client()
 
-        # Check if ticker already exists
         existing = client.table("tickers").select("symbol").eq("symbol", symbol).execute()
         if existing.data:
             return True
 
-        # Insert new ticker
         client.table("tickers").upsert({
             "symbol": symbol,
             "name": name or symbol,
@@ -113,23 +89,11 @@ def ensure_ticker_exists(symbol: str, name: str = None) -> bool:
 
 def insert_training_log(ticker: str, report_name: str, rmse: float, mae: float,
                        status: str = "Completed") -> dict:
-    """
-    Insert a training log entry into database
-
-    Args:
-        ticker: Stock ticker symbol
-        report_name: Name of the training report
-        rmse: Root Mean Square Error metric
-        mae: Mean Absolute Error metric
-        status: Training status (Completed, Processing, Failed)
-
-    Returns:
-        Inserted record data
-    """
+    """Insert a training log entry into database"""
     try:
         client = SupabaseClient.get_client()
 
-        # Ensure ticker exists in tickers table (FK constraint)
+        # FK constraint - ensure ticker exists
         ensure_ticker_exists(ticker)
 
         result = client.table("training_logs").insert({
@@ -148,63 +112,39 @@ def insert_training_log(ticker: str, report_name: str, rmse: float, mae: float,
         raise
 
 def get_all_tickers() -> list:
-    """
-    Get all active tickers from database
-    
-    Returns:
-        List of ticker records
-    """
+    """Get all active tickers from database"""
     try:
         client = SupabaseClient.get_client()
-        
+
         result = client.table("tickers").select("*").eq("is_active", True).execute()
-        
+
         return result.data or []
-        
+
     except Exception as e:
-        logger.error(f"❌ Error fetching tickers: {str(e)}")
+        logger.error(f"Error fetching tickers: {str(e)}")
         return []
 
 def get_training_logs(ticker: Optional[str] = None, limit: int = 100) -> list:
-    """
-    Get training logs from database
-    
-    Args:
-        ticker: Optional ticker filter
-        limit: Maximum number of records to return
-    
-    Returns:
-        List of training log records
-    """
+    """Get training logs from database"""
     try:
         client = SupabaseClient.get_client()
-        
+
         query = client.table("training_logs").select("*").order("created_at", desc=True).limit(limit)
-        
+
         if ticker:
             query = query.eq("ticker", ticker)
-        
+
         result = query.execute()
-        
+
         return result.data or []
-        
+
     except Exception as e:
-        logger.error(f"❌ Error fetching training logs: {str(e)}")
+        logger.error(f"Error fetching training logs: {str(e)}")
         return []
 
-# ============== Article/Insight Operations ==============
 
 def get_all_articles(status: Optional[str] = None, limit: int = 50) -> list:
-    """
-    Get articles from database
-
-    Args:
-        status: Optional filter by status (draft, published)
-        limit: Maximum number of records
-
-    Returns:
-        List of article records
-    """
+    """Get articles from database"""
     try:
         client = SupabaseClient.get_client()
 
@@ -222,15 +162,7 @@ def get_all_articles(status: Optional[str] = None, limit: int = 50) -> list:
         return []
 
 def get_article_by_id(article_id: str) -> Optional[dict]:
-    """
-    Get a single article by ID
-
-    Args:
-        article_id: Article UUID
-
-    Returns:
-        Article record or None
-    """
+    """Get a single article by ID"""
     try:
         client = SupabaseClient.get_client()
 
@@ -246,24 +178,7 @@ def create_article(title: str, content: str, category: str = "Market Analysis",
                    summary: str = "", author: str = "Admin", status: str = "draft",
                    image_url: str = None, header_image: str = None, thumbnail: str = None,
                    tags: list = None) -> dict:
-    """
-    Create a new article
-
-    Args:
-        title: Article title
-        content: Article content (markdown or plain text)
-        category: Article category
-        summary: Short summary
-        author: Author name
-        status: draft or published
-        image_url: Optional cover image URL
-        header_image: Optional header/hero image URL
-        thumbnail: Optional thumbnail image URL
-        tags: Optional list of tags
-
-    Returns:
-        Created article record
-    """
+    """Create a new article"""
     try:
         client = SupabaseClient.get_client()
 
@@ -291,16 +206,7 @@ def create_article(title: str, content: str, category: str = "Market Analysis",
         raise
 
 def update_article(article_id: str, updates: dict) -> dict:
-    """
-    Update an existing article
-
-    Args:
-        article_id: Article UUID
-        updates: Dict of fields to update
-
-    Returns:
-        Updated article record
-    """
+    """Update an existing article"""
     try:
         client = SupabaseClient.get_client()
 
@@ -318,24 +224,14 @@ def update_article(article_id: str, updates: dict) -> dict:
         raise
 
 def delete_article(article_id: str) -> bool:
-    """
-    Delete an article and its associated images from Storage
-
-    Args:
-        article_id: Article UUID
-
-    Returns:
-        True if deleted successfully
-    """
+    """Delete an article and its associated images from Storage"""
     try:
         client = SupabaseClient.get_client()
 
-        # Delete associated images from Storage
         try:
             storage = SupabaseClient.get_storage()
             bucket_name = "articles"
 
-            # List and delete all files in the article's folder
             for folder in ["header", "thumbnail", "inline", "general"]:
                 try:
                     files = storage.from_(bucket_name).list(f"{article_id}/{folder}")
@@ -349,7 +245,6 @@ def delete_article(article_id: str) -> bool:
         except Exception as e:
             logger.warning(f"Could not delete article images: {str(e)}")
 
-        # Delete the article record
         client.table("articles").delete().eq("id", article_id).execute()
 
         logger.info(f"Article deleted: {article_id}")
@@ -360,12 +255,7 @@ def delete_article(article_id: str) -> bool:
         return False
 
 def get_article_stats() -> dict:
-    """
-    Get article statistics
-
-    Returns:
-        Dict with total, published, draft counts
-    """
+    """Get article statistics"""
     try:
         client = SupabaseClient.get_client()
 
@@ -386,7 +276,6 @@ def get_article_stats() -> dict:
         logger.error(f"Error fetching article stats: {str(e)}")
         return {"total": 0, "published": 0, "draft": 0}
 
-# ============== OTP Operations ==============
 
 import random
 import string
@@ -396,17 +285,7 @@ def generate_otp_code(length: int = 6) -> str:
     return ''.join(random.choices(string.digits, k=length))
 
 def create_otp(email: str, delivery_method: str, phone_number: str = None) -> dict:
-    """
-    Create and store an OTP code
-
-    Args:
-        email: User's email address
-        delivery_method: 'email' or 'whatsapp'
-        phone_number: Required if delivery_method is 'whatsapp'
-
-    Returns:
-        Dict with OTP details including the code
-    """
+    """Create and store an OTP code"""
     try:
         client = SupabaseClient.get_client()
 
@@ -415,14 +294,12 @@ def create_otp(email: str, delivery_method: str, phone_number: str = None) -> di
             "used": True
         }).eq("email", email).eq("used", False).execute()
 
-        # Generate new code
         code = generate_otp_code()
 
         # Set expiry (5 minutes from now)
         from datetime import datetime, timedelta, timezone
         expires_at = (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat()
 
-        # Insert new OTP
         result = client.table("otp_codes").insert({
             "email": email,
             "code": code,
@@ -445,22 +322,12 @@ def create_otp(email: str, delivery_method: str, phone_number: str = None) -> di
         raise
 
 def verify_otp(email: str, code: str) -> bool:
-    """
-    Verify an OTP code
-
-    Args:
-        email: User's email address
-        code: The OTP code to verify
-
-    Returns:
-        True if code is valid and not expired
-    """
+    """Verify an OTP code"""
     try:
         client = SupabaseClient.get_client()
 
         from datetime import datetime, timezone
 
-        # Find matching unused OTP
         result = client.table("otp_codes").select("*").eq(
             "email", email
         ).eq(
@@ -513,16 +380,7 @@ def cleanup_expired_otps():
 
 
 def verify_otp_completed(email: str) -> bool:
-    """
-    Check if an OTP was recently verified (used=True) for this email.
-    Used to authorize password reset without requiring a Supabase session.
-
-    Args:
-        email: User's email address
-
-    Returns:
-        True if a verified OTP exists within the last 15 minutes
-    """
+    """Check if an OTP was recently verified (used=True) for this email within the last 15 minutes"""
     try:
         client = SupabaseClient.get_client()
         from datetime import datetime, timedelta, timezone
@@ -545,17 +403,7 @@ def verify_otp_completed(email: str) -> bool:
 
 
 def reset_user_password(email: str, new_password: str) -> dict:
-    """
-    Reset a user's password using Supabase Admin API.
-    Requires the service_role key.
-
-    Args:
-        email: User's email address
-        new_password: New password to set
-
-    Returns:
-        Dict with success status and message
-    """
+    """Reset a user's password using Supabase Admin API (requires service_role key)"""
     try:
         import httpx
 
@@ -565,16 +413,13 @@ def reset_user_password(email: str, new_password: str) -> dict:
         if not supabase_url or not service_key:
             return {"success": False, "message": "Supabase not configured"}
 
-        # Step 1: Find user by email using Admin API
         headers = {
             "apikey": service_key,
             "Authorization": f"Bearer {service_key}",
             "Content-Type": "application/json"
         }
 
-        # List users and find by email
         with httpx.Client() as http:
-            # Search for user by email
             response = http.get(
                 f"{supabase_url}/auth/v1/admin/users",
                 headers=headers,
@@ -597,7 +442,6 @@ def reset_user_password(email: str, new_password: str) -> dict:
 
             user_id = user["id"]
 
-            # Step 2: Update password
             update_response = http.put(
                 f"{supabase_url}/auth/v1/admin/users/{user_id}",
                 headers=headers,
@@ -617,17 +461,7 @@ def reset_user_password(email: str, new_password: str) -> dict:
 
 
 def set_user_role(user_id: str, role: str) -> dict:
-    """
-    Set a user's role via Supabase Admin API.
-    Updates user_metadata.role field.
-
-    Args:
-        user_id: Supabase user UUID
-        role: 'admin' or 'user'
-
-    Returns:
-        Dict with success status and message
-    """
+    """Set a user's role via Supabase Admin API (updates user_metadata.role)"""
     try:
         import httpx
 
@@ -647,7 +481,6 @@ def set_user_role(user_id: str, role: str) -> dict:
         }
 
         with httpx.Client() as http:
-            # Get current user metadata
             response = http.get(
                 f"{supabase_url}/auth/v1/admin/users/{user_id}",
                 headers=headers
@@ -679,12 +512,7 @@ def set_user_role(user_id: str, role: str) -> dict:
 
 
 def list_users() -> dict:
-    """
-    List all users via Supabase Admin API.
-
-    Returns:
-        Dict with success status and users list
-    """
+    """List all users via Supabase Admin API"""
     try:
         import httpx
 
@@ -728,70 +556,146 @@ def list_users() -> dict:
         return {"success": False, "message": "Internal server error"}
 
 
+def insert_prediction(user_id: str, ticker: str, current_price: float,
+                      predicted_prices: list, trend: str, predicted_change_percent: float,
+                      days_ahead: int = 7) -> dict:
+    """Save a prediction to prediction_history table"""
+    try:
+        client = SupabaseClient.get_client()
+        ensure_ticker_exists(ticker)
+
+        data = {
+            "user_id": user_id,
+            "ticker": ticker.upper(),
+            "current_price": current_price,
+            "predicted_prices": predicted_prices,
+            "trend": trend,
+            "predicted_change_percent": predicted_change_percent,
+            "days_ahead": days_ahead,
+            "status": "pending"
+        }
+
+        result = client.table("prediction_history").insert(data).execute()
+        logger.info(f"Prediction saved for {ticker} by user {user_id}")
+        return result.data[0] if result.data else {}
+
+    except Exception as e:
+        logger.error(f"Error saving prediction: {str(e)}")
+        return {"error": str(e)}
 
 
-# ============== Storage Operations ==============
+def get_user_predictions(user_id: str, ticker: str = None, status: str = None, limit: int = 50) -> list:
+    """Get prediction history for a user"""
+    try:
+        client = SupabaseClient.get_client()
+        query = client.table("prediction_history").select("*").eq("user_id", user_id)
+
+        if ticker:
+            query = query.eq("ticker", ticker.upper())
+        if status:
+            query = query.eq("status", status)
+
+        result = query.order("created_at", desc=True).limit(limit).execute()
+        return result.data or []
+
+    except Exception as e:
+        logger.error(f"Error fetching predictions: {str(e)}")
+        return []
+
+
+def get_pending_validations(limit: int = 100) -> list:
+    """Get predictions that are pending and past their forecast period"""
+    try:
+        client = SupabaseClient.get_client()
+        result = client.table("prediction_history") \
+            .select("*") \
+            .eq("status", "pending") \
+            .order("created_at", desc=False) \
+            .limit(limit) \
+            .execute()
+
+        predictions = result.data or []
+
+        # Filter to only those where the last forecast date has passed
+        from datetime import datetime, date
+        today = date.today().isoformat()
+        ready = []
+        for pred in predictions:
+            pred_dates = pred.get("predicted_prices", [])
+            if pred_dates:
+                last_date = pred_dates[-1].get("date", "")
+                if last_date <= today:
+                    ready.append(pred)
+
+        return ready
+
+    except Exception as e:
+        logger.error(f"Error fetching pending validations: {str(e)}")
+        return []
+
+
+def update_prediction_validation(pred_id: str, actual_prices: list,
+                                  actual_change_percent: float, direction_correct: bool,
+                                  mean_absolute_error: float, mean_percent_error: float) -> dict:
+    """Update a prediction with validation results"""
+    try:
+        from datetime import datetime
+        client = SupabaseClient.get_client()
+
+        data = {
+            "actual_prices": actual_prices,
+            "actual_change_percent": actual_change_percent,
+            "direction_correct": direction_correct,
+            "mean_absolute_error": mean_absolute_error,
+            "mean_percent_error": mean_percent_error,
+            "status": "validated",
+            "validated_at": datetime.now().isoformat()
+        }
+
+        result = client.table("prediction_history").update(data).eq("id", pred_id).execute()
+        logger.info(f"Prediction {pred_id} validated")
+        return result.data[0] if result.data else {}
+
+    except Exception as e:
+        logger.error(f"Error validating prediction: {str(e)}")
+        return {"error": str(e)}
+
 
 def upload_model_file(ticker: str, file_path: str, bucket_name: str = "models") -> str:
-    """
-    Upload model file to Supabase Storage
-    
-    Args:
-        ticker: Stock ticker symbol
-        file_path: Local path to file
-        bucket_name: Storage bucket name
-    
-    Returns:
-        Public URL of uploaded file
-    """
+    """Upload model file to Supabase Storage"""
     try:
         storage = SupabaseClient.get_storage()
-        
+
         with open(file_path, "rb") as f:
             file_name = os.path.basename(file_path)
             path = f"{ticker}/{file_name}"
-            
+
             storage.from_(bucket_name).upload(path, f)
-            
-            logger.info(f"✅ Model file uploaded: {path}")
-            
-            # Return public URL
+
+            logger.info(f"Model file uploaded: {path}")
+
             url = storage.from_(bucket_name).get_public_url(path)
             return url
-        
+
     except Exception as e:
-        logger.error(f"❌ Error uploading model file: {str(e)}")
+        logger.error(f"Error uploading model file: {str(e)}")
         raise
 
 def upload_article_image(file_content: bytes, file_name: str, article_id: str = None, image_type: str = "general") -> str:
-    """
-    Upload article image to Supabase Storage
-
-    Args:
-        file_content: File content as bytes
-        file_name: Original file name
-        article_id: Article ID for organizing images
-        image_type: Type of image (header, thumbnail, inline)
-
-    Returns:
-        Public URL of uploaded image
-    """
+    """Upload article image to Supabase Storage"""
     try:
         storage = SupabaseClient.get_storage()
         bucket_name = "articles"
 
-        # Generate unique filename
         import uuid
         ext = os.path.splitext(file_name)[1] or ".jpg"
         unique_name = f"{uuid.uuid4().hex}{ext}"
 
-        # Organize by article_id if provided
         if article_id:
             path = f"{article_id}/{image_type}/{unique_name}"
         else:
             path = f"temp/{image_type}/{unique_name}"
 
-        # Determine content type
         content_types = {
             ".jpg": "image/jpeg",
             ".jpeg": "image/jpeg",
@@ -809,34 +713,24 @@ def upload_article_image(file_content: bytes, file_name: str, article_id: str = 
         )
 
         url = storage.from_(bucket_name).get_public_url(path)
-        logger.info(f"✅ Article image uploaded: {path}")
+        logger.info(f"Article image uploaded: {path}")
         return url
 
     except Exception as e:
-        logger.error(f"❌ Error uploading article image: {str(e)}")
+        logger.error(f"Error uploading article image: {str(e)}")
         raise
 
 def download_model_file(ticker: str, file_name: str, bucket_name: str = "models") -> bytes:
-    """
-    Download model file from Supabase Storage
-    
-    Args:
-        ticker: Stock ticker symbol
-        file_name: Name of file to download
-        bucket_name: Storage bucket name
-    
-    Returns:
-        File contents as bytes
-    """
+    """Download model file from Supabase Storage"""
     try:
         storage = SupabaseClient.get_storage()
-        
+
         path = f"{ticker}/{file_name}"
         data = storage.from_(bucket_name).download(path)
-        
-        logger.info(f"✅ Model file downloaded: {path}")
+
+        logger.info(f"Model file downloaded: {path}")
         return data
-        
+
     except Exception as e:
-        logger.error(f"❌ Error downloading model file: {str(e)}")
+        logger.error(f"Error downloading model file: {str(e)}")
         raise

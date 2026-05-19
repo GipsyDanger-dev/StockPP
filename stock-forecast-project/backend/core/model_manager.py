@@ -1,7 +1,3 @@
-"""
-Model Manager - Handles model persistence, loading, saving, and versioning
-"""
-
 import logging
 import os
 import json
@@ -16,15 +12,8 @@ logger = logging.getLogger(__name__)
 
 class ModelManager:
     """Manages model lifecycle including loading, saving, and validation"""
-    
+
     def __init__(self, model_dir: str = "saved_models", use_cloud_storage: bool = True):
-        """
-        Initialize model manager
-        
-        Args:
-            model_dir: Directory to store models locally
-            use_cloud_storage: Whether to upload to Supabase Storage
-        """
         self.model_dir = Path(model_dir)
         self.model_dir.mkdir(parents=True, exist_ok=True)
         self.metadata_file = self.model_dir / "model_metadata.json"
@@ -32,19 +21,18 @@ class ModelManager:
         self.scaler_dir.mkdir(parents=True, exist_ok=True)
         self.metadata = self._load_metadata()
         self.use_cloud_storage = use_cloud_storage
-        
-        # Initialize Supabase client if cloud storage is enabled
+
         self.supabase_client = None
         if self.use_cloud_storage:
             try:
                 from core.supabase_client import SupabaseClient, insert_training_log
                 self.supabase_client = SupabaseClient
                 self.insert_training_log = insert_training_log
-                logger.info("✅ Supabase client initialized for ModelManager")
+                logger.info("Supabase client initialized for ModelManager")
             except Exception as e:
-                logger.warning(f"⚠️  Supabase not configured, using local storage only: {str(e)}")
+                logger.warning(f"Supabase not configured, using local storage only: {str(e)}")
                 self.use_cloud_storage = False
-        
+
     def _load_metadata(self) -> Dict:
         """Load metadata about saved models"""
         if self.metadata_file.exists():
@@ -55,7 +43,7 @@ class ModelManager:
                 logger.warning(f"Error loading metadata: {str(e)}")
                 return {}
         return {}
-    
+
     def _save_metadata(self) -> None:
         """Save metadata about models"""
         try:
@@ -63,52 +51,35 @@ class ModelManager:
                 json.dump(self.metadata, f, indent=2, default=str)
         except Exception as e:
             logger.error(f"Error saving metadata: {str(e)}")
-    
+
     def get_model_path(self, ticker: str, version: str = "current") -> Path:
         """Get path for a model"""
         return self.model_dir / f"{ticker.upper()}_{version}.keras"
-    
+
     def save_model(self, model, ticker: str, metrics: Dict, scaler: Any = None, feature_scaler: Any = None) -> bool:
-        """
-        Save a model with metadata and optional scalers
-
-        Args:
-            model: TensorFlow model to save
-            ticker: Stock ticker symbol
-            metrics: Dictionary with model metrics (loss, rmse, mae, etc.)
-            scaler: Optional price MinMaxScaler to persist alongside model
-            feature_scaler: Optional feature MinMaxScaler (6 features) for predictions
-
-        Returns:
-            True if saved successfully
-        """
+        """Save a model with metadata and optional scalers"""
         try:
             ticker = ticker.upper()
             model_path = self.get_model_path(ticker, "current")
 
-            # Save model
             model.save(str(model_path))
             logger.info(f"Saved model for {ticker} to {model_path}")
 
-            # Save price scaler if provided
             scaler_path = None
             if scaler is not None:
                 scaler_path = self._save_scaler(scaler, ticker)
                 logger.info(f"Saved price scaler for {ticker} to {scaler_path}")
 
-            # Save feature scaler if provided
             feature_scaler_path = None
             if feature_scaler is not None:
                 feature_scaler_path = self._save_scaler(feature_scaler, ticker, suffix="_feature_scaler")
                 logger.info(f"Saved feature scaler for {ticker} to {feature_scaler_path}")
-            
-            # Update metadata
+
             if ticker not in self.metadata:
                 self.metadata[ticker] = {
                     "versions": []
                 }
-            
-            # Create version info
+
             version_info = {
                 "timestamp": datetime.now().isoformat(),
                 "model_path": str(model_path),
@@ -118,38 +89,28 @@ class ModelManager:
                 version_info["scaler_path"] = str(scaler_path)
             if feature_scaler_path:
                 version_info["feature_scaler_path"] = str(feature_scaler_path)
-            
+
             self.metadata[ticker]["current"] = version_info
             self.metadata[ticker]["versions"].append(version_info)
-            
+
             # Keep only last 5 versions
             if len(self.metadata[ticker]["versions"]) > 5:
                 self.metadata[ticker]["versions"] = self.metadata[ticker]["versions"][-5:]
-            
+
             self._save_metadata()
-            
-            # Upload to Supabase Cloud Storage if enabled
+
             if self.use_cloud_storage:
-                self._upload_to_supabase(ticker, model_path, metrics)
-            
+                self._upload_to_supabase(ticker, model_path, metrics, scaler_path, feature_scaler_path)
+
             return True
-            
+
         except Exception as e:
             logger.error(f"Error saving model for {ticker}: {str(e)}", exc_info=True)
             return False
-    
-    def _upload_to_supabase(self, ticker: str, model_path: Path, metrics: Dict) -> bool:
-        """
-        Upload model file to Supabase Storage and log training metadata
-        
-        Args:
-            ticker: Stock ticker symbol
-            model_path: Path to the model file
-            metrics: Model metrics dictionary
-            
-        Returns:
-            True if uploaded successfully
-        """
+
+    def _upload_to_supabase(self, ticker: str, model_path: Path, metrics: Dict,
+                             scaler_path: Path = None, feature_scaler_path: Path = None) -> bool:
+        """Upload model and scaler files to Supabase Storage, log training metadata"""
         try:
             if not self.supabase_client:
                 logger.warning("Supabase client not available, skipping cloud upload")
@@ -157,13 +118,21 @@ class ModelManager:
 
             storage = self.supabase_client.get_storage()
 
-            # Upload model file
             with open(model_path, "rb") as f:
                 path = f"{ticker}/model.keras"
                 storage.from_("models").upload(path, f, {"content-type": "application/octet-stream"})
                 logger.info(f"Uploaded model to Supabase: {path}")
 
-            # Insert training log into database
+            if scaler_path and scaler_path.exists():
+                with open(scaler_path, "rb") as f:
+                    storage.from_("models").upload(f"{ticker}/{scaler_path.name}", f, {"content-type": "application/octet-stream"})
+                    logger.info(f"Uploaded price scaler to Supabase: {ticker}/{scaler_path.name}")
+
+            if feature_scaler_path and feature_scaler_path.exists():
+                with open(feature_scaler_path, "rb") as f:
+                    storage.from_("models").upload(f"{ticker}/{feature_scaler_path.name}", f, {"content-type": "application/octet-stream"})
+                    logger.info(f"Uploaded feature scaler to Supabase: {ticker}/{feature_scaler_path.name}")
+
             try:
                 self.insert_training_log(
                     ticker=ticker,
@@ -181,76 +150,56 @@ class ModelManager:
         except Exception as e:
             logger.error(f"Error uploading to Supabase: {str(e)}")
             return False
-    
+
     def load_model(self, ticker: str) -> Optional[object]:
-        """
-        Load a model if it exists
-        
-        Args:
-            ticker: Stock ticker symbol
-            
-        Returns:
-            Loaded model or None if not found
-        """
+        """Load a model if it exists"""
         try:
             from tensorflow import keras
-            
+
             ticker = ticker.upper()
             model_path = self.get_model_path(ticker, "current")
-            
+
             if not model_path.exists():
                 logger.warning(f"Model not found for {ticker} at {model_path}")
                 return None
-            
+
             model = keras.models.load_model(str(model_path))
             logger.info(f"Loaded model for {ticker} from {model_path}")
             return model
-            
+
         except Exception as e:
             logger.error(f"Error loading model for {ticker}: {str(e)}", exc_info=True)
             return None
-    
+
     def load_model_and_scaler(self, ticker: str) -> Tuple[Optional[object], Optional[Any]]:
         """
         Load model and its associated scaler together.
         Critical: Both must be loaded in sync for correct predictions.
-        
-        Args:
-            ticker: Stock ticker symbol
-            
-        Returns:
-            Tuple of (loaded_model, loaded_scaler) or (None, None) if not found
         """
         try:
             ticker = ticker.upper()
             model = self.load_model(ticker)
             scaler = self._load_scaler(ticker)
-            
+
             if model is None:
                 logger.warning(f"Model not found for {ticker}")
                 return None, None
-                
+
             if scaler is None:
                 logger.warning(f"Scaler not found for {ticker}, model loaded without scaler")
                 return model, None
-            
+
             logger.info(f"Loaded model and scaler for {ticker}")
             return model, scaler
-            
+
         except Exception as e:
             logger.error(f"Error loading model and scaler for {ticker}: {str(e)}", exc_info=True)
             return None, None
-    
+
     def load_feature_scaler(self, ticker: str) -> Optional[Any]:
         """
         Load the feature scaler (6 features) used during training.
         Critical: Must use the same scaler for prediction as was used for training.
-
-        Args:
-            ticker: Stock ticker symbol
-
-        Returns:
-            Loaded feature scaler or None if not found
         """
         try:
             ticker = ticker.upper()
@@ -262,11 +211,26 @@ class ModelManager:
                     with open(path_str, 'rb') as f:
                         return pickle.load(f)
 
-            # Fallback to default path
             scaler_path = self.scaler_dir / f"{ticker}_feature_scaler.pkl"
             if scaler_path.exists():
                 with open(scaler_path, 'rb') as f:
                     return pickle.load(f)
+
+            # Try downloading from Supabase cloud storage
+            if self.use_cloud_storage and self.supabase_client:
+                try:
+                    storage = self.supabase_client.get_storage()
+                    cloud_path = f"{ticker}/{ticker}_feature_scaler.pkl"
+                    data = storage.from_("models").download(cloud_path)
+                    if data:
+                        scaler = pickle.loads(data)
+                        # Save locally for future use
+                        with open(scaler_path, 'wb') as f:
+                            pickle.dump(scaler, f)
+                        logger.info(f"Downloaded feature scaler from Supabase for {ticker}")
+                        return scaler
+                except Exception as cloud_err:
+                    logger.debug(f"Feature scaler not found in Supabase for {ticker}: {cloud_err}")
 
             logger.warning(f"Feature scaler not found for {ticker}")
             return None
@@ -276,32 +240,16 @@ class ModelManager:
             return None
 
     def get_model_metrics(self, ticker: str) -> Optional[Dict]:
-        """
-        Get metrics for current model
-        
-        Args:
-            ticker: Stock ticker symbol
-            
-        Returns:
-            Dictionary with metrics or None if not available
-        """
+        """Get metrics for current model"""
         ticker = ticker.upper()
-        
+
         if ticker in self.metadata and "current" in self.metadata[ticker]:
             return self.metadata[ticker]["current"].get("metrics", {})
-        
+
         return None
-    
+
     def get_model_age(self, ticker: str) -> Optional[float]:
-        """
-        Get age of model in hours
-        
-        Args:
-            ticker: Stock ticker symbol
-            
-        Returns:
-            Age in hours or None if not available
-        """
+        """Get age of model in hours"""
         try:
             ticker = ticker.upper()
             if ticker in self.metadata and "current" in self.metadata[ticker]:
@@ -313,71 +261,50 @@ class ModelManager:
         except Exception as e:
             logger.error(f"Error getting model age for {ticker}: {str(e)}")
             return None
-    
+
     def should_retrain(self, ticker: str, max_age_hours: float = 24) -> bool:
-        """
-        Check if model should be retrained
-        
-        Args:
-            ticker: Stock ticker symbol
-            max_age_hours: Maximum age before retraining needed
-            
-        Returns:
-            True if model is too old or doesn't exist
-        """
+        """Check if model should be retrained"""
         ticker = ticker.upper()
-        
-        # No model exists, need to train
+
         if ticker not in self.metadata or "current" not in self.metadata[ticker]:
             return True
-        
-        # Check age
+
         age = self.get_model_age(ticker)
         if age is None:
             return True
-        
+
         return age > max_age_hours
-    
+
     def validate_model_improvement(
-        self, 
-        old_metrics: Dict, 
+        self,
+        old_metrics: Dict,
         new_metrics: Dict
     ) -> bool:
-        """
-        Compare old and new model metrics
-        
-        Args:
-            old_metrics: Previous model metrics
-            new_metrics: New model metrics
-            
-        Returns:
-            True if new model is better or equal
-        """
+        """Compare old and new model metrics. Returns True if new model is better or equal."""
         if not old_metrics:
             return True  # No old model, new is better
-        
-        # Compare RMSE (primary metric, lower is better)
+
         old_rmse = old_metrics.get("rmse", float('inf'))
         new_rmse = new_metrics.get("rmse", float('inf'))
-        
+
         logger.info(f"Model comparison - Old RMSE: {old_rmse:.4f}, New RMSE: {new_rmse:.4f}")
-        
+
         # Allow 2% tolerance for similar models
         tolerance = old_rmse * 0.02
-        
+
         if new_rmse <= (old_rmse + tolerance):
             logger.info(f"New model is better or equivalent (within {tolerance:.4f} tolerance)")
             return True
-        
+
         logger.warning(f"New model is worse. Not saving.")
         return False
-    
+
     def model_exists(self, ticker: str) -> bool:
         """Check if model exists for ticker"""
         ticker = ticker.upper()
         model_path = self.get_model_path(ticker, "current")
         return model_path.exists()
-    
+
     def get_all_model_info(self) -> Dict:
         """Get information about all saved models"""
         info = {}
@@ -391,56 +318,52 @@ class ModelManager:
                     "last_updated": data["current"]["timestamp"]
                 }
         return info
-    
+
     def _save_scaler(self, scaler: Any, ticker: str, suffix: str = "_scaler") -> Path:
-        """
-        Save scaler to disk as pickle file
-
-        Args:
-            scaler: MinMaxScaler object
-            ticker: Stock ticker symbol
-            suffix: Filename suffix (default: "_scaler" for price, "_feature_scaler" for features)
-
-        Returns:
-            Path to saved scaler file
-        """
+        """Save scaler to disk as pickle file"""
         ticker = ticker.upper()
         scaler_path = self.scaler_dir / f"{ticker}{suffix}.pkl"
-        
+
         with open(scaler_path, 'wb') as f:
             pickle.dump(scaler, f)
-        
+
         return scaler_path
-    
+
     def _load_scaler(self, ticker: str) -> Optional[Any]:
-        """
-        Load scaler from disk
-        
-        Args:
-            ticker: Stock ticker symbol
-            
-        Returns:
-            Loaded scaler or None if not found
-        """
+        """Load scaler from disk"""
         try:
             ticker = ticker.upper()
-            
+
             # Check metadata first for scaler path
             if ticker in self.metadata and "current" in self.metadata[ticker]:
                 scaler_path_str = self.metadata[ticker]["current"].get("scaler_path")
                 if scaler_path_str and Path(scaler_path_str).exists():
                     with open(scaler_path_str, 'rb') as f:
                         return pickle.load(f)
-            
-            # Fallback to default scaler directory
+
             scaler_path = self.scaler_dir / f"{ticker}_scaler.pkl"
             if scaler_path.exists():
                 with open(scaler_path, 'rb') as f:
                     return pickle.load(f)
-            
+
+            # Try downloading from Supabase cloud storage
+            if self.use_cloud_storage and self.supabase_client:
+                try:
+                    storage = self.supabase_client.get_storage()
+                    cloud_path = f"{ticker}/{ticker}_scaler.pkl"
+                    data = storage.from_("models").download(cloud_path)
+                    if data:
+                        scaler = pickle.loads(data)
+                        with open(scaler_path, 'wb') as f:
+                            pickle.dump(scaler, f)
+                        logger.info(f"Downloaded price scaler from Supabase for {ticker}")
+                        return scaler
+                except Exception as cloud_err:
+                    logger.debug(f"Price scaler not found in Supabase for {ticker}: {cloud_err}")
+
             logger.warning(f"Scaler not found for {ticker}")
             return None
-            
+
         except Exception as e:
             logger.error(f"Error loading scaler for {ticker}: {str(e)}")
             return None

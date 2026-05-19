@@ -1,8 +1,3 @@
-"""
-Insight Engine - Generates AI-driven market insights from model data and market trends
-Uses Supabase data + model metrics to generate meaningful insights
-"""
-
 import logging
 from typing import Dict, List, Optional
 from datetime import datetime, timedelta
@@ -13,10 +8,10 @@ logger = logging.getLogger(__name__)
 
 class InsightEngine:
     """Generates market insights based on trained models and market data"""
-    
+
     def __init__(self, model_manager=None):
         self.model_manager = model_manager
-        
+
     def get_all_insights(self) -> Dict:
         """
         Generate comprehensive insights from all available data
@@ -29,32 +24,28 @@ class InsightEngine:
             "timestamp": datetime.now().isoformat()
         }
         return insights
-    
+
     def _generate_featured_insight(self) -> Dict:
         """Generate featured article based on model performance and market trends"""
-        # Get all model info if available
         model_info = {}
         if self.model_manager:
             try:
                 model_info = self.model_manager.get_all_model_info()
             except Exception:
                 pass
-        
-        # Determine best performing model
+
         best_ticker = None
         best_rmse = float('inf')
-        
+
         for ticker, info in model_info.items():
             metrics = info.get("metrics", {})
             rmse = metrics.get("rmse", float('inf'))
             if rmse < best_rmse:
                 best_rmse = rmse
                 best_ticker = ticker
-        
-        # Count models
+
         total_models = len(model_info)
-        
-        # Generate dynamic content
+
         if total_models > 0 and best_ticker:
             title = f"AI Model Performance: {best_ticker} Leads with RMSE {best_rmse:.4f}"
             summary = (
@@ -72,7 +63,7 @@ class InsightEngine:
                 "predictions and insights will appear here."
             )
             category = "Getting Started"
-        
+
         return {
             "title": title,
             "summary": summary,
@@ -80,28 +71,25 @@ class InsightEngine:
             "date": datetime.now().strftime("%b %d, %Y"),
             "read_time": "3 min read"
         }
-    
+
     def _generate_insight_cards(self) -> List[Dict]:
         """Generate insight cards from ticker data and model metrics"""
         cards = []
-        
-        # Get model info
+
         model_info = {}
         if self.model_manager:
             try:
                 model_info = self.model_manager.get_all_model_info()
             except Exception:
                 pass
-        
-        # Get tickers from Supabase
+
         tickers_data = []
         try:
             from core.supabase_client import get_all_tickers
             tickers_data = get_all_tickers()
         except Exception as e:
             logger.warning(f"Cannot fetch tickers from Supabase: {e}")
-        
-        # Card 1: Model Overview
+
         total_models = len(model_info)
         models_needing_retrain = sum(
             1 for info in model_info.values()
@@ -119,14 +107,13 @@ class InsightEngine:
             "icon": "activity",
             "date": datetime.now().strftime("%b %d, %Y")
         })
-        
-        # Card 2: Market Coverage
+
         total_tickers = len(tickers_data)
         sectors = {}
         for t in tickers_data:
             sector = t.get("sector", "Unknown")
             sectors[sector] = sectors.get(sector, 0) + 1
-        
+
         sector_info = ", ".join([f"{s}: {c}" for s, c in sectors.items()])
         cards.append({
             "id": "market-coverage",
@@ -140,8 +127,7 @@ class InsightEngine:
             "icon": "bar-chart",
             "date": datetime.now().strftime("%b %d, %Y")
         })
-        
-        # Card 3: Best Model Highlight
+
         best_ticker = None
         best_rmse = float('inf')
         for ticker, info in model_info.items():
@@ -150,7 +136,7 @@ class InsightEngine:
             if rmse < best_rmse:
                 best_rmse = rmse
                 best_ticker = ticker
-        
+
         if best_ticker:
             cards.append({
                 "id": "best-model",
@@ -176,8 +162,7 @@ class InsightEngine:
                 "icon": "activity",
                 "date": datetime.now().strftime("%b %d, %Y")
             })
-        
-        # Card 4: Retraining Recommendation
+
         if models_needing_retrain > 0:
             cards.append({
                 "id": "retrain-recommendation",
@@ -202,9 +187,9 @@ class InsightEngine:
                 "icon": "check-circle",
                 "date": datetime.now().strftime("%b %d, %Y")
             })
-        
+
         return cards
-    
+
     def _generate_market_summary(self) -> Dict:
         """Generate market summary statistics"""
         model_info = {}
@@ -213,18 +198,18 @@ class InsightEngine:
                 model_info = self.model_manager.get_all_model_info()
             except Exception:
                 pass
-        
+
         total_models = len(model_info)
         models_needing_retrain = sum(
             1 for info in model_info.values()
             if info.get("age_hours", 0) > 24
         )
-        
+
         avg_rmse = 0
         if total_models > 0:
             rmses = [info.get("metrics", {}).get("rmse", 0) for info in model_info.values()]
             avg_rmse = sum(rmses) / len(rmses) if rmses else 0
-        
+
         return {
             "total_models": total_models,
             "models_needing_retrain": models_needing_retrain,

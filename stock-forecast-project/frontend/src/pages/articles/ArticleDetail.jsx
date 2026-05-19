@@ -4,8 +4,8 @@ import {
   ArrowLeft, Clock, User, Calendar, Tag, Share2,
   BookOpen, Loader, AlertCircle, ChevronUp
 } from 'lucide-react';
-import * as apiService from '../services/apiService';
-import MarkdownRenderer from '../components/MarkdownRenderer';
+import * as apiService from '../../services/apiService';
+import MarkdownRenderer from '../../components/MarkdownRenderer';
 
 const ArticleDetail = () => {
   const { articleId } = useParams();

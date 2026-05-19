@@ -8,7 +8,6 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
-// ========== OVERVIEW MODE (no ticker selected) ==========
 const AnalyticsOverview = () => {
   const navigate = useNavigate();
   const { data: marketData, isLoading } = useMarketSummary(true);
@@ -18,7 +17,6 @@ const AnalyticsOverview = () => {
 
   const stocks = marketData?.tickers || [];
 
-  // Search via Finnhub
   useEffect(() => {
     if (searchTerm.length < 2) {
       setSearchResults([]);
@@ -37,7 +35,6 @@ const AnalyticsOverview = () => {
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
-  // Top gainers and losers
   const sortedByChange = [...stocks].sort((a, b) => (b.change_percent || 0) - (a.change_percent || 0));
   const topGainers = sortedByChange.slice(0, 3);
   const topLosers = sortedByChange.slice(-3).reverse();
@@ -219,7 +216,6 @@ const AnalyticsOverview = () => {
   );
 };
 
-// ========== DETAIL MODE (ticker selected) ==========
 const AnalyticsDetail = ({ ticker }) => {
   const navigate = useNavigate();
   const { data, isLoading } = useForecast(ticker, 7, '1y');
@@ -259,20 +255,17 @@ const AnalyticsDetail = ({ ticker }) => {
   const indicators = data.indicators || {};
   const historicalIndicators = data.historical_indicators || [];
 
-  // RSI interpretation
   const getRsiSignal = (rsi) => {
     if (rsi < 30) return { label: 'Oversold', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' };
     if (rsi > 70) return { label: 'Overbought', color: 'text-rose-600', bg: 'bg-rose-50 border-rose-200' };
     return { label: 'Neutral', color: 'text-slate-600', bg: 'bg-slate-50 border-slate-200' };
   };
 
-  // MA crossover interpretation
   const getMaSignal = (ma20, ma50) => {
     if (ma20 > ma50) return { label: 'Bullish Crossover', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' };
     return { label: 'Bearish Crossover', color: 'text-rose-600', bg: 'bg-rose-50 border-rose-200' };
   };
 
-  // MACD interpretation
   const getMacdSignal = (macd) => {
     if (macd > 0) return { label: 'Bullish Momentum', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' };
     return { label: 'Bearish Momentum', color: 'text-rose-600', bg: 'bg-rose-50 border-rose-200' };
@@ -477,7 +470,6 @@ const AnalyticsDetail = ({ ticker }) => {
   );
 };
 
-// ========== MAIN COMPONENT ==========
 const Analytics = () => {
   const { ticker } = useParams();
 

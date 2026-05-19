@@ -1,10 +1,3 @@
-"""
-LSTM Model - Deep Learning architecture for stock price forecasting
-Uses TensorFlow/Keras for neural network implementation
-Multi-feature input: Close, Volume, MA20, MA50, RSI, MACD
-Window size: 20 days (optimized per research)
-"""
-
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -25,14 +18,6 @@ class LSTMModel:
     """
 
     def __init__(self, window_size: int = 20, num_features: int = 6, model_path: str = None):
-        """
-        Initialize LSTM Model
-
-        Args:
-            window_size: Sequence length for LSTM input (default: 20)
-            num_features: Number of input features (default: 6)
-            model_path: Path to save/load model weights
-        """
         self.window_size = window_size
         self.num_features = num_features
         self.model_path = model_path or "saved_models/lstm_model.keras"
@@ -40,28 +25,19 @@ class LSTMModel:
         self.is_trained = False
 
     def build_model(self) -> keras.Model:
-        """
-        Build LSTM neural network architecture
-
-        Returns:
-            Compiled Keras Sequential model
-        """
+        """Build LSTM neural network architecture"""
         try:
             model = Sequential([
-                # First LSTM layer with return_sequences
                 LSTM(units=50, return_sequences=True,
                      input_shape=(self.window_size, self.num_features)),
                 Dropout(0.2),
 
-                # Second LSTM layer
                 LSTM(units=50, return_sequences=True),
                 Dropout(0.2),
 
-                # Third LSTM layer
                 LSTM(units=50),
                 Dropout(0.2),
 
-                # Dense output layer (single value: predicted Close price)
                 Dense(units=1)
             ])
 
@@ -82,19 +58,7 @@ class LSTMModel:
     def train(self, X_train: np.ndarray, y_train: np.ndarray,
               epochs: int = 50, batch_size: int = 32,
               validation_split: float = 0.2) -> Dict[str, Any]:
-        """
-        Train the LSTM model
-
-        Args:
-            X_train: Training sequences [samples, time_steps, features]
-            y_train: Training targets
-            epochs: Number of training epochs
-            batch_size: Batch size for training
-            validation_split: Fraction for validation
-
-        Returns:
-            Training history
-        """
+        """Train the LSTM model"""
         try:
             if self.model is None:
                 self.build_model()
@@ -120,15 +84,7 @@ class LSTMModel:
             raise
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        """
-        Make predictions on new data
-
-        Args:
-            X: Input sequences for prediction
-
-        Returns:
-            Predicted values
-        """
+        """Make predictions on new data"""
         if self.model is None:
             raise ValueError("Model not built. Call build_model() first")
 
@@ -140,16 +96,7 @@ class LSTMModel:
             raise
 
     def evaluate(self, X_test: np.ndarray, y_test: np.ndarray) -> Dict[str, float]:
-        """
-        Evaluate model performance on test data
-
-        Args:
-            X_test: Test sequences
-            y_test: Test targets
-
-        Returns:
-            Dictionary with RMSE and MAE metrics
-        """
+        """Evaluate model performance on test data. Returns dict with RMSE and MAE."""
         try:
             predictions = self.predict(X_test)
 

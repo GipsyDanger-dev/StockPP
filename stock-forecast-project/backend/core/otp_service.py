@@ -1,34 +1,19 @@
-"""
-OTP Delivery Service
-Handles sending OTP codes via Email (Resend) and WhatsApp (Twilio Sandbox)
-Both services are FREE and don't require credit card
-"""
-
 import os
 import logging
 import httpx
 
 logger = logging.getLogger(__name__)
 
-# ============== Email OTP via Resend (FREE: 3,000/month) ==============
 
 async def send_otp_email(email: str, code: str) -> bool:
     """
-    Send OTP code via email using Resend API
-    Free tier: 3,000 emails/month, 100/day
+    Send OTP code via email using Resend API.
+    Free tier: 3,000 emails/month, 100/day.
     Sign up: https://resend.com (no credit card needed)
-
-    Args:
-        email: Recipient email address
-        code: The OTP code to send
-
-    Returns:
-        True if email sent successfully
     """
     resend_api_key = os.getenv("RESEND_API_KEY")
 
     if not resend_api_key:
-        # Development mode - log the code
         logger.info(f"[DEV MODE] OTP Email for {email}: {code}")
         print(f"\n{'='*50}")
         print(f"[OTP EMAIL] Code for {email}: {code}")
@@ -86,12 +71,10 @@ async def send_otp_email(email: str, code: str) -> bool:
         return False
 
 
-# ============== WhatsApp OTP via Twilio Sandbox (FREE: Unlimited testing) ==============
-
 async def send_otp_whatsapp(phone_number: str, code: str) -> bool:
     """
-    Send OTP code via WhatsApp using Twilio Sandbox
-    FREE: Unlimited messages via sandbox (testing)
+    Send OTP code via WhatsApp using Twilio Sandbox.
+    FREE: Unlimited messages via sandbox (testing).
     Sign up: https://www.twilio.com/try-twilio (no credit card for trial)
 
     SETUP (one-time per phone number):
@@ -99,30 +82,20 @@ async def send_otp_whatsapp(phone_number: str, code: str) -> bool:
     2. Send the join code (e.g., "join xxx-yyy") to +1 415 523 8886 via WhatsApp
     3. You'll get a confirmation message
     4. Now you can receive messages from the sandbox
-
-    Args:
-        phone_number: Recipient phone number with country code (e.g., +628123456789)
-        code: The OTP code to send
-
-    Returns:
-        True if message sent successfully
     """
     account_sid = os.getenv("TWILIO_ACCOUNT_SID")
     auth_token = os.getenv("TWILIO_AUTH_TOKEN")
     whatsapp_from = os.getenv("TWILIO_WHATSAPP_NUMBER", "whatsapp:+14155238886")
 
     if not all([account_sid, auth_token]):
-        # Development mode - log the code
         logger.info(f"[DEV MODE] OTP WhatsApp for {phone_number}: {code}")
         print(f"\n{'='*50}")
         print(f"[OTP WHATSAPP] Code for {phone_number}: {code}")
         print(f"{'='*50}\n")
         return True
 
-    # Format phone number for WhatsApp
     to_number = f"whatsapp:{phone_number}" if not phone_number.startswith("whatsapp:") else phone_number
 
-    # Build message
     message_body = f"Your Precision Analytics verification code is: {code}\n\nThis code expires in 5 minutes.\n\nIf you didn't request this, please ignore this message."
 
     try:
@@ -149,21 +122,8 @@ async def send_otp_whatsapp(phone_number: str, code: str) -> bool:
         return False
 
 
-# ============== Unified Send Function ==============
-
 async def send_otp(email: str, code: str, delivery_method: str, phone_number: str = None) -> bool:
-    """
-    Send OTP via the specified delivery method
-
-    Args:
-        email: User's email (always needed for records)
-        code: The OTP code
-        delivery_method: 'email' or 'whatsapp'
-        phone_number: Required if delivery_method is 'whatsapp'
-
-    Returns:
-        True if sent successfully
-    """
+    """Send OTP via the specified delivery method ('email' or 'whatsapp')"""
     if delivery_method == "whatsapp":
         if not phone_number:
             logger.error("Phone number required for WhatsApp delivery")

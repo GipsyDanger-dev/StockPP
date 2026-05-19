@@ -4,18 +4,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import logging
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize FastAPI app
 app = FastAPI(
     title="Stock Price Forecasting API",
     description="LSTM-based stock price prediction engine",
     version="1.0.0"
 )
 
-# Configure CORS for frontend communication
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://localhost:3000"],
@@ -24,17 +21,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- BARIS YANG HILANG (WAJIB ADA) ---
-# Ini menghubungkan routes.py ke server utama dengan prefix /api/v1
 app.include_router(api_router, prefix="/api/v1")
 
-# Health check endpoint
 @app.get("/health")
 async def health_check():
     """API health status endpoint"""
     return {"status": "API is running", "version": "1.0.0"}
 
-# Root endpoint
 @app.get("/")
 async def root():
     """Root endpoint - API information"""
@@ -46,5 +39,4 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-    # Menggunakan host 127.0.0.1 agar lebih stabil di lokal
     uvicorn.run(app, host="127.0.0.1", port=8000)

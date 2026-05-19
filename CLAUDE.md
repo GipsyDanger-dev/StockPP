@@ -1,6 +1,8 @@
-# CLAUDE.md - Precision Analytics (Stock Forecast AI)
+# CLAUDE.md - StockPP (Stock Forecast AI)
 
 ## Overview
+Project name: **StockPP**. "Precision Analytics" hanya brand name yang tampil di UI (logo, footer, sidebar), BUKAN nama project. Gunakan "StockPP" di commit message, dokumentasi, dan referensi project.
+
 Autonomous financial forecasting agent that automates the ML lifecycle (LSTM) for stock market analysis. The agent has high autonomy to perform refactoring and optimizations without explicit approval.
 
 ## Tech Stack
@@ -39,6 +41,7 @@ Schema files: `documentation/otp-fix.sql`, `documentation/corrected-schema.sql`
 
 ## Architecture Rules
 - **Agent Autonomy**: Agent diperbolehkan melakukan refactoring, perbaikan bug, dan optimasi kode secara OTOMATIS. Persetujuan user hanya diperlukan jika ingin menambah atau menghapus fitur besar (major features).
+- **Commit & Push Policy**: Jika perubahan mencakup 3+ file atau merupakan major change, WAJIB commit dan push ke GitHub sebelum melanjutkan ke task berikutnya. Jangan menumpuk terlalu banyak perubahan dalam satu commit.
 - **Error Handling Policy**: Jika `yfinance` mengalami gangguan (rate-limited/API down), JANGAN tampilkan data dummy (mock). Tampilkan pesan: "Market API is currently down or undergoing maintenance."
 - **CORS Policy**: `allow_origins=["http://localhost:5173", "http://localhost:3000"]` (update di main.py jika perlu).
 - **Model Storage**: Model wajib di-upload ke Supabase Storage, local cache di `saved_models/` hanya untuk sementara.

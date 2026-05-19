@@ -4,9 +4,22 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   @apply bg-slate-50 text-slate-900;
 }
+
+/* Tech stack brand color hovers */
+.tech-fastapi:hover { color: #009688 !important; }
+.tech-tensorflow:hover { color: #FF6F00 !important; }
+.tech-react:hover { color: #61DAFB !important; }
+.tech-tailwind:hover { color: #06B6D4 !important; }
+.tech-sklearn:hover { color: #F89939 !important; }
+.tech-yfinance:hover { color: #4CAF50 !important; }
+.tech-supabase:hover { color: #3ECF8E !important; }
 
 .card {
   @apply bg-white rounded-lg shadow-md p-6 border border-slate-200;

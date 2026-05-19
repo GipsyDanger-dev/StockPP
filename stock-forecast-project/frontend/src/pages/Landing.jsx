@@ -149,7 +149,7 @@ export default function Landing() {
   const announcementOffset = showAnnouncement ? 36 : 0
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-slate-950">
+    <div className="min-h-screen overflow-x-hidden bg-slate-950" style={{ zoom: 0.9 }}>
 
       {/* Announcement Bar */}
       {showAnnouncement && (
@@ -168,19 +168,17 @@ export default function Landing() {
 
       {/* Navbar */}
       <nav
-        className={`fixed left-0 right-0 z-50 h-[72px] px-6 flex items-center transition-all duration-500 ${
+        className={`fixed left-0 right-0 z-50 h-[72px] px-6 flex items-center transition-all duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${
           scrolled
             ? 'top-0 bg-slate-950/90 backdrop-blur-2xl border-b border-white/5 shadow-xl shadow-black/20'
             : 'bg-transparent'
         }`}
         style={{ top: scrolled ? 0 : announcementOffset }}
       >
-        {/* When NOT scrolled: logo left, links center, buttons right */}
-        {/* When scrolled: everything centers */}
-        <div className={`w-full max-w-7xl mx-auto flex items-center transition-all duration-500 ${scrolled ? 'justify-center gap-8' : 'justify-between'}`}>
+        <div className={`w-full max-w-7xl mx-auto flex items-center transition-all duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${scrolled ? 'justify-center gap-8' : 'justify-between'}`}>
 
           {/* Logo */}
-          <div className={`flex items-center gap-2.5 cursor-pointer transition-all duration-500 ${scrolled ? 'mr-8' : ''}`} onClick={() => navigate('/')}>
+          <div className={`flex items-center gap-2.5 cursor-pointer transition-all duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${scrolled ? 'mr-8' : ''}`} onClick={() => navigate('/')}>
             <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
               <Activity className="w-5 h-5 text-white" />
             </div>
@@ -188,22 +186,20 @@ export default function Landing() {
           </div>
 
           {/* Nav Links */}
-          <div className={`hidden lg:flex items-center gap-1 transition-all duration-500 ${
-            scrolled ? 'bg-white/5 rounded-full px-1.5 py-1' : 'bg-white/5 rounded-full px-1.5 py-1 border border-white/10'
-          }`}>
+          <div className={`hidden lg:flex items-center gap-1 transition-all duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)] bg-white/5 rounded-full px-1.5 py-1 ${scrolled ? '' : 'border border-white/10'}`}>
             {NAV_LINKS.map(link => (
-              <button key={link} className="px-4 py-2 rounded-full text-sm font-medium text-slate-400 hover:text-white hover:bg-white/10 transition-all bg-transparent border-none cursor-pointer">
+              <button key={link} className="px-4 py-2 rounded-full text-sm font-medium text-slate-400 hover:text-white hover:bg-white/10 transition-all duration-300 bg-transparent border-none cursor-pointer">
                 {link}
               </button>
             ))}
           </div>
 
           {/* Buttons */}
-          <div className={`flex items-center gap-3 transition-all duration-500 ${scrolled ? 'ml-8' : ''}`}>
-            <button onClick={() => navigate('/login')} className="hidden sm:block text-sm text-slate-400 hover:text-white bg-transparent border-none cursor-pointer font-medium px-4 py-2 rounded-full hover:bg-white/5 transition-all">
+          <div className={`flex items-center gap-3 transition-all duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${scrolled ? 'ml-8' : ''}`}>
+            <button onClick={() => navigate('/login')} className="hidden sm:block text-sm text-slate-400 hover:text-white bg-transparent border-none cursor-pointer font-medium px-4 py-2 rounded-full hover:bg-white/5 transition-all duration-300">
               Login
             </button>
-            <button onClick={() => navigate('/signup')} className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-none rounded-full px-5 py-2.5 text-sm font-bold cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:from-blue-600 hover:to-blue-700 transition-all">
+            <button onClick={() => navigate('/signup')} className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-none rounded-full px-5 py-2.5 text-sm font-bold cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:from-blue-600 hover:to-blue-700 transition-all duration-300">
               Start Forecasting
             </button>
           </div>
@@ -308,9 +304,9 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center justify-items-center">
             {/* Left: Feature list */}
-            <div className="space-y-5">
+            <div className="space-y-5 w-full">
               {FEATURES.map((f, i) => (
                 <div key={i} className="feature-card flex gap-5 p-6 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-blue-500/20 hover:bg-white/[0.06] transition-all duration-300 cursor-default group">
                   <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-blue-500/20 transition-colors">
@@ -333,6 +329,7 @@ export default function Landing() {
                 verticalDistance={60}
                 delay={4500}
                 pauseOnHover
+                clickToSwap
                 skewAmount={5}
               >
                 <Card className="!bg-gradient-to-br !from-slate-800 !to-slate-900 !border-white/10 rounded-2xl p-8 overflow-hidden">

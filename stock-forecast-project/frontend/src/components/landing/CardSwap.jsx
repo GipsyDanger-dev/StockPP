@@ -38,6 +38,7 @@ const CardSwap = ({
   delay = 5000,
   pauseOnHover = false,
   onCardClick,
+  clickToSwap = false,
   skewAmount = 6,
   easing = 'elastic',
   children
@@ -72,6 +73,7 @@ const CardSwap = ({
   const tlRef = useRef(null);
   const intervalRef = useRef();
   const container = useRef(null);
+  const swapRef = useRef(null);
 
   useEffect(() => {
     const total = refs.length;
@@ -135,6 +137,7 @@ const CardSwap = ({
       });
     };
 
+    swapRef.current = swap;
     swap();
     intervalRef.current = window.setInterval(swap, delay);
 
@@ -168,6 +171,7 @@ const CardSwap = ({
           onClick: e => {
             child.props.onClick?.(e);
             onCardClick?.(i);
+            if (clickToSwap && swapRef.current) swapRef.current();
           }
         })
       : child

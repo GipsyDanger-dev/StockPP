@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Activity, ArrowRight, Star, Zap, Shield, Globe, ChevronRight, X } from 'lucide-react'
 import gsap from 'gsap'
@@ -64,9 +64,10 @@ function MiniChart({ up = true }) {
   )
 }
 
-function TickerCard({ ticker }) {
+function TickerCard({ ticker, className = '' }) {
   return (
-    <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 p-4 min-w-[200px] shadow-lg">
+    <div className={`bg-white/[0.07] backdrop-blur-xl rounded-2xl border border-white/[0.08] p-4 min-w-[200px] shadow-[0_8px_32px_rgba(0,0,0,0.3)] ${className}`}
+      style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 32px rgba(0,0,0,0.3)' }}>
       <div className="flex justify-between items-start mb-2">
         <div>
           <div className="font-bold text-sm text-white">{ticker.symbol}</div>
@@ -93,54 +94,153 @@ function TickerCard({ ticker }) {
 
 function MetricBadge({ label, value, className = '' }) {
   return (
-    <div className={`bg-white/10 backdrop-blur-md border border-white/10 rounded-xl px-4 py-3 shadow-lg ${className}`}>
+    <div className={`bg-white/[0.07] backdrop-blur-xl border border-white/[0.08] rounded-xl px-4 py-3 shadow-lg ${className}`}
+      style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.2)' }}>
       <div className="text-[10px] text-slate-400 font-bold mb-0.5">{label}</div>
       <div className="text-xl font-extrabold text-blue-400">{value}</div>
     </div>
   )
 }
 
+function MagneticButton({ children, className = '', onClick }) {
+  const btnRef = useRef(null)
+
+  const handleMouseMove = useCallback((e) => {
+    const btn = btnRef.current
+    if (!btn) return
+    const rect = btn.getBoundingClientRect()
+    const x = e.clientX - rect.left - rect.width / 2
+    const y = e.clientY - rect.top - rect.height / 2
+    gsap.to(btn, { x: x * 0.2, y: y * 0.2, duration: 0.4, ease: 'power2.out' })
+  }, [])
+
+  const handleMouseLeave = useCallback(() => {
+    gsap.to(btnRef.current, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1, 0.5)' })
+  }, [])
+
+  return (
+    <button
+      ref={btnRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onClick={onClick}
+      className={className}
+    >
+      {children}
+    </button>
+  )
+}
+
 export default function Landing() {
   const navigate = useNavigate()
-  const [scrolled, setScrolled] = useState(false)
   const [showAnnouncement, setShowAnnouncement] = useState(true)
   const heroRef = useRef(null)
   const featuresRef = useRef(null)
   const dashboardRef = useRef(null)
   const stepsRef = useRef(null)
   const pricingRef = useRef(null)
+  const navRef = useRef(null)
+  const navInnerRef = useRef(null)
+  const logoRef = useRef(null)
+  const linksRef = useRef(null)
+  const buttonsRef = useRef(null)
+  const scrolledRef = useRef(false)
 
+  // GSAP-powered navbar transition (smooth, no CSS transition jank)
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 200)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+    const nav = navRef.current
+    const navInner = navInnerRef.current
+    const logo = logoRef.current
+    const links = linksRef.current
+    const btns = buttonsRef.current
+    if (!nav || !navInner || !logo || !links || !btns) return
 
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 200
+      if (isScrolled === scrolledRef.current) return
+      scrolledRef.current = isScrolled
+
+      const tl = gsap.timeline({ defaults: { ease: 'power3.inOut', duration: 0.8 } })
+
+      if (isScrolled) {
+        tl.to(nav, { top: 0, backgroundColor: 'rgba(2,6,23,0.92)', borderBottomColor: 'rgba(255,255,255,0.05)', boxShadow: '0 4px 30px rgba(0,0,0,0.3)', duration: 0.5 }, 0)
+          .to(navInner, { justifyContent: 'center', gap: '2rem', duration: 0.8, ease: 'power3.inOut' }, 0)
+          .to(logo, { marginRight: '2rem', duration: 0.8, ease: 'power3.inOut' }, 0)
+          .to(btns, { marginLeft: '2rem', duration: 0.8, ease: 'power3.inOut' }, 0)
+      } else {
+        tl.to(nav, { top: showAnnouncement ? 36 : 0, backgroundColor: 'transparent', borderBottomColor: 'transparent', boxShadow: 'none', duration: 0.5 }, 0)
+          .to(navInner, { justifyContent: 'space-between', gap: '0rem', duration: 0.8, ease: 'power3.inOut' }, 0)
+          .to(logo, { marginRight: '0rem', duration: 0.8, ease: 'power3.inOut' }, 0)
+          .to(btns, { marginLeft: '0rem', duration: 0.8, ease: 'power3.inOut' }, 0)
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [showAnnouncement])
+
+  // Scroll-triggered section animations
   useEffect(() => {
     const ctx = gsap.context(() => {
+      // Hero text entrance
       gsap.from('.hero-text', {
         scrollTrigger: { trigger: heroRef.current, start: 'top 80%' },
-        y: 40, opacity: 0, duration: 0.8, ease: 'power2.out',
+        y: 50, opacity: 0, duration: 1, ease: 'power3.out',
       })
 
+      // Hero 3D scene parallax
+      gsap.to('.hero-3d', {
+        scrollTrigger: {
+          trigger: heroRef.current,
+          start: 'top top',
+          end: 'bottom top',
+          scrub: 1.5,
+        },
+        y: -80,
+        scale: 0.85,
+        opacity: 0.4,
+      })
+
+      // Tech stack stagger
+      gsap.from('.tech-badge', {
+        scrollTrigger: { trigger: '.tech-section', start: 'top 85%' },
+        y: 30, opacity: 0, stagger: 0.06, duration: 0.6, ease: 'power2.out',
+      })
+
+      // Feature cards
       gsap.from('.feature-card', {
         scrollTrigger: { trigger: featuresRef.current, start: 'top 80%' },
-        y: 60, opacity: 0, stagger: 0.12, duration: 0.7, ease: 'power2.out',
+        y: 60, opacity: 0, stagger: 0.1, duration: 0.8, ease: 'power3.out',
       })
 
+      // CardSwap reveal
+      gsap.from('.cardswap-container', {
+        scrollTrigger: { trigger: featuresRef.current, start: 'top 70%' },
+        x: 80, opacity: 0, duration: 1, ease: 'power3.out',
+      })
+
+      // Dashboard preview
       gsap.from('.dashboard-preview', {
         scrollTrigger: { trigger: dashboardRef.current, start: 'top 80%' },
-        scale: 0.92, opacity: 0, duration: 0.9, ease: 'power2.out',
+        y: 60, scale: 0.94, opacity: 0, duration: 1, ease: 'power3.out',
       })
 
+      // Steps
       gsap.from('.step-item', {
         scrollTrigger: { trigger: stepsRef.current, start: 'top 80%' },
-        y: 40, opacity: 0, stagger: 0.15, duration: 0.6, ease: 'power2.out',
+        y: 40, opacity: 0, stagger: 0.12, duration: 0.7, ease: 'power3.out',
       })
 
+      // Step connector line draw
+      gsap.from('.step-line', {
+        scrollTrigger: { trigger: stepsRef.current, start: 'top 80%' },
+        scaleX: 0, duration: 1.2, ease: 'power2.inOut', delay: 0.3,
+      })
+
+      // Pricing cards
       gsap.from('.pricing-card', {
         scrollTrigger: { trigger: pricingRef.current, start: 'top 80%' },
-        y: 50, opacity: 0, stagger: 0.12, duration: 0.7, ease: 'power2.out',
+        y: 50, opacity: 0, stagger: 0.1, duration: 0.8, ease: 'power3.out',
       })
     })
     return () => ctx.revert()
@@ -156,9 +256,12 @@ export default function Landing() {
         <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white text-xs text-center py-2 font-medium tracking-wide flex items-center justify-center gap-3">
           <span className="bg-white/20 rounded-full px-2 py-0.5 text-[10px] font-bold">NEW</span>
           <span>StockPP v2.0 — LSTM + real-time sentiment now in beta.</span>
-          <span className="text-blue-200 font-bold cursor-pointer hover:text-white transition-colors">Try it free →</span>
+          <span className="text-blue-200 font-bold cursor-pointer hover:text-white transition-colors">Try it free</span>
           <button
-            onClick={() => setShowAnnouncement(false)}
+            onClick={() => {
+              setShowAnnouncement(false)
+              gsap.to(navRef.current, { top: 0, duration: 0.4, ease: 'power2.out' })
+            }}
             className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-200 hover:text-white transition-colors bg-transparent border-none cursor-pointer p-1"
           >
             <X className="w-3.5 h-3.5" />
@@ -166,19 +269,19 @@ export default function Landing() {
         </div>
       )}
 
-      {/* Navbar */}
+      {/* Navbar — GSAP animated, no CSS transitions */}
       <nav
-        className={`fixed left-0 right-0 z-50 h-[72px] px-6 flex items-center transition-all duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${
-          scrolled
-            ? 'top-0 bg-slate-950/90 backdrop-blur-2xl border-b border-white/5 shadow-xl shadow-black/20'
-            : 'bg-transparent'
-        }`}
-        style={{ top: scrolled ? 0 : announcementOffset }}
+        ref={navRef}
+        className="fixed left-0 right-0 z-50 h-[72px] px-6 flex items-center border-b border-transparent"
+        style={{ top: announcementOffset }}
       >
-        <div className={`w-full max-w-7xl mx-auto flex items-center transition-all duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${scrolled ? 'justify-center gap-8' : 'justify-between'}`}>
-
+        <div
+          ref={navInnerRef}
+          className="w-full max-w-7xl mx-auto flex items-center"
+          style={{ justifyContent: 'space-between' }}
+        >
           {/* Logo */}
-          <div className={`flex items-center gap-2.5 cursor-pointer transition-all duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${scrolled ? 'mr-8' : ''}`} onClick={() => navigate('/')}>
+          <div ref={logoRef} className="flex items-center gap-2.5 cursor-pointer flex-shrink-0" onClick={() => navigate('/')}>
             <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
               <Activity className="w-5 h-5 text-white" />
             </div>
@@ -186,33 +289,36 @@ export default function Landing() {
           </div>
 
           {/* Nav Links */}
-          <div className={`hidden lg:flex items-center gap-1 transition-all duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)] bg-white/5 rounded-full px-1.5 py-1 ${scrolled ? '' : 'border border-white/10'}`}>
+          <div ref={linksRef} className="hidden lg:flex items-center gap-1 bg-white/5 rounded-full px-1.5 py-1 border border-white/10">
             {NAV_LINKS.map(link => (
-              <button key={link} className="px-4 py-2 rounded-full text-sm font-medium text-slate-400 hover:text-white hover:bg-white/10 transition-all duration-300 bg-transparent border-none cursor-pointer">
+              <button key={link} className="px-4 py-2 rounded-full text-sm font-medium text-slate-400 hover:text-white hover:bg-white/10 transition-colors duration-200 bg-transparent border-none cursor-pointer">
                 {link}
               </button>
             ))}
           </div>
 
           {/* Buttons */}
-          <div className={`flex items-center gap-3 transition-all duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${scrolled ? 'ml-8' : ''}`}>
-            <button onClick={() => navigate('/login')} className="hidden sm:block text-sm text-slate-400 hover:text-white bg-transparent border-none cursor-pointer font-medium px-4 py-2 rounded-full hover:bg-white/5 transition-all duration-300">
+          <div ref={buttonsRef} className="flex items-center gap-3 flex-shrink-0">
+            <button onClick={() => navigate('/login')} className="hidden sm:block text-sm text-slate-400 hover:text-white bg-transparent border-none cursor-pointer font-medium px-4 py-2 rounded-full hover:bg-white/5 transition-colors duration-200">
               Login
             </button>
-            <button onClick={() => navigate('/signup')} className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-none rounded-full px-5 py-2.5 text-sm font-bold cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:from-blue-600 hover:to-blue-700 transition-all duration-300">
+            <MagneticButton
+              onClick={() => navigate('/signup')}
+              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-none rounded-full px-5 py-2.5 text-sm font-bold cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
+            >
               Start Forecasting
-            </button>
+            </MagneticButton>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section ref={heroRef} className="relative pt-32 pb-24 px-6 lg:px-12 overflow-hidden" style={{ background: 'linear-gradient(165deg, #020617 0%, #0F172A 40%, #0B1121 100%)' }}>
-        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
-        <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-[radial-gradient(circle,rgba(37,99,235,0.15)_0%,transparent_60%)] rounded-full pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(99,102,241,0.08)_0%,transparent_60%)] rounded-full pointer-events-none" />
+      <section ref={heroRef} className="relative pt-32 pb-24 px-6 lg:px-12 overflow-hidden min-h-[100dvh] flex items-center" style={{ background: 'linear-gradient(165deg, #020617 0%, #0F172A 40%, #0B1121 100%)' }}>
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+        <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-[radial-gradient(circle,rgba(37,99,235,0.12)_0%,transparent_60%)] rounded-full pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(99,102,241,0.06)_0%,transparent_60%)] rounded-full pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-16 relative">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-16 relative w-full">
           <div className="hero-text flex-1 z-10">
             <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-4 py-1.5 mb-8">
               <span className="w-1.5 h-1.5 bg-blue-400 rounded-full pulse-dot" />
@@ -232,13 +338,16 @@ export default function Landing() {
             </p>
 
             <div className="flex items-center gap-4 flex-wrap">
-              <button onClick={() => navigate('/signup')} className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-none rounded-full px-8 py-4 text-sm font-bold cursor-pointer flex items-center gap-2 shadow-xl shadow-blue-500/30 hover:shadow-blue-500/50 hover:from-blue-600 hover:to-blue-700 transition-all">
+              <MagneticButton
+                onClick={() => navigate('/signup')}
+                className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-none rounded-full px-8 py-4 text-sm font-bold cursor-pointer flex items-center gap-2 shadow-xl shadow-blue-500/30 hover:shadow-blue-500/50 hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
+              >
                 Start Forecasting
                 <ArrowRight className="w-4 h-4" />
-              </button>
-              <button className="bg-white/5 text-white border border-white/10 rounded-full px-7 py-4 text-sm font-semibold cursor-pointer hover:bg-white/10 hover:border-white/20 transition-all backdrop-blur-sm">
+              </MagneticButton>
+              <MagneticButton className="bg-white/5 text-white border border-white/10 rounded-full px-7 py-4 text-sm font-semibold cursor-pointer hover:bg-white/10 hover:border-white/20 transition-all duration-200 backdrop-blur-sm">
                 View Live Dashboard
-              </button>
+              </MagneticButton>
             </div>
 
             <div className="flex items-center gap-10 mt-14">
@@ -251,7 +360,7 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="flex-1 relative h-[520px] flex items-center justify-center">
+          <div className="hero-3d flex-1 relative h-[520px] flex items-center justify-center">
             <div className="absolute inset-0 z-0">
               <HeroScene />
             </div>
@@ -275,7 +384,7 @@ export default function Landing() {
       </section>
 
       {/* Tech Stack Bar */}
-      <section className="bg-slate-950 border-b border-white/5 py-14 px-6 lg:px-12">
+      <section className="tech-section bg-slate-950 border-b border-white/5 py-14 px-6 lg:px-12">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8">
             <span className="text-xs text-slate-500 font-bold tracking-widest uppercase">Enterprise-Grade Infrastructure</span>
@@ -321,7 +430,7 @@ export default function Landing() {
             </div>
 
             {/* Right: CardSwap */}
-            <div className="hidden lg:flex justify-center items-center h-[500px]">
+            <div className="cardswap-container hidden lg:flex justify-center items-center h-[500px]">
               <CardSwap
                 width={420}
                 height={340}
@@ -414,7 +523,7 @@ export default function Landing() {
                 <polyline points="420,100 480,85 540,78 600,65" fill="none" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="6,4" />
                 <polygon points="0,200 0,160 60,145 120,148 180,130 240,135 300,118 360,122 420,100 480,85 540,78 600,65 600,200" fill="url(#chartGrad)" />
                 <line x1="420" y1="30" x2="420" y2="200" stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="4,3" />
-                <text x="426" y="44" fontSize="10" fill="#64748B" fontFamily="DM Sans, sans-serif">Forecast →</text>
+                <text x="426" y="44" fontSize="10" fill="#64748B" fontFamily="DM Sans, sans-serif">Forecast</text>
               </svg>
 
               <div className="flex gap-3 mt-5">
@@ -454,7 +563,7 @@ export default function Landing() {
             Surgical Forecasting Workflow
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-0 relative">
-            <div className="absolute top-7 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent z-0 hidden md:block" />
+            <div className="step-line absolute top-7 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent z-0 hidden md:block origin-left" />
             {STEPS.map((s, i) => (
               <div key={i} className="step-item text-center px-5 relative z-10">
                 <div className={`w-14 h-14 rounded-full mx-auto mb-6 flex items-center justify-center ${i === 0 ? 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-xl shadow-blue-500/20' : 'bg-white/5 border border-white/10'}`}>
@@ -502,9 +611,9 @@ export default function Landing() {
                       </div>
                     ))}
                   </div>
-                  <button className={`w-full py-3.5 rounded-full text-sm font-bold cursor-pointer transition-all ${plan.popular ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white border-none shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30' : 'bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:border-white/20'}`}>
+                  <MagneticButton className={`w-full py-3.5 rounded-full text-sm font-bold cursor-pointer transition-all ${plan.popular ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white border-none shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30' : 'bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:border-white/20'}`}>
                     {plan.cta}
-                  </button>
+                  </MagneticButton>
                 </div>
               </div>
             ))}
@@ -541,7 +650,7 @@ export default function Landing() {
             ))}
           </div>
           <div className="border-t border-white/5 pt-7 flex flex-col md:flex-row justify-between items-center gap-4">
-            <span className="text-xs text-slate-600">© 2026 StockPP. All rights reserved.</span>
+            <span className="text-xs text-slate-600">2026 StockPP. All rights reserved.</span>
             <div className="flex gap-4">
               {['GitHub', 'Twitter', 'LinkedIn'].map(s => (
                 <span key={s} className="text-xs text-slate-600 cursor-pointer hover:text-slate-400 transition-colors">{s}</span>
@@ -560,7 +669,7 @@ function TechBadge({ name, brandColor }) {
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="flex items-center gap-2 px-5 py-2.5 rounded-full border cursor-default transition-all duration-300 hover:scale-105"
+      className="tech-badge flex items-center gap-2 px-5 py-2.5 rounded-full border cursor-default transition-all duration-300 hover:scale-105"
       style={{
         borderColor: hovered ? brandColor + '40' : 'rgba(255,255,255,0.08)',
         background: hovered ? brandColor + '10' : 'rgba(255,255,255,0.03)',

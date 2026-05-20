@@ -235,56 +235,49 @@ export default function Landing() {
         </div>
       )}
 
-      {/* Navbar — wide: normal flex flow with spacers; scrolled: logo/buttons absolute, nav links truly centered */}
+      {/* Navbar — Dynamic Flex Spacers: three areas (flex-1, flex-none, flex-1) for auto centering */}
       <nav
         className={`fixed left-0 right-0 z-50 h-[72px] px-6 flex items-center transition-all duration-500 ${
-          isScrolled
-            ? 'bg-slate-950/90 backdrop-blur-2xl border-b border-white/10 shadow-xl shadow-black/20'
-            : 'bg-transparent border-b border-transparent'
+          isScrolled ? 'bg-black/80 backdrop-blur-md border-b border-white/10' : 'bg-transparent'
         }`}
-        style={{ top: isScrolled ? 0 : announcementOffset }}
+        style={{ top: announcementOffset }}
       >
-        {/* Logo — normal flow when wide, absolute-left when scrolled */}
-        <div
-          className={`flex items-center gap-2.5 cursor-pointer flex-shrink-0 transition-all duration-500 ${
-            isScrolled ? 'absolute left-6' : ''
-          }`}
-          onClick={() => navigate('/')}
-        >
-          <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-            <Activity className="w-5 h-5 text-white" />
+        <div className="w-full max-w-7xl mx-auto flex items-center justify-between h-full">
+
+          {/* Left Area (Logo) — flex-1 when wide, flex-none when scrolled */}
+          <div className={`flex items-center transition-all duration-700 ${isScrolled ? 'flex-none pr-8' : 'flex-1'}`}>
+            <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
+              <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <Activity className="w-5 h-5 text-white" />
+              </div>
+              <span className="font-heading font-extrabold text-lg text-white tracking-tight">StockPP</span>
+            </div>
           </div>
-          <span className="font-heading font-extrabold text-lg text-white tracking-tight">StockPP</span>
-        </div>
 
-        {/* Left Spacer — pushes nav links right when wide, collapses when scrolled */}
-        <div className={`transition-all duration-500 ${isScrolled ? 'w-0' : 'flex-1'}`} />
-
-        {/* Nav Links — centered by remaining space when wide, truly centered by flex-1 when scrolled */}
-        <div className={`transition-all duration-500 ${isScrolled ? 'flex-1 flex justify-center' : ''}`}>
-          <div className="hidden lg:flex items-center gap-1 bg-white/5 rounded-full px-1.5 py-1 border border-white/10">
+          {/* Center Area (Nav Links) — always flex-none, auto-centered by equal flex-1 sides */}
+          <div className="flex-none hidden lg:flex items-center gap-1 bg-white/5 border border-white/10 backdrop-blur-sm rounded-full px-1.5 py-1">
             {NAV_LINKS.map(link => (
               <button key={link} className="px-4 py-2 rounded-full text-sm font-medium text-slate-400 hover:text-white hover:bg-white/10 transition-colors duration-200 bg-transparent border-none cursor-pointer">
                 {link}
               </button>
             ))}
           </div>
-        </div>
 
-        {/* Right Spacer — pushes buttons left when wide, collapses when scrolled */}
-        <div className={`transition-all duration-500 ${isScrolled ? 'w-0' : 'flex-1'}`} />
+          {/* Right Area (Buttons) — flex-1 when wide, flex-none when scrolled */}
+          <div className={`flex items-center transition-all duration-700 ${isScrolled ? 'flex-none pl-8' : 'flex-1 justify-end'}`}>
+            <div className="flex items-center gap-3">
+              <button onClick={() => navigate('/login')} className="hidden sm:block text-sm text-slate-400 hover:text-white bg-transparent border-none cursor-pointer font-medium px-4 py-2 rounded-full hover:bg-white/5 transition-colors duration-200">
+                Login
+              </button>
+              <MagneticButton
+                onClick={() => navigate('/signup')}
+                className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-none rounded-full px-5 py-2.5 text-sm font-bold cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
+              >
+                {isScrolled ? 'Start' : 'Start Forecasting'}
+              </MagneticButton>
+            </div>
+          </div>
 
-        {/* Buttons — normal flow when wide, absolute-right when scrolled */}
-        <div className={`flex items-center gap-3 flex-shrink-0 transition-all duration-500 ${isScrolled ? 'absolute right-6' : ''}`}>
-          <button onClick={() => navigate('/login')} className="hidden sm:block text-sm text-slate-400 hover:text-white bg-transparent border-none cursor-pointer font-medium px-4 py-2 rounded-full hover:bg-white/5 transition-colors duration-200">
-            Login
-          </button>
-          <MagneticButton
-            onClick={() => navigate('/signup')}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-none rounded-full px-5 py-2.5 text-sm font-bold cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
-          >
-            Start Forecasting
-          </MagneticButton>
         </div>
       </nav>
 

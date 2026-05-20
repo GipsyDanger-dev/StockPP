@@ -153,3 +153,5 @@ saved_models/
 *.csv
 *.xlsx
 data/
+
+CLAUDE.md

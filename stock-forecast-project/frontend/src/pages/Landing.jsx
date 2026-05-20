@@ -235,7 +235,7 @@ export default function Landing() {
         </div>
       )}
 
-      {/* Navbar — wide at hero (flex-1 spacers push to edges), centered group on scroll (absolute logo/buttons from viewport edges) */}
+      {/* Navbar — wide: normal flex flow with spacers; scrolled: logo/buttons absolute, nav links truly centered */}
       <nav
         className={`fixed left-0 right-0 z-50 h-[72px] px-6 flex items-center transition-all duration-500 ${
           isScrolled
@@ -244,10 +244,10 @@ export default function Landing() {
         }`}
         style={{ top: isScrolled ? 0 : announcementOffset }}
       >
-        {/* Logo — always absolute from viewport, transition slides to center on scroll */}
+        {/* Logo — normal flow when wide, absolute-left when scrolled */}
         <div
-          className={`absolute top-1/2 -translate-y-1/2 flex items-center gap-2.5 cursor-pointer transition-all duration-500 ${
-            isScrolled ? 'left-1/2 -translate-x-[520px]' : 'left-6'
+          className={`flex items-center gap-2.5 cursor-pointer flex-shrink-0 transition-all duration-500 ${
+            isScrolled ? 'absolute left-6' : ''
           }`}
           onClick={() => navigate('/')}
         >
@@ -257,8 +257,11 @@ export default function Landing() {
           <span className="font-heading font-extrabold text-lg text-white tracking-tight">StockPP</span>
         </div>
 
-        {/* Center: nav links — always centered by flex */}
-        <div className="w-full max-w-7xl mx-auto flex justify-center items-center">
+        {/* Left Spacer — pushes nav links right when wide, collapses when scrolled */}
+        <div className={`transition-all duration-500 ${isScrolled ? 'w-0' : 'flex-1'}`} />
+
+        {/* Nav Links — centered by remaining space when wide, truly centered by flex-1 when scrolled */}
+        <div className={`transition-all duration-500 ${isScrolled ? 'flex-1 flex justify-center' : ''}`}>
           <div className="hidden lg:flex items-center gap-1 bg-white/5 rounded-full px-1.5 py-1 border border-white/10">
             {NAV_LINKS.map(link => (
               <button key={link} className="px-4 py-2 rounded-full text-sm font-medium text-slate-400 hover:text-white hover:bg-white/10 transition-colors duration-200 bg-transparent border-none cursor-pointer">
@@ -268,10 +271,11 @@ export default function Landing() {
           </div>
         </div>
 
-        {/* Buttons — always absolute from viewport, transition slides to center on scroll */}
-        <div className={`absolute top-1/2 -translate-y-1/2 flex items-center gap-3 transition-all duration-500 ${
-          isScrolled ? 'right-1/2 translate-x-[420px]' : 'right-6'
-        }`}>
+        {/* Right Spacer — pushes buttons left when wide, collapses when scrolled */}
+        <div className={`transition-all duration-500 ${isScrolled ? 'w-0' : 'flex-1'}`} />
+
+        {/* Buttons — normal flow when wide, absolute-right when scrolled */}
+        <div className={`flex items-center gap-3 flex-shrink-0 transition-all duration-500 ${isScrolled ? 'absolute right-6' : ''}`}>
           <button onClick={() => navigate('/login')} className="hidden sm:block text-sm text-slate-400 hover:text-white bg-transparent border-none cursor-pointer font-medium px-4 py-2 rounded-full hover:bg-white/5 transition-colors duration-200">
             Login
           </button>

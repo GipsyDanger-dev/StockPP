@@ -17,13 +17,13 @@ const TICKERS = [
 ]
 
 const TECH_STACK = [
-  { name: 'FastAPI', color: '#009688' },
-  { name: 'TensorFlow', color: '#FF6F00' },
-  { name: 'React', color: '#61DAFB' },
-  { name: 'Tailwind CSS', color: '#06B6D4' },
-  { name: 'Scikit-learn', color: '#F89939' },
-  { name: 'yfinance', color: '#4CAF50' },
-  { name: 'Supabase', color: '#3ECF8E' },
+  { name: 'FastAPI', color: '#009688', icon: 'fastapi' },
+  { name: 'TensorFlow', color: '#FF6F00', icon: 'tensorflow' },
+  { name: 'React', color: '#61DAFB', icon: 'react' },
+  { name: 'Tailwind CSS', color: '#06B6D4', icon: 'tailwind' },
+  { name: 'Scikit-learn', color: '#F89939', icon: 'sklearn' },
+  { name: 'yfinance', color: '#4CAF50', icon: 'yfinance' },
+  { name: 'Supabase', color: '#3ECF8E', icon: 'supabase' },
 ]
 
 const FEATURES = [
@@ -98,6 +98,92 @@ function MetricBadge({ label, value, className = '' }) {
       style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.2)' }}>
       <div className="text-[10px] text-slate-400 font-bold mb-0.5">{label}</div>
       <div className="text-xl font-extrabold text-blue-400">{value}</div>
+    </div>
+  )
+}
+
+function TechLogo({ icon, size = 20, color = 'currentColor' }) {
+  const s = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', xmlns: 'http://www.w3.org/2000/svg' }
+  switch (icon) {
+    case 'fastapi':
+      return (
+        <svg {...s}>
+          <path d="M12 2L2 19.5h20L12 2z" fill={color} fillOpacity="0.15" stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
+          <path d="M12 7v6m0 0l-3 5m3-5l3 5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )
+    case 'tensorflow':
+      return (
+        <svg {...s}>
+          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.1" />
+          <path d="M8 8v8l4 2V10L8 8z" fill={color} fillOpacity="0.6" />
+          <path d="M16 8v8l-4 2V10l4-2z" fill={color} fillOpacity="0.4" />
+        </svg>
+      )
+    case 'react':
+      return (
+        <svg {...s}>
+          <ellipse cx="12" cy="12" rx="9" ry="3.5" stroke={color} strokeWidth="1.2" fill="none" transform="rotate(0 12 12)" />
+          <ellipse cx="12" cy="12" rx="9" ry="3.5" stroke={color} strokeWidth="1.2" fill="none" transform="rotate(60 12 12)" />
+          <ellipse cx="12" cy="12" rx="9" ry="3.5" stroke={color} strokeWidth="1.2" fill="none" transform="rotate(-60 12 12)" />
+          <circle cx="12" cy="12" r="2" fill={color} />
+        </svg>
+      )
+    case 'tailwind':
+      return (
+        <svg {...s}>
+          <path d="M4 12c0-2 1.5-4 4.5-4 4 0 4.5 4 8.5 4 3 0 4.5-2 4.5-4" stroke={color} strokeWidth="2" strokeLinecap="round" fill="none" />
+          <path d="M4 16c0-2 1.5-4 4.5-4 4 0 4.5 4 8.5 4 3 0 4.5-2 4.5-4" stroke={color} strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.5" />
+        </svg>
+      )
+    case 'sklearn':
+      return (
+        <svg {...s}>
+          <rect x="3" y="3" width="18" height="18" rx="4" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.1" />
+          <path d="M7 15c2-4 4-8 6-8s3 5 4 8" stroke={color} strokeWidth="1.5" strokeLinecap="round" fill="none" />
+          <circle cx="12" cy="11" r="2" fill={color} fillOpacity="0.6" />
+        </svg>
+      )
+    case 'yfinance':
+      return (
+        <svg {...s}>
+          <rect x="3" y="3" width="18" height="18" rx="3" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.1" />
+          <polyline points="6,16 10,11 14,13 18,8" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <circle cx="18" cy="8" r="1.5" fill={color} />
+        </svg>
+      )
+    case 'supabase':
+      return (
+        <svg {...s}>
+          <path d="M4 17V7l7-4 7 4v10l-7 4-7-4z" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.1" strokeLinejoin="round" />
+          <path d="M11 3v18" stroke={color} strokeWidth="1" opacity="0.3" />
+          <circle cx="11" cy="11" r="3" stroke={color} strokeWidth="1.5" fill="none" />
+        </svg>
+      )
+    default:
+      return <div className="w-5 h-5 rounded-full" style={{ background: color, opacity: 0.6 }} />
+  }
+}
+
+function TechBadge({ name, brandColor, icon }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="tech-badge group flex items-center gap-3 px-5 py-3 rounded-xl border cursor-default transition-all duration-500 hover:scale-[1.05]"
+      style={{
+        borderColor: hovered ? brandColor + '50' : 'rgba(255,255,255,0.06)',
+        background: hovered ? brandColor + '12' : 'rgba(255,255,255,0.02)',
+        boxShadow: hovered ? `0 0 24px ${brandColor}20, 0 0 48px ${brandColor}08` : 'none',
+      }}
+    >
+      <div className="transition-all duration-500" style={{ filter: hovered ? `drop-shadow(0 0 8px ${brandColor}60)` : 'none', transform: hovered ? 'rotate(-5deg) scale(1.15)' : 'rotate(0) scale(1)' }}>
+        <TechLogo icon={icon} size={22} color={hovered ? brandColor : '#64748B'} />
+      </div>
+      <span className="text-sm font-semibold transition-all duration-500" style={{ color: hovered ? brandColor : '#94A3B8' }}>
+        {name}
+      </span>
     </div>
   )
 }
@@ -235,17 +321,17 @@ export default function Landing() {
         </div>
       )}
 
-      {/* Navbar — Dynamic Flex Spacers: three areas (flex-1, flex-none, flex-1) for auto centering */}
+      {/* Navbar — Dynamic Flex Spacers: three areas that auto-center the nav links */}
       <nav
         className={`fixed left-0 right-0 z-50 h-[72px] px-6 flex items-center transition-all duration-500 ${
           isScrolled ? 'bg-black/80 backdrop-blur-md border-b border-white/10' : 'bg-transparent'
         }`}
         style={{ top: announcementOffset }}
       >
-        <div className="w-full max-w-7xl mx-auto flex items-center justify-between h-full">
+        <div className="w-full max-w-7xl mx-auto flex items-center h-full">
 
-          {/* Left Area (Logo) — flex-1 when wide, flex-none when scrolled */}
-          <div className={`flex items-center transition-all duration-700 ${isScrolled ? 'flex-none pr-8' : 'flex-1'}`}>
+          {/* Left Area (Logo) — flex-1 when wide pushes center right, flex-none when scrolled */}
+          <div className={`flex items-center transition-all duration-700 ${isScrolled ? 'flex-none pr-4' : 'flex-1'}`}>
             <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
               <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
                 <Activity className="w-5 h-5 text-white" />
@@ -254,17 +340,19 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* Center Area (Nav Links) — always flex-none, auto-centered by equal flex-1 sides */}
-          <div className="flex-none hidden lg:flex items-center gap-1 bg-white/5 border border-white/10 backdrop-blur-sm rounded-full px-1.5 py-1">
-            {NAV_LINKS.map(link => (
-              <button key={link} className="px-4 py-2 rounded-full text-sm font-medium text-slate-400 hover:text-white hover:bg-white/10 transition-colors duration-200 bg-transparent border-none cursor-pointer">
-                {link}
-              </button>
-            ))}
+          {/* Center Area (Nav Links) — flex-none when wide (centered by equal flex-1 sides), flex-1 when scrolled (takes remaining space, centers content) */}
+          <div className={`hidden lg:flex items-center justify-center transition-all duration-700 ${isScrolled ? 'flex-1' : 'flex-none'}`}>
+            <div className="flex items-center gap-1 bg-white/5 border border-white/10 backdrop-blur-sm rounded-full px-1.5 py-1">
+              {NAV_LINKS.map(link => (
+                <button key={link} className="px-4 py-2 rounded-full text-sm font-medium text-slate-400 hover:text-white hover:bg-white/10 transition-colors duration-200 bg-transparent border-none cursor-pointer">
+                  {link}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Right Area (Buttons) — flex-1 when wide, flex-none when scrolled */}
-          <div className={`flex items-center transition-all duration-700 ${isScrolled ? 'flex-none pl-8' : 'flex-1 justify-end'}`}>
+          {/* Right Area (Buttons) — flex-1 when wide pushes center left, flex-none when scrolled */}
+          <div className={`flex items-center transition-all duration-700 ${isScrolled ? 'flex-none pl-4' : 'flex-1 justify-end'}`}>
             <div className="flex items-center gap-3">
               <button onClick={() => navigate('/login')} className="hidden sm:block text-sm text-slate-400 hover:text-white bg-transparent border-none cursor-pointer font-medium px-4 py-2 rounded-full hover:bg-white/5 transition-colors duration-200">
                 Login
@@ -360,7 +448,7 @@ export default function Landing() {
           </div>
           <div className="flex justify-center items-center gap-3 flex-wrap">
             {TECH_STACK.map(tech => (
-              <TechBadge key={tech.name} name={tech.name} brandColor={tech.color} />
+              <TechBadge key={tech.name} name={tech.name} brandColor={tech.color} icon={tech.icon} />
             ))}
           </div>
         </div>
@@ -628,26 +716,6 @@ export default function Landing() {
           </div>
         </div>
       </footer>
-    </div>
-  )
-}
-
-function TechBadge({ name, brandColor }) {
-  const [hovered, setHovered] = useState(false)
-  return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className="tech-badge flex items-center gap-2 px-5 py-2.5 rounded-full border cursor-default transition-all duration-300 hover:scale-105"
-      style={{
-        borderColor: hovered ? brandColor + '40' : 'rgba(255,255,255,0.08)',
-        background: hovered ? brandColor + '10' : 'rgba(255,255,255,0.03)',
-      }}
-    >
-      <div className="w-2 h-2 rounded-full transition-all duration-300" style={{ background: hovered ? brandColor : '#475569' }} />
-      <span className="text-sm font-semibold transition-all duration-300" style={{ color: hovered ? brandColor : '#64748B' }}>
-        {name}
-      </span>
     </div>
   )
 }

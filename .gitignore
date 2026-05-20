@@ -1,0 +1,5 @@
+# Claude Code local config
+.agents/
+.claude/skills/
+.claude/settings.local.json
+skills-lock.json

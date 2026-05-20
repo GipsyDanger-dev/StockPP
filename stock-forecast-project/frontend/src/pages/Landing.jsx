@@ -134,40 +134,19 @@ function MagneticButton({ children, className = '', onClick }) {
 export default function Landing() {
   const navigate = useNavigate()
   const [showAnnouncement, setShowAnnouncement] = useState(true)
+  const [isScrolled, setIsScrolled] = useState(false)
   const heroRef = useRef(null)
   const featuresRef = useRef(null)
   const dashboardRef = useRef(null)
   const stepsRef = useRef(null)
   const pricingRef = useRef(null)
-  const navRef = useRef(null)
-  const spacerRef = useRef(null)
-  const scrolledRef = useRef(false)
 
-  // GSAP-powered navbar transition — only animates width/opacity (GPU-safe)
+  // Scroll state for navbar collapse
   useEffect(() => {
-    const nav = navRef.current
-    const spacer = spacerRef.current
-    if (!nav || !spacer) return
-
-    const handleScroll = () => {
-      const isScrolled = window.scrollY > 200
-      if (isScrolled === scrolledRef.current) return
-      scrolledRef.current = isScrolled
-
-      const tl = gsap.timeline({ defaults: { ease: 'power3.inOut', duration: 0.9 } })
-
-      if (isScrolled) {
-        tl.to(nav, { top: 0, backgroundColor: 'rgba(2,6,23,0.92)', borderBottomColor: 'rgba(255,255,255,0.05)', boxShadow: '0 4px 30px rgba(0,0,0,0.3)', duration: 0.5 }, 0)
-          .to(spacer, { width: 0, duration: 0.9, ease: 'power3.inOut' }, 0)
-      } else {
-        tl.to(nav, { top: showAnnouncement ? 36 : 0, backgroundColor: 'transparent', borderBottomColor: 'transparent', boxShadow: 'none', duration: 0.5 }, 0)
-          .to(spacer, { width: 300, duration: 0.9, ease: 'power3.inOut' }, 0)
-      }
-    }
-
+    const handleScroll = () => setIsScrolled(window.scrollY > 50)
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [showAnnouncement])
+  }, [])
 
   // Scroll-triggered section animations
   useEffect(() => {
@@ -248,10 +227,7 @@ export default function Landing() {
           <span>StockPP v2.0 — LSTM + real-time sentiment now in beta.</span>
           <span className="text-blue-200 font-bold cursor-pointer hover:text-white transition-colors">Try it free</span>
           <button
-            onClick={() => {
-              setShowAnnouncement(false)
-              gsap.to(navRef.current, { top: 0, duration: 0.4, ease: 'power2.out' })
-            }}
+            onClick={() => setShowAnnouncement(false)}
             className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-200 hover:text-white transition-colors bg-transparent border-none cursor-pointer p-1"
           >
             <X className="w-3.5 h-3.5" />
@@ -259,23 +235,27 @@ export default function Landing() {
         </div>
       )}
 
-      {/* Navbar — GSAP animated via spacer width (GPU-safe properties only) */}
+      {/* Navbar — dual-spacer collapse: wide at top, compact on scroll */}
       <nav
-        ref={navRef}
-        className="fixed left-0 right-0 z-50 h-[72px] px-6 flex items-center border-b border-transparent"
-        style={{ top: announcementOffset }}
+        className={`fixed left-0 right-0 z-50 h-[72px] px-6 flex items-center transition-all duration-500 ${
+          isScrolled
+            ? 'bg-slate-950/90 backdrop-blur-2xl border-b border-white/10 shadow-xl shadow-black/20'
+            : 'bg-transparent border-b border-transparent'
+        }`}
+        style={{ top: isScrolled ? 0 : announcementOffset }}
       >
-        <div className="w-full max-w-7xl mx-auto flex items-center justify-center gap-4">
-          {/* Spacer — collapses from 300px to 0 when scrolled, pushing logo left */}
-          <div ref={spacerRef} className="flex-shrink-0 h-1" style={{ width: 300 }} />
+        <div className="w-full max-w-7xl mx-auto flex items-center">
 
           {/* Logo */}
-          <div className="flex items-center gap-2.5 cursor-pointer flex-shrink-0" onClick={() => navigate('/')}>
+          <div className="flex items-center gap-2.5 cursor-pointer flex-shrink-0 transition-all duration-500" onClick={() => navigate('/')}>
             <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
               <Activity className="w-5 h-5 text-white" />
             </div>
             <span className="font-heading font-extrabold text-lg text-white tracking-tight">StockPP</span>
           </div>
+
+          {/* Left Spacer — flex-1 when wide, w-8 when collapsed */}
+          <div className={`transition-all duration-500 ${isScrolled ? 'w-8' : 'flex-1'}`} />
 
           {/* Nav Links */}
           <div className="hidden lg:flex items-center gap-1 bg-white/5 rounded-full px-1.5 py-1 border border-white/10">
@@ -285,6 +265,9 @@ export default function Landing() {
               </button>
             ))}
           </div>
+
+          {/* Right Spacer — flex-1 when wide, w-8 when collapsed */}
+          <div className={`transition-all duration-500 ${isScrolled ? 'w-8' : 'flex-1'}`} />
 
           {/* Buttons */}
           <div className="flex items-center gap-3 flex-shrink-0">

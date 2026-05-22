@@ -56,6 +56,9 @@ const DASHBOARD_VIEWS = [
   { ticker: 'NVDA', price: '$894.20', pred: '$942.15', confidence: '88%', trend: 'up' },
   { ticker: 'AAPL', price: '$189.40', pred: '$201.80', confidence: '82%', trend: 'up' },
   { ticker: 'MSFT', price: '$415.80', pred: '$432.10', confidence: '79%', trend: 'up' },
+  { ticker: 'GOOGL', price: '$174.20', pred: '$182.50', confidence: '76%', trend: 'up' },
+  { ticker: 'AMZN', price: '$186.50', pred: '$179.80', confidence: '71%', trend: 'down' },
+  { ticker: 'BBCA.JK', price: 'Rp9.250', pred: 'Rp9.750', confidence: '84%', trend: 'up' },
 ]
 
 const STEPS = [
@@ -310,42 +313,38 @@ function DashboardCard({ data }) {
     ? '0,60 40,50 80,55 120,40 160,35 200,25 240,20 280,15 320,10'
     : '0,15 40,25 80,20 120,35 160,40 200,50 240,55 280,60 320,65'
   return (
-    <div className="scroll-snap-item w-[380px] flex-shrink-0">
-      <TiltCard className="h-full">
-        <div className="glass-strong rounded-2xl overflow-hidden h-full">
-          <div className="px-5 py-4 border-b border-slate-100/60 flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-lg flex items-center justify-center">
-                <LineChart className="w-3 h-3 text-white" />
-              </div>
-              <span className="font-heading font-bold text-sm text-slate-800">{data.ticker}</span>
-            </div>
-            <span className="text-[10px] text-indigo-500 font-bold bg-indigo-50 px-2 py-0.5 rounded-md">{data.confidence} confidence</span>
+    <div className="glass-strong rounded-2xl overflow-hidden h-full">
+      <div className="px-5 py-4 border-b border-slate-100/60 flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-lg flex items-center justify-center">
+            <LineChart className="w-3 h-3 text-white" />
           </div>
-          <div className="p-5">
-            <svg width="100%" height="80" viewBox="0 0 320 80" preserveAspectRatio="none" className="block mb-4">
-              <defs>
-                <linearGradient id={`cardGrad-${data.ticker}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#4F46E5" stopOpacity="0.1" />
-                  <stop offset="100%" stopColor="#4F46E5" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <polyline points={chartPoints} fill="none" stroke="#4F46E5" strokeWidth="2" strokeLinecap="round" />
-              <polygon points={`0,80 ${chartPoints} 320,80`} fill={`url(#cardGrad-${data.ticker})`} />
-            </svg>
-            <div className="flex justify-between">
-              <div>
-                <div className="text-[10px] text-slate-400 font-medium">PRICE</div>
-                <div className="text-base font-extrabold text-slate-900 font-heading">{data.price}</div>
-              </div>
-              <div className="text-right">
-                <div className="text-[10px] text-indigo-500 font-medium">PREDICTED</div>
-                <div className="text-base font-extrabold text-indigo-600 font-heading">{data.pred}</div>
-              </div>
-            </div>
+          <span className="font-heading font-bold text-sm text-slate-800">{data.ticker}</span>
+        </div>
+        <span className="text-[10px] text-indigo-500 font-bold bg-indigo-50 px-2 py-0.5 rounded-md">{data.confidence} confidence</span>
+      </div>
+      <div className="p-5">
+        <svg width="100%" height="80" viewBox="0 0 320 80" preserveAspectRatio="none" className="block mb-4">
+          <defs>
+            <linearGradient id={`cardGrad-${data.ticker}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#4F46E5" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#4F46E5" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <polyline points={chartPoints} fill="none" stroke="#4F46E5" strokeWidth="2" strokeLinecap="round" />
+          <polygon points={`0,80 ${chartPoints} 320,80`} fill={`url(#cardGrad-${data.ticker})`} />
+        </svg>
+        <div className="flex justify-between">
+          <div>
+            <div className="text-[10px] text-slate-400 font-medium">PRICE</div>
+            <div className="text-base font-extrabold text-slate-900 font-heading">{data.price}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-[10px] text-indigo-500 font-medium">PREDICTED</div>
+            <div className="text-base font-extrabold text-indigo-600 font-heading">{data.pred}</div>
           </div>
         </div>
-      </TiltCard>
+      </div>
     </div>
   )
 }
@@ -458,11 +457,39 @@ export default function Landing() {
       y: 30, opacity: 0, stagger: 0.1, duration: 0.6, ease: 'power3.out',
     })
 
-    // Dashboard horizontal scroll parallax
-    gsap.to('.dashboard-scroll-inner', {
-      scrollTrigger: { trigger: '.dashboard-section', start: 'top 80%', end: 'bottom 20%', scrub: 1 },
-      x: -80,
-    })
+    // Dashboard horizontal scroll with GSAP pin + containerAnimation
+    const hScrollContainer = document.querySelector('.h-scroll-container')
+    const hScrollTrack = document.querySelector('.h-scroll-track')
+    if (hScrollContainer && hScrollTrack) {
+      const getScrollAmount = () => -(hScrollTrack.scrollWidth - hScrollContainer.offsetWidth)
+      const hScrollTween = gsap.to(hScrollTrack, {
+        x: getScrollAmount,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: '.h-scroll-section',
+          start: 'top top',
+          end: () => `+=${hScrollTrack.scrollWidth - hScrollContainer.offsetWidth}`,
+          pin: true,
+          scrub: 1,
+          invalidateOnRefresh: true,
+        },
+      })
+
+      // Animate each card as it enters viewport during horizontal scroll
+      gsap.utils.toArray('.h-scroll-card').forEach((card) => {
+        gsap.from(card, {
+          opacity: 0,
+          scale: 0.9,
+          scrollTrigger: {
+            containerAnimation: hScrollTween,
+            trigger: card,
+            start: 'left 90%',
+            end: 'left 60%',
+            scrub: 1,
+          },
+        })
+      })
+    }
 
     // Chart line draw
     const chartLine = document.querySelector('.chart-line-main')
@@ -470,7 +497,7 @@ export default function Landing() {
       const lineLength = chartLine.getTotalLength()
       gsap.set(chartLine, { strokeDasharray: lineLength, strokeDashoffset: lineLength })
       gsap.to(chartLine, {
-        scrollTrigger: { trigger: '.dashboard-section', start: 'top 70%' },
+        scrollTrigger: { trigger: '.dashboard-preview', start: 'top 80%' },
         strokeDashoffset: 0, duration: 2, ease: 'power2.inOut',
       })
     }
@@ -713,9 +740,22 @@ export default function Landing() {
             <p className="text-lg text-slate-500">Interactive charts, live metrics, and AI-generated market narratives.</p>
           </div>
 
-          {/* Horizontal scroll gallery */}
-          <div className="horizontal-scroll-section flex gap-6 pb-4 mb-16 dashboard-scroll-inner">
-            {DASHBOARD_VIEWS.map((d, i) => <DashboardCard key={i} data={d} />)}
+          {/* GSAP Horizontal scroll gallery */}
+          <div className="h-scroll-section mb-16">
+            <div className="h-scroll-container overflow-hidden">
+              <div className="h-scroll-track flex gap-6 w-max">
+                {DASHBOARD_VIEWS.map((d, i) => (
+                  <div key={i} className="h-scroll-card w-[380px] flex-shrink-0">
+                    <TiltCard className="h-full">
+                      <DashboardCard data={d} />
+                    </TiltCard>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-center mt-6">
+              <span className="text-xs text-slate-400 font-medium">Scroll to explore more tickers</span>
+            </div>
           </div>
 
           {/* Full dashboard preview */}

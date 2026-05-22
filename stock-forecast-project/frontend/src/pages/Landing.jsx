@@ -46,10 +46,10 @@ const TECH_STACK = [
 ]
 
 const FEATURES = [
-  { icon: Brain, title: 'LSTM Prediction Engine', desc: 'Three-layer LSTM with 50 units per layer. Trained on 60-day sliding windows, forecasts up to 30 days ahead with MinMaxScaler normalization.', accent: 'indigo', span: 'col-span-2 row-span-2' },
-  { icon: Globe, title: 'Live Market Data', desc: 'Real-time quotes from Yahoo Finance and Finnhub. 30+ tickers across US and Indonesian markets.', accent: 'emerald', span: 'col-span-1 row-span-1' },
-  { icon: BarChart3, title: 'Accuracy Metrics', desc: 'RMSE, MAE, and R-squared on every prediction. Confidence intervals included.', accent: 'violet', span: 'col-span-1 row-span-1' },
-  { icon: Shield, title: 'Auto Validation', desc: 'Forecasts checked against actual prices automatically. Track direction accuracy over time.', accent: 'amber', span: 'col-span-1 row-span-1' },
+  { icon: Brain, title: 'LSTM Prediction Engine', desc: 'Three-layer LSTM with 50 units per layer. Trained on 60-day sliding windows, forecasts up to 30 days ahead with MinMaxScaler normalization.', accent: 'indigo', span: 'md:col-span-2 md:row-span-2' },
+  { icon: Globe, title: 'Live Market Data', desc: 'Real-time quotes from Yahoo Finance and Finnhub. 30+ tickers across US and Indonesian markets.', accent: 'emerald', span: '' },
+  { icon: BarChart3, title: 'Accuracy Metrics', desc: 'RMSE, MAE, and R-squared on every prediction. Confidence intervals included.', accent: 'violet', span: '' },
+  { icon: Shield, title: 'Auto Validation', desc: 'Forecasts checked against actual prices automatically. Track direction accuracy over time.', accent: 'amber', span: '' },
 ]
 
 const DASHBOARD_VIEWS = [
@@ -234,7 +234,7 @@ function MetricBadge({ label, value }) {
 function StatCard({ value, suffix, label, decimals }) {
   const { ref, count } = useCounter(value, decimals)
   return (
-    <div ref={ref} className="text-center px-8">
+    <div ref={ref} className="text-center px-4 md:px-8">
       <div className="font-heading text-4xl lg:text-5xl font-extrabold text-slate-900 mb-1">
         {count}<span className="text-indigo-500">{suffix}</span>
       </div>
@@ -457,38 +457,39 @@ export default function Landing() {
       y: 30, opacity: 0, stagger: 0.1, duration: 0.6, ease: 'power3.out',
     })
 
-    // Dashboard horizontal scroll with GSAP pin + containerAnimation
-    const hScrollContainer = document.querySelector('.h-scroll-container')
-    const hScrollTrack = document.querySelector('.h-scroll-track')
-    if (hScrollContainer && hScrollTrack) {
-      const getScrollAmount = () => -(hScrollTrack.scrollWidth - hScrollContainer.offsetWidth)
-      const hScrollTween = gsap.to(hScrollTrack, {
-        x: getScrollAmount,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: '.h-scroll-section',
-          start: 'top top',
-          end: () => `+=${hScrollTrack.scrollWidth - hScrollContainer.offsetWidth}`,
-          pin: true,
-          scrub: 1,
-          invalidateOnRefresh: true,
-        },
-      })
-
-      // Animate each card as it enters viewport during horizontal scroll
-      gsap.utils.toArray('.h-scroll-card').forEach((card) => {
-        gsap.from(card, {
-          opacity: 0,
-          scale: 0.9,
+    // Dashboard horizontal scroll with GSAP pin + containerAnimation (desktop only)
+    if (window.matchMedia('(min-width: 768px)').matches) {
+      const hScrollContainer = document.querySelector('.h-scroll-container')
+      const hScrollTrack = document.querySelector('.h-scroll-track')
+      if (hScrollContainer && hScrollTrack) {
+        const getScrollAmount = () => -(hScrollTrack.scrollWidth - hScrollContainer.offsetWidth)
+        const hScrollTween = gsap.to(hScrollTrack, {
+          x: getScrollAmount,
+          ease: 'none',
           scrollTrigger: {
-            containerAnimation: hScrollTween,
-            trigger: card,
-            start: 'left 90%',
-            end: 'left 60%',
+            trigger: '.h-scroll-section',
+            start: 'top top',
+            end: () => `+=${hScrollTrack.scrollWidth - hScrollContainer.offsetWidth}`,
+            pin: true,
             scrub: 1,
+            invalidateOnRefresh: true,
           },
         })
-      })
+
+        gsap.utils.toArray('.h-scroll-card').forEach((card) => {
+          gsap.from(card, {
+            opacity: 0,
+            scale: 0.9,
+            scrollTrigger: {
+              containerAnimation: hScrollTween,
+              trigger: card,
+              start: 'left 90%',
+              end: 'left 60%',
+              scrub: 1,
+            },
+          })
+        })
+      }
     }
 
     // Chart line draw
@@ -568,11 +569,11 @@ export default function Landing() {
       </nav>
 
       {/* ===== Hero ===== */}
-      <section className="hero-section relative pt-32 pb-32 px-6 lg:px-12 min-h-[100dvh] flex items-center overflow-hidden">
-        <div className="orb orb-indigo w-[500px] h-[500px] -top-40 -left-40" />
-        <div className="orb orb-violet w-[400px] h-[400px] top-20 right-[-10%]" />
-        <div className="orb orb-blue w-[300px] h-[300px] bottom-0 left-[30%]" />
-        <div className="orb orb-pink w-[250px] h-[250px] top-[60%] right-[20%]" />
+      <section className="hero-section relative pt-24 pb-20 md:pt-32 md:pb-32 px-5 md:px-6 lg:px-12 min-h-[100dvh] flex items-center overflow-hidden">
+        <div className="orb orb-indigo w-[300px] h-[300px] md:w-[500px] md:h-[500px] -top-40 -left-40" />
+        <div className="orb orb-violet w-[250px] h-[250px] md:w-[400px] md:h-[400px] top-20 right-[-10%]" />
+        <div className="orb orb-blue w-[200px] h-[200px] md:w-[300px] md:h-[300px] bottom-0 left-[30%]" />
+        <div className="orb orb-pink w-[150px] h-[150px] md:w-[250px] md:h-[250px] top-[60%] right-[20%]" />
         <div className="absolute inset-0 dot-grid opacity-40" />
         <div className="geo-line top-[30%] left-0 w-[40%]" />
         <div className="geo-line top-[70%] right-0 w-[35%]" />
@@ -581,14 +582,14 @@ export default function Landing() {
 
         <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20 relative w-full">
           <div className="hero-text flex-1 z-10">
-            <div className="inline-flex items-center gap-2 glass-subtle rounded-full px-3.5 py-1.5 mb-8">
+            <div className="inline-flex items-center gap-2 glass-subtle rounded-full px-3.5 py-1.5 mb-5 md:mb-8">
               <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full pulse-dot" />
               <span ref={scrambleRef} className="text-[11px] font-bold text-indigo-600 tracking-wider uppercase">AI-POWERED FORECASTING</span>
             </div>
-            <h1 ref={heroHeadingRef} className="font-heading text-[clamp(2.5rem,5vw,4rem)] font-extrabold leading-[1.08] text-slate-900 mb-7 tracking-tight" style={{ perspective: '400px' }}>
+            <h1 ref={heroHeadingRef} className="font-heading text-[clamp(2rem,5vw,4rem)] font-extrabold leading-[1.08] text-slate-900 mb-5 md:mb-7 tracking-tight" style={{ perspective: '400px' }}>
               Predict where stocks are heading, before the market does.
             </h1>
-            <p ref={heroSubRef} className="text-lg text-slate-500 leading-relaxed max-w-lg mb-10">
+            <p ref={heroSubRef} className="text-base md:text-lg text-slate-500 leading-relaxed max-w-lg mb-7 md:mb-10">
               LSTM neural networks trained on historical price data, delivering forecasts with transparent accuracy metrics. No black boxes.
             </p>
             <div className="flex items-center gap-4 flex-wrap">
@@ -606,16 +607,16 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="hero-3d flex-1 relative h-[500px] flex items-center justify-center">
+          <div className="hero-3d flex-1 relative h-[320px] md:h-[420px] lg:h-[500px] flex items-center justify-center">
             <div className="absolute inset-0 rounded-3xl overflow-hidden" style={{ background: 'rgba(10,10,20,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.08)' }}>
               <HeroScene />
             </div>
-            <div className="absolute top-6 -left-2 z-10 float1"><TickerCard ticker={TICKERS[0]} /></div>
-            <div className="absolute top-44 -right-4 z-10 float2"><TickerCard ticker={TICKERS[1]} /></div>
-            <div className="absolute bottom-8 left-10 z-10 float3"><TickerCard ticker={TICKERS[2]} /></div>
-            <div className="absolute top-10 right-6 z-20"><MetricBadge label="CONFIDENCE" value="88%" /></div>
-            <div className="absolute bottom-24 right-2 z-20"><MetricBadge label="RMSE SCORE" value="0.024" /></div>
-            <div className="absolute top-4 right-24 z-20 glass rounded-full px-3 py-1 flex items-center gap-1.5">
+            <div className="absolute top-6 -left-2 z-10 float1 hidden lg:block"><TickerCard ticker={TICKERS[0]} /></div>
+            <div className="absolute top-44 -right-4 z-10 float2 hidden lg:block"><TickerCard ticker={TICKERS[1]} /></div>
+            <div className="absolute bottom-8 left-10 z-10 float3 hidden lg:block"><TickerCard ticker={TICKERS[2]} /></div>
+            <div className="absolute top-10 right-6 z-20 hidden md:block"><MetricBadge label="CONFIDENCE" value="88%" /></div>
+            <div className="absolute bottom-24 right-2 z-20 hidden md:block"><MetricBadge label="RMSE SCORE" value="0.024" /></div>
+            <div className="absolute top-4 right-4 md:right-24 z-20 glass rounded-full px-3 py-1 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full pulse-dot" />
               <span className="text-[11px] font-bold text-emerald-600">Engine Active</span>
             </div>
@@ -624,7 +625,7 @@ export default function Landing() {
       </section>
 
       {/* ===== Kinetic Marquee ===== */}
-      <section className="marquee-section relative py-10 overflow-hidden">
+      <section className="marquee-section relative py-8 md:py-10 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-50/30 to-transparent" />
         <div className="space-y-4 relative">
           <MarqueeRow items={MARQUEE_ITEMS} />
@@ -633,9 +634,9 @@ export default function Landing() {
       </section>
 
       {/* ===== Tech Stack ===== */}
-      <section className="tech-section relative py-16 px-6 lg:px-12 overflow-hidden">
-        <div className="orb orb-emerald w-[350px] h-[350px] -top-32 left-[10%]" />
-        <div className="orb orb-indigo w-[300px] h-[300px] -bottom-32 right-[5%]" />
+      <section className="tech-section relative py-12 md:py-16 px-5 md:px-6 lg:px-12 overflow-hidden">
+        <div className="orb orb-emerald w-[200px] h-[200px] md:w-[350px] md:h-[350px] -top-32 left-[10%]" />
+        <div className="orb orb-indigo w-[200px] h-[200px] md:w-[300px] md:h-[300px] -bottom-32 right-[5%]" />
         <div className="max-w-5xl mx-auto relative">
           <div className="text-center mb-8">
             <span className="text-[11px] text-slate-400 font-bold tracking-[0.2em] uppercase">Built with</span>
@@ -662,7 +663,7 @@ export default function Landing() {
       </section>
 
       {/* ===== Features Bento Grid ===== */}
-      <section className="features-section relative py-36 px-6 lg:px-12 overflow-hidden">
+      <section className="features-section relative py-20 md:py-36 px-5 md:px-6 lg:px-12 overflow-hidden">
         <div className="orb orb-violet w-[450px] h-[450px] top-[-10%] right-[-5%]" />
         <div className="orb orb-blue w-[350px] h-[350px] bottom-[-10%] left-[10%]" />
         <div className="absolute inset-0 dot-grid opacity-25" />
@@ -674,7 +675,7 @@ export default function Landing() {
           </div>
 
           {/* Bento Grid */}
-          <div className="bento-grid grid-cols-1 md:grid-cols-3 gap-5 auto-rows-[220px]">
+          <div className="bento-grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 auto-rows-[200px] md:auto-rows-[220px]">
             {FEATURES.map((f, i) => {
               const c = ACCENT[f.accent]
               return (
@@ -722,10 +723,10 @@ export default function Landing() {
       </section>
 
       {/* ===== Stats Band with Animated Counters ===== */}
-      <section className="stats-section relative py-24 px-6 lg:px-12 overflow-hidden">
+      <section className="stats-section relative py-16 md:py-24 px-5 md:px-6 lg:px-12 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/40 via-white/20 to-indigo-50/40" />
         <div className="max-w-5xl mx-auto relative">
-          <div className="glass-strong rounded-[2rem] px-8 py-14">
+          <div className="glass-strong rounded-[1.5rem] md:rounded-[2rem] px-5 md:px-8 py-10 md:py-14">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {STATS.map((s, i) => (
                 <div key={i} className="stat-item">
@@ -738,9 +739,9 @@ export default function Landing() {
       </section>
 
       {/* ===== Dashboard Horizontal Scroll ===== */}
-      <section className="dashboard-section relative py-36 px-6 lg:px-12 overflow-hidden">
-        <div className="orb orb-indigo w-[500px] h-[500px] top-[10%] left-[-10%]" />
-        <div className="orb orb-pink w-[300px] h-[300px] bottom-[5%] right-[5%]" />
+      <section className="dashboard-section relative py-20 md:py-36 px-5 md:px-6 lg:px-12 overflow-hidden">
+        <div className="orb orb-indigo w-[300px] h-[300px] md:w-[500px] md:h-[500px] top-[10%] left-[-10%]" />
+        <div className="orb orb-pink w-[200px] h-[200px] md:w-[300px] md:h-[300px] bottom-[5%] right-[5%]" />
         <div className="max-w-6xl mx-auto relative">
           <div className="mb-12">
             <span className="inline-block glass-subtle rounded-full px-3 py-1 text-[10px] text-indigo-600 font-bold tracking-[0.2em] uppercase mb-5">Dashboard</span>
@@ -749,11 +750,11 @@ export default function Landing() {
           </div>
 
           {/* GSAP Horizontal scroll gallery */}
-          <div className="h-scroll-section mb-16">
+          <div className="h-scroll-section mb-12 md:mb-16">
             <div className="h-scroll-container overflow-hidden">
-              <div className="h-scroll-track flex gap-6 w-max">
+              <div className="h-scroll-track flex gap-4 md:gap-6 w-max">
                 {DASHBOARD_VIEWS.map((d, i) => (
-                  <div key={i} className="h-scroll-card w-[380px] flex-shrink-0">
+                  <div key={i} className="h-scroll-card w-[280px] md:w-[380px] flex-shrink-0">
                     <TiltCard className="h-full">
                       <DashboardCard data={d} />
                     </TiltCard>
@@ -761,7 +762,7 @@ export default function Landing() {
                 ))}
               </div>
             </div>
-            <div className="flex justify-center mt-6">
+            <div className="flex justify-center mt-4 md:mt-6">
               <span className="text-xs text-slate-400 font-medium">Scroll to explore more tickers</span>
             </div>
           </div>
@@ -769,24 +770,24 @@ export default function Landing() {
           {/* Full dashboard preview */}
           <div className="dashboard-preview p-[3px] rounded-[2rem] bg-gradient-to-br from-indigo-200/40 via-white/60 to-violet-200/30">
             <div className="glass-strong rounded-[calc(2rem-3px)] overflow-hidden">
-              <div className="bg-slate-50/80 border-b border-slate-200/50 px-6 py-3.5 flex justify-between items-center">
+              <div className="bg-slate-50/80 border-b border-slate-200/50 px-4 md:px-6 py-3 flex md:flex-row justify-between items-center gap-2 flex-wrap">
                 <div className="flex gap-1.5">
                   {['#FF5F57', '#FEBC2E', '#28C840'].map(c => <div key={c} className="w-2.5 h-2.5 rounded-full" style={{ background: c }} />)}
                 </div>
-                <div className="bg-indigo-50 border border-indigo-200/50 rounded-lg px-4 py-1.5 text-xs text-indigo-600 font-semibold">NVDA - 30 Day Forecast</div>
-                <div className="flex gap-5">
+                <div className="bg-indigo-50 border border-indigo-200/50 rounded-lg px-3 md:px-4 py-1.5 text-[10px] md:text-xs text-indigo-600 font-semibold order-3 md:order-2">NVDA - 30 Day Forecast</div>
+                <div className="flex gap-4 md:gap-5 order-2 md:order-3">
                   <div className="text-right">
                     <div className="text-[10px] text-slate-400 font-bold tracking-wider">PRICE</div>
-                    <div className="text-base font-extrabold text-slate-900 font-heading">$894.20</div>
+                    <div className="text-sm md:text-base font-extrabold text-slate-900 font-heading">$894.20</div>
                   </div>
                   <div className="text-right">
                     <div className="text-[10px] text-indigo-500 font-bold tracking-wider">PREDICTED</div>
-                    <div className="text-base font-extrabold text-indigo-600 font-heading">$942.15</div>
+                    <div className="text-sm md:text-base font-extrabold text-indigo-600 font-heading">$942.15</div>
                   </div>
                 </div>
               </div>
-              <div className="p-7 flex gap-6 bg-white/50">
-                <div className="flex-1">
+              <div className="p-4 md:p-7 flex flex-col md:flex-row gap-4 md:gap-6 bg-white/50">
+                <div className="flex-1 min-w-0">
                   <svg width="100%" height="200" viewBox="0 0 600 200" preserveAspectRatio="none" className="block rounded-2xl">
                     <defs>
                       <linearGradient id="chartGradLight" x1="0" y1="0" x2="0" y2="1">
@@ -800,7 +801,7 @@ export default function Landing() {
                     <line x1="420" y1="30" x2="420" y2="200" stroke="rgba(0,0,0,0.06)" strokeWidth="1" strokeDasharray="3,2" />
                     <text x="426" y="46" fontSize="10" fill="#94A3B8" fontFamily="DM Sans, sans-serif" fontWeight="600">Forecast</text>
                   </svg>
-                  <div className="grid grid-cols-4 gap-3 mt-5">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mt-4 md:mt-5">
                     {[['CONFIDENCE', '88%', 'text-indigo-600'], ['VOLATILITY', 'Medium', 'text-slate-700'], ['VOLUME', 'High', 'text-slate-700'], ['MAE', '0.018', 'text-indigo-600']].map(([l, v, c]) => (
                       <div key={l} className="glass-subtle rounded-xl px-4 py-3.5">
                         <div className="text-[10px] text-slate-400 font-bold tracking-wider mb-1">{l}</div>
@@ -809,7 +810,7 @@ export default function Landing() {
                     ))}
                   </div>
                 </div>
-                <div className="w-[220px] glass-subtle rounded-2xl p-6">
+                <div className="w-full md:w-[220px] flex-shrink-0 glass-subtle rounded-2xl p-5 md:p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Zap className="w-4 h-4 text-indigo-500" />
                     <span className="text-xs font-bold text-indigo-600 font-heading">AI Narrative</span>
@@ -830,14 +831,14 @@ export default function Landing() {
       </section>
 
       {/* ===== How It Works ===== */}
-      <section className="steps-section relative py-36 px-6 lg:px-12 overflow-hidden">
-        <div className="orb orb-emerald w-[400px] h-[400px] top-[-15%] left-[40%]" />
-        <div className="orb orb-violet w-[300px] h-[300px] bottom-[-10%] right-[20%]" />
+      <section className="steps-section relative py-20 md:py-36 px-5 md:px-6 lg:px-12 overflow-hidden">
+        <div className="orb orb-emerald w-[250px] h-[250px] md:w-[400px] md:h-[400px] top-[-15%] left-[40%]" />
+        <div className="orb orb-violet w-[200px] h-[200px] md:w-[300px] md:h-[300px] bottom-[-10%] right-[20%]" />
         <div className="absolute inset-0 dot-grid opacity-20" />
         <div className="max-w-5xl mx-auto relative">
           <span className="inline-block glass-subtle rounded-full px-3 py-1 text-[10px] text-indigo-600 font-bold tracking-[0.2em] uppercase mb-5">Process</span>
           <h2 className="font-heading text-4xl lg:text-5xl font-extrabold text-slate-900 mb-16 tracking-tight">How it works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-0 relative">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-0 relative">
             <div className="step-line absolute top-7 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-transparent via-indigo-300/40 to-transparent z-0 hidden md:block origin-left" />
             {STEPS.map((s, i) => (
               <div key={i} className="step-item text-center px-6 relative z-10">
@@ -854,16 +855,16 @@ export default function Landing() {
       </section>
 
       {/* ===== Pricing ===== */}
-      <section className="pricing-section relative py-36 px-6 lg:px-12 overflow-hidden">
-        <div className="orb orb-blue w-[400px] h-[400px] top-[5%] right-[-5%]" />
-        <div className="orb orb-indigo w-[350px] h-[350px] bottom-[10%] left-[-5%]" />
+      <section className="pricing-section relative py-20 md:py-36 px-5 md:px-6 lg:px-12 overflow-hidden">
+        <div className="orb orb-blue w-[250px] h-[250px] md:w-[400px] md:h-[400px] top-[5%] right-[-5%]" />
+        <div className="orb orb-indigo w-[200px] h-[200px] md:w-[350px] md:h-[350px] bottom-[10%] left-[-5%]" />
         <div className="max-w-5xl mx-auto relative">
           <div className="mb-14">
             <span className="inline-block glass-subtle rounded-full px-3 py-1 text-[10px] text-indigo-600 font-bold tracking-[0.2em] uppercase mb-5">Pricing</span>
             <h2 className="font-heading text-4xl lg:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">Plans</h2>
             <p className="text-lg text-slate-500">Scale from individual analysis to institutional-grade forecasting.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 items-start">
             {PLANS.map((plan, i) => (
               <div key={i} className="pricing-card relative">
                 {plan.popular && (
@@ -900,10 +901,10 @@ export default function Landing() {
       </section>
 
       {/* ===== Footer ===== */}
-      <footer className="footer-section relative py-20 px-6 lg:px-12 overflow-hidden">
+      <footer className="footer-section relative py-16 md:py-20 px-5 md:px-6 lg:px-12 overflow-hidden">
         <div className="footer-content max-w-5xl mx-auto relative">
-          <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-12 mb-12">
-            <div>
+          <div className="grid grid-cols-2 md:grid-cols-[2fr_1fr_1fr_1fr] gap-8 md:gap-12 mb-12">
+            <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2.5 mb-4">
                 <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center">
                   <Activity className="w-4 h-4 text-white" />

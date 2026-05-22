@@ -106,6 +106,102 @@ body {
   width: 1px;
 }
 
+/* Kinetic marquee */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes marquee-reverse {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+.marquee-track {
+  animation: marquee 30s linear infinite;
+}
+.marquee-track-reverse {
+  animation: marquee-reverse 35s linear infinite;
+}
+
+/* Parallax tilt card */
+.tilt-card {
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.tilt-card-inner {
+  transform: translateZ(30px);
+}
+
+/* Magnetic button */
+.magnetic-btn {
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Spotlight border effect */
+@keyframes spotlight-rotate {
+  0% { --spot-angle: 0deg; }
+  100% { --spot-angle: 360deg; }
+}
+.spotlight-border {
+  position: relative;
+  overflow: hidden;
+}
+.spotlight-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: conic-gradient(from var(--spot-angle, 0deg), transparent 60%, rgba(99,102,241,0.3) 70%, rgba(139,92,246,0.2) 80%, transparent 90%);
+  animation: spotlight-rotate 6s linear infinite;
+  z-index: -1;
+}
+.spotlight-border::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: inherit;
+  z-index: -1;
+}
+
+/* Animated counter */
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Skeleton shimmer */
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(90deg, rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.04) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 2s ease-in-out infinite;
+}
+
+/* Bento grid helpers */
+.bento-grid {
+  display: grid;
+  grid-auto-flow: dense;
+}
+
+/* Horizontal scroll section */
+.horizontal-scroll-section {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.horizontal-scroll-section::-webkit-scrollbar {
+  display: none;
+}
+.scroll-snap-item {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
 /* Glass card base */
 .glass {
   background: rgba(255, 255, 255, 0.55);

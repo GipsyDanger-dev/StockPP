@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Activity, ArrowRight, X, Check, Zap, Shield, Globe, BarChart3, TrendingUp, LineChart } from 'lucide-react'
+import { Activity, ArrowRight, X, Check, Zap, Shield, Globe, BarChart3, TrendingUp, LineChart, Cpu, Database, Brain } from 'lucide-react'
 
 import { gsap } from 'gsap/dist/gsap'
 import { useGSAP } from '@gsap/react/dist'
@@ -22,6 +22,19 @@ const TICKERS = [
   { symbol: 'BBCA.JK', name: 'Bank BCA', price: 'Rp9.250', pred: 'Rp9.750', change: '+5.41%', up: true },
 ]
 
+const MARQUEE_ITEMS = [
+  { symbol: 'NVDA', price: '$894.20', change: '+5.36%', up: true },
+  { symbol: 'AAPL', price: '$189.40', change: '+6.54%', up: true },
+  { symbol: 'MSFT', price: '$415.80', change: '+2.18%', up: true },
+  { symbol: 'GOOGL', price: '$174.20', change: '+3.42%', up: true },
+  { symbol: 'AMZN', price: '$186.50', change: '-1.24%', up: false },
+  { symbol: 'BBCA.JK', price: 'Rp9.250', change: '+5.41%', up: true },
+  { symbol: 'TSLA', price: '$248.90', change: '-2.15%', up: false },
+  { symbol: 'META', price: '$505.75', change: '+4.12%', up: true },
+  { symbol: 'BBRI.JK', price: 'Rp4.680', change: '+1.89%', up: true },
+  { symbol: 'NFLX', price: '$628.30', change: '+3.67%', up: true },
+]
+
 const TECH_STACK = [
   { name: 'FastAPI', color: '#009688', icon: 'fastapi' },
   { name: 'TensorFlow', color: '#FF6F00', icon: 'tensorflow' },
@@ -33,17 +46,30 @@ const TECH_STACK = [
 ]
 
 const FEATURES = [
-  { icon: LineChart, title: 'LSTM Prediction Engine', desc: 'Trained per-ticker on historical price data. Learns patterns from 60-day windows and forecasts up to 30 days ahead.', accent: 'indigo' },
-  { icon: Globe, title: 'Live Market Data', desc: 'Real-time quotes from Yahoo Finance and Finnhub. Supports US stocks and Indonesian tickers like BBCA.JK.', accent: 'emerald' },
-  { icon: BarChart3, title: 'Accuracy Metrics', desc: 'Every prediction comes with RMSE and MAE scores. You see exactly how reliable each forecast is.', accent: 'violet' },
-  { icon: Shield, title: 'Prediction Validation', desc: 'Forecasts are automatically checked against actual prices. Track direction accuracy over time.', accent: 'amber' },
+  { icon: Brain, title: 'LSTM Prediction Engine', desc: 'Three-layer LSTM with 50 units per layer. Trained on 60-day sliding windows, forecasts up to 30 days ahead with MinMaxScaler normalization.', accent: 'indigo', span: 'col-span-2 row-span-2' },
+  { icon: Globe, title: 'Live Market Data', desc: 'Real-time quotes from Yahoo Finance and Finnhub. 30+ tickers across US and Indonesian markets.', accent: 'emerald', span: 'col-span-1 row-span-1' },
+  { icon: BarChart3, title: 'Accuracy Metrics', desc: 'RMSE, MAE, and R-squared on every prediction. Confidence intervals included.', accent: 'violet', span: 'col-span-1 row-span-1' },
+  { icon: Shield, title: 'Auto Validation', desc: 'Forecasts checked against actual prices automatically. Track direction accuracy over time.', accent: 'amber', span: 'col-span-1 row-span-1' },
+]
+
+const DASHBOARD_VIEWS = [
+  { ticker: 'NVDA', price: '$894.20', pred: '$942.15', confidence: '88%', trend: 'up' },
+  { ticker: 'AAPL', price: '$189.40', pred: '$201.80', confidence: '82%', trend: 'up' },
+  { ticker: 'MSFT', price: '$415.80', pred: '$432.10', confidence: '79%', trend: 'up' },
 ]
 
 const STEPS = [
-  { n: '01', title: 'Fetch data', desc: 'Historical prices pulled from Yahoo Finance and Finnhub APIs in real-time.', icon: TrendingUp },
+  { n: '01', title: 'Fetch data', desc: 'Historical prices pulled from Yahoo Finance and Finnhub APIs.', icon: TrendingUp },
   { n: '02', title: 'Normalize', desc: 'Price data scaled to 0-1 range and shaped into 60-day sequences.', icon: Activity },
-  { n: '03', title: 'Predict', desc: 'LSTM neural network runs inference and generates price forecasts.', icon: Zap },
-  { n: '04', title: 'Display', desc: 'Results shown on your dashboard with interactive charts.', icon: BarChart3 },
+  { n: '03', title: 'Predict', desc: 'LSTM neural network runs inference and generates forecasts.', icon: Zap },
+  { n: '04', title: 'Display', desc: 'Results shown with interactive charts and trend analysis.', icon: BarChart3 },
+]
+
+const STATS = [
+  { value: 99.2, suffix: '%', label: 'Uptime SLA', decimals: 1 },
+  { value: 0.018, suffix: '', label: 'Avg MAE Error', decimals: 3 },
+  { value: 30, suffix: '+', label: 'Global Tickers', decimals: 0 },
+  { value: 88, suffix: '%', label: 'Model Confidence', decimals: 0 },
 ]
 
 const PLANS = [
@@ -53,12 +79,98 @@ const PLANS = [
 ]
 
 const ACCENT = {
-  indigo: { bg: 'bg-indigo-50', text: 'text-indigo-600', ring: 'ring-indigo-200' },
-  emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', ring: 'ring-emerald-200' },
-  violet: { bg: 'bg-violet-50', text: 'text-violet-600', ring: 'ring-violet-200' },
-  amber: { bg: 'bg-amber-50', text: 'text-amber-600', ring: 'ring-amber-200' },
+  indigo: { bg: 'bg-indigo-50', text: 'text-indigo-600', ring: 'ring-indigo-200', glow: 'rgba(99,102,241,0.08)' },
+  emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', ring: 'ring-emerald-200', glow: 'rgba(16,185,129,0.08)' },
+  violet: { bg: 'bg-violet-50', text: 'text-violet-600', ring: 'ring-violet-200', glow: 'rgba(139,92,246,0.08)' },
+  amber: { bg: 'bg-amber-50', text: 'text-amber-600', ring: 'ring-amber-200', glow: 'rgba(245,158,11,0.08)' },
 }
 
+/* Animated Counter Hook */
+function useCounter(target, decimals = 0, duration = 2000) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const counted = useRef(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !counted.current) {
+        counted.current = true
+        const start = performance.now()
+        const step = (now) => {
+          const progress = Math.min((now - start) / duration, 1)
+          const eased = 1 - Math.pow(1 - progress, 3)
+          setCount(eased * target)
+          if (progress < 1) requestAnimationFrame(step)
+        }
+        requestAnimationFrame(step)
+      }
+    }, { threshold: 0.5 })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [target, duration])
+
+  return { ref, count: count.toFixed(decimals) }
+}
+
+/* Kinetic Marquee */
+function MarqueeRow({ items, reverse = false }) {
+  const doubled = [...items, ...items]
+  return (
+    <div className="overflow-hidden">
+      <div className={`flex gap-8 w-max ${reverse ? 'marquee-track-reverse' : 'marquee-track'}`}>
+        {doubled.map((t, i) => (
+          <div key={i} className="flex items-center gap-3 px-5 py-2.5 rounded-xl glass-subtle whitespace-nowrap">
+            <span className="font-heading font-bold text-sm text-slate-800">{t.symbol}</span>
+            <span className="text-sm text-slate-500 font-medium">{t.price}</span>
+            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-md ${t.up ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
+              {t.change}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* Parallax Tilt Card */
+function TiltCard({ children, className = '' }) {
+  const cardRef = useRef(null)
+
+  const handleMouseMove = useCallback((e) => {
+    const card = cardRef.current
+    if (!card) return
+    const rect = card.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    const centerX = rect.width / 2
+    const centerY = rect.height / 2
+    const rotateX = ((y - centerY) / centerY) * -6
+    const rotateY = ((x - centerX) / centerX) * 6
+    card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`
+  }, [])
+
+  const handleMouseLeave = useCallback(() => {
+    const card = cardRef.current
+    if (!card) return
+    card.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)'
+  }, [])
+
+  return (
+    <div
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className={`transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${className}`}
+      style={{ transformStyle: 'preserve-3d' }}
+    >
+      {children}
+    </div>
+  )
+}
+
+/* Mini Chart */
 function MiniChart({ up = true }) {
   const points = up
     ? '0,50 20,45 40,48 60,35 80,38 100,28 120,30 140,18 160,22 180,10'
@@ -77,6 +189,7 @@ function MiniChart({ up = true }) {
   )
 }
 
+/* Ticker Card */
 function TickerCard({ ticker }) {
   return (
     <div className="glass rounded-2xl p-4 min-w-[190px]">
@@ -104,6 +217,7 @@ function TickerCard({ ticker }) {
   )
 }
 
+/* Metric Badge */
 function MetricBadge({ label, value }) {
   return (
     <div className="glass rounded-xl px-3.5 py-2.5">
@@ -113,6 +227,20 @@ function MetricBadge({ label, value }) {
   )
 }
 
+/* Stat Counter Card */
+function StatCard({ value, suffix, label, decimals }) {
+  const { ref, count } = useCounter(value, decimals)
+  return (
+    <div ref={ref} className="text-center px-8">
+      <div className="font-heading text-4xl lg:text-5xl font-extrabold text-slate-900 mb-1">
+        {count}<span className="text-indigo-500">{suffix}</span>
+      </div>
+      <div className="text-sm text-slate-400 font-medium">{label}</div>
+    </div>
+  )
+}
+
+/* Tech Logo SVG */
 function TechLogo({ icon, size = 20, color = 'currentColor' }) {
   const s = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', xmlns: 'http://www.w3.org/2000/svg' }
   switch (icon) {
@@ -176,20 +304,85 @@ function TechLogo({ icon, size = 20, color = 'currentColor' }) {
   }
 }
 
+/* Dashboard Preview Card for horizontal scroll */
+function DashboardCard({ data }) {
+  const chartPoints = data.trend === 'up'
+    ? '0,60 40,50 80,55 120,40 160,35 200,25 240,20 280,15 320,10'
+    : '0,15 40,25 80,20 120,35 160,40 200,50 240,55 280,60 320,65'
+  return (
+    <div className="scroll-snap-item w-[380px] flex-shrink-0">
+      <TiltCard className="h-full">
+        <div className="glass-strong rounded-2xl overflow-hidden h-full">
+          <div className="px-5 py-4 border-b border-slate-100/60 flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-lg flex items-center justify-center">
+                <LineChart className="w-3 h-3 text-white" />
+              </div>
+              <span className="font-heading font-bold text-sm text-slate-800">{data.ticker}</span>
+            </div>
+            <span className="text-[10px] text-indigo-500 font-bold bg-indigo-50 px-2 py-0.5 rounded-md">{data.confidence} confidence</span>
+          </div>
+          <div className="p-5">
+            <svg width="100%" height="80" viewBox="0 0 320 80" preserveAspectRatio="none" className="block mb-4">
+              <defs>
+                <linearGradient id={`cardGrad-${data.ticker}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#4F46E5" stopOpacity="0.1" />
+                  <stop offset="100%" stopColor="#4F46E5" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <polyline points={chartPoints} fill="none" stroke="#4F46E5" strokeWidth="2" strokeLinecap="round" />
+              <polygon points={`0,80 ${chartPoints} 320,80`} fill={`url(#cardGrad-${data.ticker})`} />
+            </svg>
+            <div className="flex justify-between">
+              <div>
+                <div className="text-[10px] text-slate-400 font-medium">PRICE</div>
+                <div className="text-base font-extrabold text-slate-900 font-heading">{data.price}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] text-indigo-500 font-medium">PREDICTED</div>
+                <div className="text-base font-extrabold text-indigo-600 font-heading">{data.pred}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </TiltCard>
+    </div>
+  )
+}
+
 export default function Landing() {
   const navigate = useNavigate()
   const [showAnnouncement, setShowAnnouncement] = useState(true)
   const [isScrolled, setIsScrolled] = useState(false)
-  const [menuOpen, setMenuOpen] = useState(false)
   const containerRef = useRef(null)
   const heroHeadingRef = useRef(null)
   const heroSubRef = useRef(null)
   const scrambleRef = useRef(null)
+  const magBtnRef = useRef(null)
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50)
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  /* Magnetic button effect */
+  useEffect(() => {
+    const btn = magBtnRef.current
+    if (!btn) return
+    const handleMove = (e) => {
+      const rect = btn.getBoundingClientRect()
+      const x = e.clientX - rect.left - rect.width / 2
+      const y = e.clientY - rect.top - rect.height / 2
+      btn.style.transform = `translate(${x * 0.15}px, ${y * 0.15}px)`
+    }
+    const handleLeave = () => { btn.style.transform = 'translate(0, 0)' }
+    btn.addEventListener('mousemove', handleMove)
+    btn.addEventListener('mouseleave', handleLeave)
+    return () => {
+      btn.removeEventListener('mousemove', handleMove)
+      btn.removeEventListener('mouseleave', handleLeave)
+    }
   }, [])
 
   useGSAP(() => {
@@ -210,70 +403,35 @@ export default function Landing() {
       delay: 0.3,
     })
 
-    // Hero subtitle
-    gsap.from(heroSubRef.current, {
-      opacity: 0,
-      y: 16,
-      duration: 0.6,
-      delay: 0.8,
-      ease: 'power2.out',
-    })
+    gsap.from(heroSubRef.current, { opacity: 0, y: 16, duration: 0.6, delay: 0.8, ease: 'power2.out' })
 
-    // Scramble text badge
     if (scrambleRef.current) {
       gsap.to(scrambleRef.current, {
         duration: 1.5,
-        scrambleText: {
-          text: 'AI-POWERED FORECASTING',
-          chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
-          revealDelay: 0.5,
-          speed: 0.3,
-        },
+        scrambleText: { text: 'AI-POWERED FORECASTING', chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', revealDelay: 0.5, speed: 0.3 },
         delay: 0.2,
       })
     }
 
-    // Hero CTAs
-    gsap.from('.hero-cta', {
-      y: 24,
-      opacity: 0,
-      stagger: 0.12,
-      duration: 0.6,
-      ease: 'power3.out',
-      delay: 1,
-    })
-
-    // Hero stats
-    gsap.from('.hero-stat', {
-      y: 16,
-      opacity: 0,
-      stagger: 0.08,
-      duration: 0.5,
-      ease: 'power2.out',
-      delay: 1.3,
-    })
+    gsap.from('.hero-cta', { y: 24, opacity: 0, stagger: 0.12, duration: 0.6, ease: 'power3.out', delay: 1 })
+    gsap.from('.hero-stat', { y: 16, opacity: 0, stagger: 0.08, duration: 0.5, ease: 'power2.out', delay: 1.3 })
 
     // Hero 3D parallax
     gsap.to('.hero-3d', {
-      scrollTrigger: {
-        trigger: '.hero-section',
-        start: 'top top',
-        end: 'bottom top',
-        scrub: 1.5,
-      },
-      y: -60,
-      scale: 0.92,
-      opacity: 0.4,
+      scrollTrigger: { trigger: '.hero-section', start: 'top top', end: 'bottom top', scrub: 1.5 },
+      y: -60, scale: 0.92, opacity: 0.4,
+    })
+
+    // Marquee speed change on scroll
+    gsap.to('.marquee-track', {
+      scrollTrigger: { trigger: '.marquee-section', start: 'top bottom', end: 'bottom top', scrub: true },
+      x: -100,
     })
 
     // Tech stack stagger
     gsap.from('.tech-item', {
       scrollTrigger: { trigger: '.tech-section', start: 'top 85%' },
-      y: 20,
-      opacity: 0,
-      stagger: 0.06,
-      duration: 0.5,
-      ease: 'power2.out',
+      y: 20, opacity: 0, stagger: 0.06, duration: 0.5, ease: 'power2.out',
     })
 
     // Feature heading SplitText
@@ -282,49 +440,28 @@ export default function Landing() {
       const featureSplit = new SplitText(featureHeading, { type: 'words', wordsClass: 'word' })
       gsap.from(featureSplit.words, {
         scrollTrigger: { trigger: '.features-section', start: 'top 80%' },
-        y: 24,
-        opacity: 0,
-        stagger: 0.04,
-        duration: 0.6,
-        ease: 'power3.out',
+        y: 24, opacity: 0, stagger: 0.04, duration: 0.6, ease: 'power3.out',
       })
     }
 
-    // Feature cards
-    gsap.utils.toArray('.feature-card').forEach((card) => {
+    // Bento feature cards — staggered reveal
+    gsap.utils.toArray('.bento-card').forEach((card, i) => {
       gsap.from(card, {
-        scrollTrigger: {
-          trigger: card,
-          start: 'top 88%',
-          end: 'top 60%',
-          scrub: 0.5,
-        },
-        y: 40,
-        opacity: 0,
-        scale: 0.97,
+        scrollTrigger: { trigger: card, start: 'top 90%', end: 'top 60%', scrub: 0.5 },
+        y: 50, opacity: 0, scale: 0.95,
       })
     })
 
-    // CardSwap reveal
-    gsap.from('.cardswap-wrap', {
-      scrollTrigger: { trigger: '.features-section', start: 'top 70%' },
-      x: 40,
-      opacity: 0,
-      duration: 0.9,
-      ease: 'power3.out',
+    // Stats counters reveal
+    gsap.from('.stat-item', {
+      scrollTrigger: { trigger: '.stats-section', start: 'top 80%' },
+      y: 30, opacity: 0, stagger: 0.1, duration: 0.6, ease: 'power3.out',
     })
 
-    // Dashboard preview
-    gsap.from('.dashboard-preview', {
-      scrollTrigger: {
-        trigger: '.dashboard-section',
-        start: 'top 80%',
-        end: 'top 40%',
-        scrub: 0.8,
-      },
-      y: 50,
-      scale: 0.95,
-      opacity: 0,
+    // Dashboard horizontal scroll parallax
+    gsap.to('.dashboard-scroll-inner', {
+      scrollTrigger: { trigger: '.dashboard-section', start: 'top 80%', end: 'bottom 20%', scrub: 1 },
+      x: -80,
     })
 
     // Chart line draw
@@ -334,9 +471,7 @@ export default function Landing() {
       gsap.set(chartLine, { strokeDasharray: lineLength, strokeDashoffset: lineLength })
       gsap.to(chartLine, {
         scrollTrigger: { trigger: '.dashboard-section', start: 'top 70%' },
-        strokeDashoffset: 0,
-        duration: 2,
-        ease: 'power2.inOut',
+        strokeDashoffset: 0, duration: 2, ease: 'power2.inOut',
       })
     }
 
@@ -344,40 +479,25 @@ export default function Landing() {
     gsap.utils.toArray('.step-item').forEach((step, i) => {
       gsap.from(step, {
         scrollTrigger: { trigger: step, start: 'top 88%' },
-        y: 30,
-        opacity: 0,
-        duration: 0.6,
-        delay: i * 0.1,
-        ease: 'power3.out',
+        y: 30, opacity: 0, duration: 0.6, delay: i * 0.1, ease: 'power3.out',
       })
     })
 
-    // Step connector line
     gsap.from('.step-line', {
       scrollTrigger: { trigger: '.steps-section', start: 'top 80%' },
-      scaleX: 0,
-      duration: 1.2,
-      ease: 'power2.inOut',
-      delay: 0.3,
+      scaleX: 0, duration: 1.2, ease: 'power2.inOut', delay: 0.3,
     })
 
     // Pricing cards
     gsap.from('.pricing-card', {
       scrollTrigger: { trigger: '.pricing-section', start: 'top 80%' },
-      y: 40,
-      opacity: 0,
-      stagger: 0.12,
-      duration: 0.7,
-      ease: 'power3.out',
+      y: 40, opacity: 0, stagger: 0.12, duration: 0.7, ease: 'power3.out',
     })
 
     // Footer
     gsap.from('.footer-content', {
       scrollTrigger: { trigger: '.footer-section', start: 'top 90%' },
-      y: 24,
-      opacity: 0,
-      duration: 0.6,
-      ease: 'power2.out',
+      y: 24, opacity: 0, duration: 0.6, ease: 'power2.out',
     })
 
   }, { scope: containerRef })
@@ -386,29 +506,21 @@ export default function Landing() {
 
   return (
     <div ref={containerRef} className="min-h-screen overflow-x-hidden mesh-bg relative">
-
-      {/* Global noise overlay */}
       <div className="noise-overlay" />
 
-      {/* ===== Section 1: Announcement Bar ===== */}
+      {/* ===== Announcement Bar ===== */}
       {showAnnouncement && (
         <div className="fixed top-0 left-0 right-0 z-[60] bg-white/70 backdrop-blur-xl border-b border-indigo-100/50 text-xs text-center py-2 font-medium text-slate-500 flex items-center justify-center gap-3">
           <span className="bg-indigo-100 text-indigo-600 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">New</span>
           <span>Real-time sentiment analysis now in beta</span>
-          <button
-            onClick={() => setShowAnnouncement(false)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors bg-transparent border-none cursor-pointer p-1"
-          >
+          <button onClick={() => setShowAnnouncement(false)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors bg-transparent border-none cursor-pointer p-1">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
 
-      {/* ===== Section 2: Navbar ===== */}
-      <nav
-        className="fixed left-0 right-0 z-50 h-[64px] px-6 flex items-center transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]"
-        style={{ top: announcementOffset }}
-      >
+      {/* ===== Navbar ===== */}
+      <nav className="fixed left-0 right-0 z-50 h-[64px] px-6 flex items-center transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]" style={{ top: announcementOffset }}>
         <div className={`w-full max-w-6xl mx-auto flex items-center h-full px-5 rounded-2xl transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] ${isScrolled ? 'glass-strong' : ''}`}>
           <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
             <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
@@ -416,106 +528,66 @@ export default function Landing() {
             </div>
             <span className="font-heading font-extrabold text-base text-slate-900 tracking-tight">StockPP</span>
           </div>
-
           <div className="hidden lg:flex items-center justify-center flex-1 gap-1">
             {NAV_LINKS.map(link => (
-              <button key={link} className="px-4 py-2 rounded-xl text-sm text-slate-500 hover:text-slate-900 hover:bg-slate-100/60 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] bg-transparent border-none cursor-pointer">
-                {link}
-              </button>
+              <button key={link} className="px-4 py-2 rounded-xl text-sm text-slate-500 hover:text-slate-900 hover:bg-slate-100/60 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] bg-transparent border-none cursor-pointer">{link}</button>
             ))}
           </div>
-
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/login')} className="hidden sm:block text-sm text-slate-500 hover:text-slate-900 bg-transparent border-none cursor-pointer font-medium px-3 py-2 rounded-xl hover:bg-slate-100/60 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
-              Log in
-            </button>
-            <button
-              onClick={() => navigate('/signup')}
-              className="btn-accent rounded-xl px-5 py-2 text-sm font-semibold cursor-pointer"
-            >
-              Get Started
-            </button>
+            <button onClick={() => navigate('/login')} className="hidden sm:block text-sm text-slate-500 hover:text-slate-900 bg-transparent border-none cursor-pointer font-medium px-3 py-2 rounded-xl hover:bg-slate-100/60 transition-all duration-300">Log in</button>
+            <button onClick={() => navigate('/signup')} className="btn-accent rounded-xl px-5 py-2 text-sm font-semibold cursor-pointer">Get Started</button>
           </div>
         </div>
       </nav>
 
-      {/* ===== Section 3: Hero ===== */}
+      {/* ===== Hero ===== */}
       <section className="hero-section relative pt-32 pb-32 px-6 lg:px-12 min-h-[100dvh] flex items-center overflow-hidden">
-        {/* Animated gradient orbs */}
         <div className="orb orb-indigo w-[500px] h-[500px] -top-40 -left-40" />
         <div className="orb orb-violet w-[400px] h-[400px] top-20 right-[-10%]" />
         <div className="orb orb-blue w-[300px] h-[300px] bottom-0 left-[30%]" />
         <div className="orb orb-pink w-[250px] h-[250px] top-[60%] right-[20%]" />
-        {/* Dot grid */}
         <div className="absolute inset-0 dot-grid opacity-40" />
-        {/* Geometric accent lines */}
         <div className="geo-line top-[30%] left-0 w-[40%]" />
         <div className="geo-line top-[70%] right-0 w-[35%]" />
         <div className="geo-line-v top-0 left-[25%] h-[50%]" />
         <div className="geo-line-v top-[20%] right-[15%] h-[60%]" />
+
         <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20 relative w-full">
           <div className="hero-text flex-1 z-10">
             <div className="inline-flex items-center gap-2 glass-subtle rounded-full px-3.5 py-1.5 mb-8">
               <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full pulse-dot" />
               <span ref={scrambleRef} className="text-[11px] font-bold text-indigo-600 tracking-wider uppercase">AI-POWERED FORECASTING</span>
             </div>
-
             <h1 ref={heroHeadingRef} className="font-heading text-[clamp(2.5rem,5vw,4rem)] font-extrabold leading-[1.08] text-slate-900 mb-7 tracking-tight" style={{ perspective: '400px' }}>
               Predict where stocks are heading, before the market does.
             </h1>
-
             <p ref={heroSubRef} className="text-lg text-slate-500 leading-relaxed max-w-lg mb-10">
               LSTM neural networks trained on historical price data, delivering forecasts with transparent accuracy metrics. No black boxes.
             </p>
-
             <div className="flex items-center gap-4 flex-wrap">
-              <button
-                onClick={() => navigate('/signup')}
-                className="hero-cta btn-accent rounded-xl px-8 py-4 text-sm font-bold cursor-pointer flex items-center gap-2.5 group"
-              >
-                Get Started
-                <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-0.5 group-hover:-translate-y-[1px] transition-transform duration-300">
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </span>
-              </button>
-              <button
-                onClick={() => navigate('/login')}
-                className="hero-cta glass-subtle text-slate-700 rounded-xl px-8 py-4 text-sm font-semibold cursor-pointer hover:bg-white/60 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"
-              >
+              <div ref={magBtnRef} className="magnetic-btn">
+                <button onClick={() => navigate('/signup')} className="hero-cta btn-accent rounded-xl px-8 py-4 text-sm font-bold cursor-pointer flex items-center gap-2.5 group">
+                  Get Started
+                  <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-0.5 group-hover:-translate-y-[1px] transition-transform duration-300">
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                </button>
+              </div>
+              <button onClick={() => navigate('/login')} className="hero-cta glass-subtle text-slate-700 rounded-xl px-8 py-4 text-sm font-semibold cursor-pointer hover:bg-white/60 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]">
                 See How It Works
               </button>
-            </div>
-
-            <div className="flex items-center gap-10 mt-16 pt-8 border-t border-slate-200/60">
-              {[['99.2%', 'Uptime SLA'], ['0.018', 'Avg MAE Error'], ['30+', 'Global Tickers']].map(([val, lbl]) => (
-                <div key={lbl} className="hero-stat">
-                  <div className="font-heading text-2xl font-extrabold text-slate-900">{val}</div>
-                  <div className="text-xs text-slate-400 font-medium mt-0.5">{lbl}</div>
-                </div>
-              ))}
             </div>
           </div>
 
           <div className="hero-3d flex-1 relative h-[500px] flex items-center justify-center">
-            {/* Dark glass container for 3D scene */}
             <div className="absolute inset-0 rounded-3xl overflow-hidden" style={{ background: 'rgba(10,10,20,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.08)' }}>
               <HeroScene />
             </div>
-            <div className="absolute top-6 -left-2 z-10 float1">
-              <TickerCard ticker={TICKERS[0]} />
-            </div>
-            <div className="absolute top-44 -right-4 z-10 float2">
-              <TickerCard ticker={TICKERS[1]} />
-            </div>
-            <div className="absolute bottom-8 left-10 z-10 float3">
-              <TickerCard ticker={TICKERS[2]} />
-            </div>
-            <div className="absolute top-10 right-6 z-20">
-              <MetricBadge label="CONFIDENCE" value="88%" />
-            </div>
-            <div className="absolute bottom-24 right-2 z-20">
-              <MetricBadge label="RMSE SCORE" value="0.024" />
-            </div>
+            <div className="absolute top-6 -left-2 z-10 float1"><TickerCard ticker={TICKERS[0]} /></div>
+            <div className="absolute top-44 -right-4 z-10 float2"><TickerCard ticker={TICKERS[1]} /></div>
+            <div className="absolute bottom-8 left-10 z-10 float3"><TickerCard ticker={TICKERS[2]} /></div>
+            <div className="absolute top-10 right-6 z-20"><MetricBadge label="CONFIDENCE" value="88%" /></div>
+            <div className="absolute bottom-24 right-2 z-20"><MetricBadge label="RMSE SCORE" value="0.024" /></div>
             <div className="absolute top-4 right-24 z-20 glass rounded-full px-3 py-1 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full pulse-dot" />
               <span className="text-[11px] font-bold text-emerald-600">Engine Active</span>
@@ -524,7 +596,16 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ===== Section 4: Tech Stack ===== */}
+      {/* ===== Kinetic Marquee ===== */}
+      <section className="marquee-section relative py-10 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-50/30 to-transparent" />
+        <div className="space-y-4 relative">
+          <MarqueeRow items={MARQUEE_ITEMS} />
+          <MarqueeRow items={[...MARQUEE_ITEMS].reverse()} reverse />
+        </div>
+      </section>
+
+      {/* ===== Tech Stack ===== */}
       <section className="tech-section relative py-16 px-6 lg:px-12 overflow-hidden">
         <div className="orb orb-emerald w-[350px] h-[350px] -top-32 left-[10%]" />
         <div className="orb orb-indigo w-[300px] h-[300px] -bottom-32 right-[5%]" />
@@ -534,23 +615,18 @@ export default function Landing() {
           </div>
           <div className="flex justify-center items-center gap-2 flex-wrap">
             {TECH_STACK.map(tech => (
-              <div
-                key={tech.name}
-                className="tech-item group flex items-center gap-2.5 px-4 py-2.5 rounded-xl hover:bg-white/50 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-default"
-              >
+              <div key={tech.name} className="tech-item group flex items-center gap-2.5 px-4 py-2.5 rounded-xl hover:bg-white/50 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-default">
                 <div className="transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-110">
                   <TechLogo icon={tech.icon} size={18} color="#94A3B8" />
                 </div>
-                <span className="text-sm text-slate-400 group-hover:text-slate-700 transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] font-medium">
-                  {tech.name}
-                </span>
+                <span className="text-sm text-slate-400 group-hover:text-slate-700 transition-colors duration-500 font-medium">{tech.name}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ===== Section 5: Features ===== */}
+      {/* ===== Features Bento Grid ===== */}
       <section className="features-section relative py-36 px-6 lg:px-12 overflow-hidden">
         <div className="orb orb-violet w-[450px] h-[450px] top-[-10%] right-[-5%]" />
         <div className="orb orb-blue w-[350px] h-[350px] bottom-[-10%] left-[10%]" />
@@ -558,119 +634,98 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto relative">
           <div className="mb-16">
             <span className="inline-block glass-subtle rounded-full px-3 py-1 text-[10px] text-indigo-600 font-bold tracking-[0.2em] uppercase mb-5">Features</span>
-            <h2 className="features-heading font-heading text-4xl lg:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">
-              What StockPP does
-            </h2>
-            <p className="text-lg text-slate-500 max-w-lg leading-relaxed">
-              Stock price forecasting with full transparency into how predictions are made and how accurate they are.
-            </p>
+            <h2 className="features-heading font-heading text-4xl lg:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">What StockPP does</h2>
+            <p className="text-lg text-slate-500 max-w-lg leading-relaxed">Stock price forecasting with full transparency into how predictions are made and how accurate they are.</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-start">
-            <div className="space-y-4">
-              {FEATURES.map((f, i) => {
-                const c = ACCENT[f.accent]
-                return (
-                  <div key={i} className="feature-card group">
-                    {/* Double-bezel outer shell */}
-                    <div className="p-[2px] rounded-[1.4rem] bg-gradient-to-br from-white/80 to-slate-200/30">
-                      {/* Inner core */}
-                      <div className="glass rounded-[calc(1.4rem-2px)] p-6 flex gap-5 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:-translate-y-0.5">
-                        <div className={`w-12 h-12 ${c.bg} rounded-xl flex items-center justify-center flex-shrink-0 ring-1 ${c.ring} group-hover:scale-105 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]`}>
-                          <f.icon className={`w-5 h-5 ${c.text}`} />
-                        </div>
-                        <div>
-                          <h3 className="font-heading text-base font-bold text-slate-900 mb-1.5">{f.title}</h3>
-                          <p className="text-sm text-slate-500 leading-relaxed">{f.desc}</p>
-                        </div>
+          {/* Bento Grid */}
+          <div className="bento-grid grid-cols-1 md:grid-cols-3 gap-5 auto-rows-[220px]">
+            {FEATURES.map((f, i) => {
+              const c = ACCENT[f.accent]
+              return (
+                <TiltCard key={i} className={`bento-card ${f.span}`}>
+                  <div className="p-[2px] rounded-[1.4rem] bg-gradient-to-br from-white/80 to-slate-200/30 h-full">
+                    <div className="glass rounded-[calc(1.4rem-2px)] p-7 h-full flex flex-col transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] overflow-hidden relative">
+                      <div className="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl pointer-events-none" style={{ background: c.glow }} />
+                      <div className={`w-12 h-12 ${c.bg} rounded-xl flex items-center justify-center ring-1 ${c.ring} mb-5 relative z-10`}>
+                        <f.icon className={`w-5 h-5 ${c.text}`} />
                       </div>
+                      <h3 className="font-heading text-lg font-bold text-slate-900 mb-2 relative z-10">{f.title}</h3>
+                      <p className="text-sm text-slate-500 leading-relaxed relative z-10 flex-1">{f.desc}</p>
                     </div>
                   </div>
-                )
-              })}
-            </div>
+                </TiltCard>
+              )
+            })}
+          </div>
 
-            <div className="cardswap-wrap hidden lg:flex justify-center items-center h-[480px]">
-              <CardSwap
-                width={420}
-                height={340}
-                cardDistance={50}
-                verticalDistance={60}
-                delay={4500}
-                pauseOnHover
-                clickToSwap
-                skewAmount={5}
-              >
-                <Card className="!bg-white/70 !backdrop-blur-xl !border-white/60 rounded-2xl p-8 overflow-hidden !shadow-[0_8px_32px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.9)]">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-200/30 rounded-full blur-3xl" />
-                  <div className="relative z-10">
-                    <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center mb-5 ring-1 ring-indigo-200/50">
-                      <LineChart className="w-7 h-7 text-indigo-500" />
+          {/* CardSwap below bento */}
+          <div className="mt-16 hidden lg:flex justify-center">
+            <div className="cardswap-wrap">
+              <CardSwap width={420} height={300} cardDistance={50} verticalDistance={60} delay={4500} pauseOnHover clickToSwap skewAmount={5}>
+                {[
+                  { icon: Brain, color: 'indigo', title: 'LSTM Neural Engine', desc: 'Three-layer LSTM with 50 units per layer. Trained on 60-day sliding windows.' },
+                  { icon: Globe, color: 'emerald', title: 'Real-Time Data', desc: 'Live quotes from Yahoo Finance and Finnhub. 30+ tickers.' },
+                  { icon: BarChart3, color: 'violet', title: 'Transparent Metrics', desc: 'RMSE, MAE, and R-squared on every prediction.' },
+                  { icon: Shield, color: 'amber', title: 'Auto Validation', desc: 'Forecasts checked against actual prices automatically.' },
+                ].map((card, i) => (
+                  <Card key={i} className="!bg-white/70 !backdrop-blur-xl !border-white/60 rounded-2xl p-8 overflow-hidden !shadow-[0_8px_32px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.9)]">
+                    <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl`} style={{ background: ACCENT[card.color].glow }} />
+                    <div className="relative z-10">
+                      <div className={`w-14 h-14 ${ACCENT[card.color].bg} rounded-2xl flex items-center justify-center mb-5 ring-1 ${ACCENT[card.color].ring}`}>
+                        <card.icon className={`w-7 h-7 ${ACCENT[card.color].text}`} />
+                      </div>
+                      <h3 className="font-heading text-xl font-bold text-slate-900 mb-3">{card.title}</h3>
+                      <p className="text-sm text-slate-500 leading-relaxed">{card.desc}</p>
                     </div>
-                    <h3 className="font-heading text-xl font-bold text-slate-900 mb-3">LSTM Neural Engine</h3>
-                    <p className="text-sm text-slate-500 leading-relaxed">Three-layer LSTM with 50 units per layer. Trained on 60-day sliding windows with MinMaxScaler normalization.</p>
-                  </div>
-                </Card>
-                <Card className="!bg-white/70 !backdrop-blur-xl !border-white/60 rounded-2xl p-8 overflow-hidden !shadow-[0_8px_32px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.9)]">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-200/30 rounded-full blur-3xl" />
-                  <div className="relative z-10">
-                    <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mb-5 ring-1 ring-emerald-200/50">
-                      <Globe className="w-7 h-7 text-emerald-500" />
-                    </div>
-                    <h3 className="font-heading text-xl font-bold text-slate-900 mb-3">Real-Time Data</h3>
-                    <p className="text-sm text-slate-500 leading-relaxed">Live market quotes from Yahoo Finance and Finnhub. Supports 30+ tickers across US and Indonesian markets.</p>
-                  </div>
-                </Card>
-                <Card className="!bg-white/70 !backdrop-blur-xl !border-white/60 rounded-2xl p-8 overflow-hidden !shadow-[0_8px_32px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.9)]">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-violet-200/30 rounded-full blur-3xl" />
-                  <div className="relative z-10">
-                    <div className="w-14 h-14 bg-violet-50 rounded-2xl flex items-center justify-center mb-5 ring-1 ring-violet-200/50">
-                      <BarChart3 className="w-7 h-7 text-violet-500" />
-                    </div>
-                    <h3 className="font-heading text-xl font-bold text-slate-900 mb-3">Transparent Metrics</h3>
-                    <p className="text-sm text-slate-500 leading-relaxed">RMSE, MAE, and R-squared scores on every prediction. Confidence intervals so you know when to trust the forecast.</p>
-                  </div>
-                </Card>
-                <Card className="!bg-white/70 !backdrop-blur-xl !border-white/60 rounded-2xl p-8 overflow-hidden !shadow-[0_8px_32px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.9)]">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200/30 rounded-full blur-3xl" />
-                  <div className="relative z-10">
-                    <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mb-5 ring-1 ring-amber-200/50">
-                      <Shield className="w-7 h-7 text-amber-500" />
-                    </div>
-                    <h3 className="font-heading text-xl font-bold text-slate-900 mb-3">Auto Validation</h3>
-                    <p className="text-sm text-slate-500 leading-relaxed">Predictions are automatically checked against actual prices when they come due. Track accuracy over time.</p>
-                  </div>
-                </Card>
+                  </Card>
+                ))}
               </CardSwap>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ===== Section 6: Dashboard Preview ===== */}
+      {/* ===== Stats Band with Animated Counters ===== */}
+      <section className="stats-section relative py-24 px-6 lg:px-12 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/40 via-white/20 to-indigo-50/40" />
+        <div className="max-w-5xl mx-auto relative">
+          <div className="glass-strong rounded-[2rem] px-8 py-14">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {STATS.map((s, i) => (
+                <div key={i} className="stat-item">
+                  <StatCard {...s} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== Dashboard Horizontal Scroll ===== */}
       <section className="dashboard-section relative py-36 px-6 lg:px-12 overflow-hidden">
         <div className="orb orb-indigo w-[500px] h-[500px] top-[10%] left-[-10%]" />
         <div className="orb orb-pink w-[300px] h-[300px] bottom-[5%] right-[5%]" />
-        <div className="max-w-5xl mx-auto relative">
+        <div className="max-w-6xl mx-auto relative">
           <div className="mb-12">
             <span className="inline-block glass-subtle rounded-full px-3 py-1 text-[10px] text-indigo-600 font-bold tracking-[0.2em] uppercase mb-5">Dashboard</span>
-            <h2 className="font-heading text-4xl lg:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">
-              See it in action
-            </h2>
+            <h2 className="font-heading text-4xl lg:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">See it in action</h2>
             <p className="text-lg text-slate-500">Interactive charts, live metrics, and AI-generated market narratives.</p>
           </div>
 
-          {/* Double-bezel dashboard */}
+          {/* Horizontal scroll gallery */}
+          <div className="horizontal-scroll-section flex gap-6 pb-4 mb-16 dashboard-scroll-inner">
+            {DASHBOARD_VIEWS.map((d, i) => <DashboardCard key={i} data={d} />)}
+          </div>
+
+          {/* Full dashboard preview */}
           <div className="dashboard-preview p-[3px] rounded-[2rem] bg-gradient-to-br from-indigo-200/40 via-white/60 to-violet-200/30">
             <div className="glass-strong rounded-[calc(2rem-3px)] overflow-hidden">
-              {/* Browser chrome */}
               <div className="bg-slate-50/80 border-b border-slate-200/50 px-6 py-3.5 flex justify-between items-center">
                 <div className="flex gap-1.5">
                   {['#FF5F57', '#FEBC2E', '#28C840'].map(c => <div key={c} className="w-2.5 h-2.5 rounded-full" style={{ background: c }} />)}
                 </div>
-                <div className="bg-indigo-50 border border-indigo-200/50 rounded-lg px-4 py-1.5 text-xs text-indigo-600 font-semibold">
-                  NVDA - 30 Day Forecast
-                </div>
+                <div className="bg-indigo-50 border border-indigo-200/50 rounded-lg px-4 py-1.5 text-xs text-indigo-600 font-semibold">NVDA - 30 Day Forecast</div>
                 <div className="flex gap-5">
                   <div className="text-right">
                     <div className="text-[10px] text-slate-400 font-bold tracking-wider">PRICE</div>
@@ -682,7 +737,6 @@ export default function Landing() {
                   </div>
                 </div>
               </div>
-
               <div className="p-7 flex gap-6 bg-white/50">
                 <div className="flex-1">
                   <svg width="100%" height="200" viewBox="0 0 600 200" preserveAspectRatio="none" className="block rounded-2xl">
@@ -698,7 +752,6 @@ export default function Landing() {
                     <line x1="420" y1="30" x2="420" y2="200" stroke="rgba(0,0,0,0.06)" strokeWidth="1" strokeDasharray="3,2" />
                     <text x="426" y="46" fontSize="10" fill="#94A3B8" fontFamily="DM Sans, sans-serif" fontWeight="600">Forecast</text>
                   </svg>
-
                   <div className="grid grid-cols-4 gap-3 mt-5">
                     {[['CONFIDENCE', '88%', 'text-indigo-600'], ['VOLATILITY', 'Medium', 'text-slate-700'], ['VOLUME', 'High', 'text-slate-700'], ['MAE', '0.018', 'text-indigo-600']].map(([l, v, c]) => (
                       <div key={l} className="glass-subtle rounded-xl px-4 py-3.5">
@@ -708,15 +761,12 @@ export default function Landing() {
                     ))}
                   </div>
                 </div>
-
                 <div className="w-[220px] glass-subtle rounded-2xl p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Zap className="w-4 h-4 text-indigo-500" />
                     <span className="text-xs font-bold text-indigo-600 font-heading">AI Narrative</span>
                   </div>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    Bullish convergence on the 4H timeframe. Institutional AI sector rotation suggests a probable upside breakout within 7 trading days.
-                  </p>
+                  <p className="text-xs text-slate-500 leading-relaxed">Bullish convergence on the 4H timeframe. Institutional AI sector rotation suggests a probable upside breakout within 7 trading days.</p>
                   <div className="mt-5">
                     <div className="text-[11px] text-slate-400 mb-1.5 font-medium">Model Confidence</div>
                     <div className="bg-slate-100 rounded-full h-2">
@@ -731,16 +781,14 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ===== Section 7: How It Works ===== */}
+      {/* ===== How It Works ===== */}
       <section className="steps-section relative py-36 px-6 lg:px-12 overflow-hidden">
         <div className="orb orb-emerald w-[400px] h-[400px] top-[-15%] left-[40%]" />
         <div className="orb orb-violet w-[300px] h-[300px] bottom-[-10%] right-[20%]" />
         <div className="absolute inset-0 dot-grid opacity-20" />
         <div className="max-w-5xl mx-auto relative">
           <span className="inline-block glass-subtle rounded-full px-3 py-1 text-[10px] text-indigo-600 font-bold tracking-[0.2em] uppercase mb-5">Process</span>
-          <h2 className="font-heading text-4xl lg:text-5xl font-extrabold text-slate-900 mb-16 tracking-tight">
-            How it works
-          </h2>
+          <h2 className="font-heading text-4xl lg:text-5xl font-extrabold text-slate-900 mb-16 tracking-tight">How it works</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-0 relative">
             <div className="step-line absolute top-7 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-transparent via-indigo-300/40 to-transparent z-0 hidden md:block origin-left" />
             {STEPS.map((s, i) => (
@@ -757,19 +805,16 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ===== Section 8: Pricing ===== */}
+      {/* ===== Pricing ===== */}
       <section className="pricing-section relative py-36 px-6 lg:px-12 overflow-hidden">
         <div className="orb orb-blue w-[400px] h-[400px] top-[5%] right-[-5%]" />
         <div className="orb orb-indigo w-[350px] h-[350px] bottom-[10%] left-[-5%]" />
         <div className="max-w-5xl mx-auto relative">
           <div className="mb-14">
             <span className="inline-block glass-subtle rounded-full px-3 py-1 text-[10px] text-indigo-600 font-bold tracking-[0.2em] uppercase mb-5">Pricing</span>
-            <h2 className="font-heading text-4xl lg:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">
-              Plans
-            </h2>
+            <h2 className="font-heading text-4xl lg:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">Plans</h2>
             <p className="text-lg text-slate-500">Scale from individual analysis to institutional-grade forecasting.</p>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
             {PLANS.map((plan, i) => (
               <div key={i} className="pricing-card relative">
@@ -778,7 +823,6 @@ export default function Landing() {
                     <span className="btn-accent text-[10px] font-bold rounded-full px-4 py-1 uppercase tracking-wider">Most Popular</span>
                   </div>
                 )}
-                {/* Double-bezel pricing card */}
                 <div className={`p-[2px] rounded-[1.4rem] ${plan.popular ? 'bg-gradient-to-br from-indigo-300/50 via-violet-300/30 to-indigo-300/50' : 'bg-gradient-to-br from-slate-200/40 to-white/60'}`}>
                   <div className={`glass rounded-[calc(1.4rem-2px)] p-8 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${plan.popular ? 'ring-1 ring-indigo-200/50' : ''}`}>
                     <div className={`text-xs font-bold mb-2 tracking-wider uppercase ${plan.popular ? 'text-indigo-600' : 'text-slate-400'}`}>{plan.tier}</div>
@@ -807,7 +851,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ===== Section 9: Footer ===== */}
+      {/* ===== Footer ===== */}
       <footer className="footer-section relative py-20 px-6 lg:px-12 overflow-hidden">
         <div className="footer-content max-w-5xl mx-auto relative">
           <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-12 mb-12">
@@ -818,9 +862,7 @@ export default function Landing() {
                 </div>
                 <span className="font-heading font-extrabold text-base text-slate-900 tracking-tight">StockPP</span>
               </div>
-              <p className="text-sm text-slate-400 leading-relaxed max-w-[260px]">
-                Stock price forecasting powered by LSTM neural networks. Transparent metrics, no black boxes.
-              </p>
+              <p className="text-sm text-slate-400 leading-relaxed max-w-[260px]">Stock price forecasting powered by LSTM neural networks. Transparent metrics, no black boxes.</p>
             </div>
             {[
               { title: 'Product', links: ['Features', 'Dashboard', 'API Docs', 'Status'] },
@@ -830,7 +872,7 @@ export default function Landing() {
               <div key={col.title}>
                 <div className="text-[11px] font-bold text-slate-400 mb-4 tracking-[0.15em] uppercase">{col.title}</div>
                 <div className="flex flex-col gap-2.5">
-                  {col.links.map(l => <span key={l} className="text-sm text-slate-500 cursor-pointer hover:text-slate-900 transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">{l}</span>)}
+                  {col.links.map(l => <span key={l} className="text-sm text-slate-500 cursor-pointer hover:text-slate-900 transition-colors duration-300">{l}</span>)}
                 </div>
               </div>
             ))}

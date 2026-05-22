@@ -640,13 +640,21 @@ export default function Landing() {
           <div className="text-center mb-8">
             <span className="text-[11px] text-slate-400 font-bold tracking-[0.2em] uppercase">Built with</span>
           </div>
-          <div className="flex justify-center items-center gap-2 flex-wrap">
+          <div className="flex justify-center items-center gap-3 flex-wrap">
             {TECH_STACK.map(tech => (
-              <div key={tech.name} className="tech-item group flex items-center gap-2.5 px-4 py-2.5 rounded-xl hover:bg-white/50 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-default">
-                <div className="transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-110">
-                  <TechLogo icon={tech.icon} size={18} color="#94A3B8" />
+              <div
+                key={tech.name}
+                className="tech-item group flex items-center gap-2.5 px-5 py-3 rounded-2xl border border-slate-200/50 hover:border-transparent transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-default relative overflow-hidden"
+                style={{ '--brand-color': tech.color }}
+              >
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl" style={{ background: `${tech.color}10` }} />
+                <div className="relative z-10 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-110">
+                  <TechLogo icon={tech.icon} size={20} color={tech.color} />
                 </div>
-                <span className="text-sm text-slate-400 group-hover:text-slate-700 transition-colors duration-500 font-medium">{tech.name}</span>
+                <span className="relative z-10 text-sm font-semibold transition-colors duration-500" style={{ color: '#64748B' }}>
+                  <span className="group-hover:hidden">{tech.name}</span>
+                  <span className="hidden group-hover:inline" style={{ color: tech.color }}>{tech.name}</span>
+                </span>
               </div>
             ))}
           </div>

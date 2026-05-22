@@ -385,7 +385,10 @@ export default function Landing() {
   const announcementOffset = showAnnouncement ? 36 : 0
 
   return (
-    <div ref={containerRef} className="min-h-screen overflow-x-hidden mesh-bg">
+    <div ref={containerRef} className="min-h-screen overflow-x-hidden mesh-bg relative">
+
+      {/* Global noise overlay */}
+      <div className="noise-overlay" />
 
       {/* ===== Section 1: Announcement Bar ===== */}
       {showAnnouncement && (
@@ -438,6 +441,18 @@ export default function Landing() {
 
       {/* ===== Section 3: Hero ===== */}
       <section className="hero-section relative pt-32 pb-32 px-6 lg:px-12 min-h-[100dvh] flex items-center overflow-hidden">
+        {/* Animated gradient orbs */}
+        <div className="orb orb-indigo w-[500px] h-[500px] -top-40 -left-40" />
+        <div className="orb orb-violet w-[400px] h-[400px] top-20 right-[-10%]" />
+        <div className="orb orb-blue w-[300px] h-[300px] bottom-0 left-[30%]" />
+        <div className="orb orb-pink w-[250px] h-[250px] top-[60%] right-[20%]" />
+        {/* Dot grid */}
+        <div className="absolute inset-0 dot-grid opacity-40" />
+        {/* Geometric accent lines */}
+        <div className="geo-line top-[30%] left-0 w-[40%]" />
+        <div className="geo-line top-[70%] right-0 w-[35%]" />
+        <div className="geo-line-v top-0 left-[25%] h-[50%]" />
+        <div className="geo-line-v top-[20%] right-[15%] h-[60%]" />
         <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20 relative w-full">
           <div className="hero-text flex-1 z-10">
             <div className="inline-flex items-center gap-2 glass-subtle rounded-full px-3.5 py-1.5 mb-8">
@@ -511,6 +526,8 @@ export default function Landing() {
 
       {/* ===== Section 4: Tech Stack ===== */}
       <section className="tech-section relative py-16 px-6 lg:px-12 overflow-hidden">
+        <div className="orb orb-emerald w-[350px] h-[350px] -top-32 left-[10%]" />
+        <div className="orb orb-indigo w-[300px] h-[300px] -bottom-32 right-[5%]" />
         <div className="max-w-5xl mx-auto relative">
           <div className="text-center mb-8">
             <span className="text-[11px] text-slate-400 font-bold tracking-[0.2em] uppercase">Built with</span>
@@ -535,6 +552,9 @@ export default function Landing() {
 
       {/* ===== Section 5: Features ===== */}
       <section className="features-section relative py-36 px-6 lg:px-12 overflow-hidden">
+        <div className="orb orb-violet w-[450px] h-[450px] top-[-10%] right-[-5%]" />
+        <div className="orb orb-blue w-[350px] h-[350px] bottom-[-10%] left-[10%]" />
+        <div className="absolute inset-0 dot-grid opacity-25" />
         <div className="max-w-6xl mx-auto relative">
           <div className="mb-16">
             <span className="inline-block glass-subtle rounded-full px-3 py-1 text-[10px] text-indigo-600 font-bold tracking-[0.2em] uppercase mb-5">Features</span>
@@ -629,6 +649,8 @@ export default function Landing() {
 
       {/* ===== Section 6: Dashboard Preview ===== */}
       <section className="dashboard-section relative py-36 px-6 lg:px-12 overflow-hidden">
+        <div className="orb orb-indigo w-[500px] h-[500px] top-[10%] left-[-10%]" />
+        <div className="orb orb-pink w-[300px] h-[300px] bottom-[5%] right-[5%]" />
         <div className="max-w-5xl mx-auto relative">
           <div className="mb-12">
             <span className="inline-block glass-subtle rounded-full px-3 py-1 text-[10px] text-indigo-600 font-bold tracking-[0.2em] uppercase mb-5">Dashboard</span>
@@ -711,6 +733,9 @@ export default function Landing() {
 
       {/* ===== Section 7: How It Works ===== */}
       <section className="steps-section relative py-36 px-6 lg:px-12 overflow-hidden">
+        <div className="orb orb-emerald w-[400px] h-[400px] top-[-15%] left-[40%]" />
+        <div className="orb orb-violet w-[300px] h-[300px] bottom-[-10%] right-[20%]" />
+        <div className="absolute inset-0 dot-grid opacity-20" />
         <div className="max-w-5xl mx-auto relative">
           <span className="inline-block glass-subtle rounded-full px-3 py-1 text-[10px] text-indigo-600 font-bold tracking-[0.2em] uppercase mb-5">Process</span>
           <h2 className="font-heading text-4xl lg:text-5xl font-extrabold text-slate-900 mb-16 tracking-tight">
@@ -734,6 +759,8 @@ export default function Landing() {
 
       {/* ===== Section 8: Pricing ===== */}
       <section className="pricing-section relative py-36 px-6 lg:px-12 overflow-hidden">
+        <div className="orb orb-blue w-[400px] h-[400px] top-[5%] right-[-5%]" />
+        <div className="orb orb-indigo w-[350px] h-[350px] bottom-[10%] left-[-5%]" />
         <div className="max-w-5xl mx-auto relative">
           <div className="mb-14">
             <span className="inline-block glass-subtle rounded-full px-3 py-1 text-[10px] text-indigo-600 font-bold tracking-[0.2em] uppercase mb-5">Pricing</span>

@@ -7,6 +7,7 @@ module.exports = {
     extend: {
       fontFamily: {
         heading: ['Sora', 'sans-serif'],
+        body: ['DM Sans', 'sans-serif'],
       },
       colors: {
         slate: {

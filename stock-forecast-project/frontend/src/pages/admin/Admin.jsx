@@ -119,12 +119,17 @@ const Admin = () => {
   const { data: articlesData, isLoading: articlesLoading, refetch: refetchArticles } = useArticles(null, 50, true);
   const { data: articleStatsData } = useArticleStats(true);
 
-  const models = modelsData?.models ? Object.values(modelsData.models) : [];
+  const models = modelsData?.models
+    ? Object.entries(modelsData.models).map(([ticker, data]) => ({ ...data, ticker }))
+    : [];
   const totalModels = modelsData?.total_models || 0;
   const modelsNeedingRetrain = modelsData?.models_needing_retrain || 0;
 
   const avgAccuracy = models.length > 0
-    ? (models.reduce((sum, m) => sum + (100 - (m.metrics?.rmse || 0) * 100), 0) / models.length).toFixed(2)
+    ? (models.reduce((sum, m) => {
+        const rmse = m.metrics?.rmse || 0;
+        return sum + Math.max(0, Math.min(100, 100 - rmse * 100));
+      }, 0) / models.length).toFixed(2)
     : '0.00';
 
   const articles = articlesData?.articles || [];
@@ -363,7 +368,7 @@ const Admin = () => {
                   </div>
                 ) : filteredModels.length > 0 ? (
                   filteredModels.map((model, index) => {
-                    const accuracy = (100 - (model.metrics?.rmse || 0) * 100).toFixed(2);
+                    const accuracy = Math.max(0, Math.min(100, 100 - (model.metrics?.rmse || 0) * 100)).toFixed(2);
                     const needsRetrain = model.age_hours > 24;
                     return (
                       <div key={index} className="flex items-center border-b border-[#E6E8EA] last:border-0 hover:bg-[#F7F9FB] transition-colors min-w-[600px]">

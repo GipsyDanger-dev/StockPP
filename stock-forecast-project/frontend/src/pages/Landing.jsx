@@ -244,66 +244,66 @@ function StatCard({ value, suffix, label, decimals }) {
 }
 
 /* Tech Logo SVG */
-function TechLogo({ icon, size = 20, color = 'currentColor' }) {
+function TechLogo({ icon, size = 28, color = 'currentColor' }) {
   const s = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', xmlns: 'http://www.w3.org/2000/svg' }
   switch (icon) {
     case 'fastapi':
       return (
         <svg {...s}>
-          <path d="M12 2L2 19.5h20L12 2z" fill={color} fillOpacity="0.12" stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
-          <path d="M12 7v6m0 0l-3 5m3-5l3 5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M12 2L2 19.5h20L12 2z" fill={color} fillOpacity="0.2" stroke={color} strokeWidth="2" strokeLinejoin="round" />
+          <path d="M12 7v6m0 0l-3 5m3-5l3 5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       )
     case 'tensorflow':
       return (
         <svg {...s}>
-          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.08" />
-          <path d="M8 8v8l4 2V10L8 8z" fill={color} fillOpacity="0.5" />
-          <path d="M16 8v8l-4 2V10l4-2z" fill={color} fillOpacity="0.3" />
+          <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="2" fill={color} fillOpacity="0.15" />
+          <path d="M8 8v8l4 2V10L8 8z" fill={color} fillOpacity="0.7" />
+          <path d="M16 8v8l-4 2V10l4-2z" fill={color} fillOpacity="0.5" />
         </svg>
       )
     case 'react':
       return (
         <svg {...s}>
-          <ellipse cx="12" cy="12" rx="9" ry="3.5" stroke={color} strokeWidth="1.2" fill="none" />
-          <ellipse cx="12" cy="12" rx="9" ry="3.5" stroke={color} strokeWidth="1.2" fill="none" transform="rotate(60 12 12)" />
-          <ellipse cx="12" cy="12" rx="9" ry="3.5" stroke={color} strokeWidth="1.2" fill="none" transform="rotate(-60 12 12)" />
+          <ellipse cx="12" cy="12" rx="9" ry="3.5" stroke={color} strokeWidth="2" fill="none" />
+          <ellipse cx="12" cy="12" rx="9" ry="3.5" stroke={color} strokeWidth="2" fill="none" transform="rotate(60 12 12)" />
+          <ellipse cx="12" cy="12" rx="9" ry="3.5" stroke={color} strokeWidth="2" fill="none" transform="rotate(-60 12 12)" />
           <circle cx="12" cy="12" r="2" fill={color} />
         </svg>
       )
     case 'tailwind':
       return (
         <svg {...s}>
-          <path d="M4 12c0-2 1.5-4 4.5-4 4 0 4.5 4 8.5 4 3 0 4.5-2 4.5-4" stroke={color} strokeWidth="2" strokeLinecap="round" fill="none" />
-          <path d="M4 16c0-2 1.5-4 4.5-4 4 0 4.5 4 8.5 4 3 0 4.5-2 4.5-4" stroke={color} strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.4" />
+          <path d="M4 12c0-2 1.5-4 4.5-4 4 0 4.5 4 8.5 4 3 0 4.5-2 4.5-4" stroke={color} strokeWidth="2.5" strokeLinecap="round" fill="none" />
+          <path d="M4 16c0-2 1.5-4 4.5-4 4 0 4.5 4 8.5 4 3 0 4.5-2 4.5-4" stroke={color} strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.5" />
         </svg>
       )
     case 'sklearn':
       return (
         <svg {...s}>
-          <rect x="3" y="3" width="18" height="18" rx="4" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.08" />
-          <path d="M7 15c2-4 4-8 6-8s3 5 4 8" stroke={color} strokeWidth="1.5" strokeLinecap="round" fill="none" />
-          <circle cx="12" cy="11" r="2" fill={color} fillOpacity="0.5" />
+          <rect x="3" y="3" width="18" height="18" rx="4" stroke={color} strokeWidth="2" fill={color} fillOpacity="0.15" />
+          <path d="M7 15c2-4 4-8 6-8s3 5 4 8" stroke={color} strokeWidth="2" strokeLinecap="round" fill="none" />
+          <circle cx="12" cy="11" r="2" fill={color} fillOpacity="0.7" />
         </svg>
       )
     case 'yfinance':
       return (
         <svg {...s}>
-          <rect x="3" y="3" width="18" height="18" rx="3" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.08" />
-          <polyline points="6,16 10,11 14,13 18,8" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <rect x="3" y="3" width="18" height="18" rx="3" stroke={color} strokeWidth="2" fill={color} fillOpacity="0.15" />
+          <polyline points="6,16 10,11 14,13 18,8" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
           <circle cx="18" cy="8" r="1.5" fill={color} />
         </svg>
       )
     case 'supabase':
       return (
         <svg {...s}>
-          <path d="M4 17V7l7-4 7 4v10l-7 4-7-4z" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.08" strokeLinejoin="round" />
-          <path d="M11 3v18" stroke={color} strokeWidth="1" opacity="0.2" />
-          <circle cx="11" cy="11" r="3" stroke={color} strokeWidth="1.5" fill="none" />
+          <path d="M4 17V7l7-4 7 4v10l-7 4-7-4z" stroke={color} strokeWidth="2" fill={color} fillOpacity="0.15" strokeLinejoin="round" />
+          <path d="M11 3v18" stroke={color} strokeWidth="1.5" opacity="0.3" />
+          <circle cx="11" cy="11" r="3" stroke={color} strokeWidth="2" fill="none" />
         </svg>
       )
     default:
-      return <div className="w-5 h-5 rounded-full" style={{ background: color, opacity: 0.4 }} />
+      return <div className="w-7 h-7 rounded-full" style={{ background: color, opacity: 0.5 }} />
   }
 }
 
@@ -503,13 +503,25 @@ export default function Landing() {
       })
     }
 
-    // Steps stagger
-    gsap.utils.toArray('.step-item').forEach((step, i) => {
-      gsap.from(step, {
-        scrollTrigger: { trigger: step, start: 'top 88%' },
-        y: 30, opacity: 0, duration: 0.6, delay: i * 0.1, ease: 'power3.out',
-      })
-    })
+    // Steps horizontal scroll (desktop only)
+    if (window.matchMedia('(min-width: 768px)').matches) {
+      const stepsTrack = document.querySelector('.steps-scroll-track')
+      if (stepsTrack) {
+        const getScrollAmount = () => -(stepsTrack.scrollWidth - stepsTrack.parentElement.offsetWidth)
+        gsap.to(stepsTrack, {
+          x: getScrollAmount,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: '.steps-section',
+            start: 'top top',
+            end: () => `+=${stepsTrack.scrollWidth - stepsTrack.parentElement.offsetWidth}`,
+            pin: true,
+            scrub: 1,
+            invalidateOnRefresh: true,
+          },
+        })
+      }
+    }
 
     gsap.from('.step-line', {
       scrollTrigger: { trigger: '.steps-section', start: 'top 80%' },
@@ -650,7 +662,7 @@ export default function Landing() {
               >
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl" style={{ background: `${tech.color}10` }} />
                 <div className="relative z-10 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-110">
-                  <TechLogo icon={tech.icon} size={20} color={tech.color} />
+                  <TechLogo icon={tech.icon} size={28} color={tech.color} />
                 </div>
                 <span className="relative z-10 text-sm font-semibold transition-colors duration-500" style={{ color: '#64748B' }}>
                   <span className="group-hover:hidden">{tech.name}</span>
@@ -831,17 +843,19 @@ export default function Landing() {
       </section>
 
       {/* ===== How It Works ===== */}
-      <section className="steps-section relative py-20 md:py-36 px-5 md:px-6 lg:px-12 overflow-hidden">
+      <section className="steps-section relative py-20 md:py-36 overflow-hidden">
         <div className="orb orb-emerald w-[250px] h-[250px] md:w-[400px] md:h-[400px] top-[-15%] left-[40%]" />
         <div className="orb orb-violet w-[200px] h-[200px] md:w-[300px] md:h-[300px] bottom-[-10%] right-[20%]" />
         <div className="absolute inset-0 dot-grid opacity-20" />
-        <div className="max-w-5xl mx-auto relative">
+        <div className="px-5 md:px-6 lg:px-12 relative mb-16">
           <span className="inline-block glass-subtle rounded-full px-3 py-1 text-[10px] text-indigo-600 font-bold tracking-[0.2em] uppercase mb-5">Process</span>
-          <h2 className="font-heading text-4xl lg:text-5xl font-extrabold text-slate-900 mb-16 tracking-tight">How it works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-0 relative">
+          <h2 className="font-heading text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight">How it works</h2>
+        </div>
+        <div className="steps-scroll-container relative overflow-hidden">
+          <div className="steps-scroll-track flex md:gap-0 gap-6 px-5 md:px-12">
             <div className="step-line absolute top-7 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-transparent via-indigo-300/40 to-transparent z-0 hidden md:block origin-left" />
             {STEPS.map((s, i) => (
-              <div key={i} className="step-item text-center px-6 relative z-10">
+              <div key={i} className="step-item flex-shrink-0 w-[80vw] md:w-[380px] text-center px-6 py-4 relative z-10">
                 <div className={`w-14 h-14 rounded-2xl mx-auto mb-6 flex items-center justify-center ${i === 0 ? 'btn-accent shadow-xl shadow-indigo-500/20' : 'glass-subtle ring-1 ring-slate-200/50'}`}>
                   <s.icon className={`w-6 h-6 ${i === 0 ? 'text-white' : 'text-slate-400'}`} />
                 </div>

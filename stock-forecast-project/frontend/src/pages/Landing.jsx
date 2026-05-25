@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { X } from 'lucide-react'
+import NeuralCanvas from '../components/landing/NeuralCanvas'
 
 import * as THREE from 'three'
 import { gsap } from 'gsap/dist/gsap'
@@ -330,6 +331,50 @@ export default function Landing() {
       gsap.from(el, { y: 60, opacity: 0, duration: 0.6, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 85%' } })
     })
 
+    // Tech rows stagger entrance
+    gsap.to('[data-tech]', {
+      opacity: 1, y: 0, duration: 0.55, ease: 'power3.out', stagger: 0.08,
+      scrollTrigger: { trigger: '#tech-stack', start: 'top 80%', once: true },
+    })
+
+    // Tech header entrance
+    gsap.from('.tech-header', {
+      opacity: 0, y: 20, duration: 0.6, ease: 'power3.out',
+      scrollTrigger: { trigger: '#tech-stack', start: 'top 85%', once: true },
+    })
+
+    // Features bento cards entrance
+    gsap.to('[data-bento]', {
+      opacity: 1, y: 0, duration: 0.6, ease: 'power3.out', stagger: 0.12,
+      scrollTrigger: { trigger: '#features', start: 'top 75%', once: true },
+    })
+
+    // Validation checkmarks
+    ScrollTrigger.create({
+      trigger: '.bento-validation',
+      start: 'top 80%',
+      once: true,
+      onEnter: () => {
+        document.querySelectorAll('[data-validate]').forEach((row, i) => {
+          const check = row.querySelector('.validation-check')
+          setTimeout(() => {
+            check.classList.add('active')
+          }, 200 + i * 150)
+        })
+      },
+    })
+
+    // Validation counter
+    gsap.utils.toArray('[data-counter]').forEach(el => {
+      const target = parseInt(el.textContent)
+      const obj = { val: 0 }
+      gsap.to(obj, {
+        val: target, duration: 2.5, ease: 'power1.inOut',
+        scrollTrigger: { trigger: el, start: 'top 85%', once: true },
+        onUpdate: () => { el.textContent = Math.round(obj.val) },
+      })
+    })
+
     // Stat counters
     gsap.utils.toArray('[data-count]').forEach(el => {
       const target = parseFloat(el.dataset.count)
@@ -464,47 +509,184 @@ export default function Landing() {
       </section>
 
       {/* Tech Stack */}
-      <section className="section" id="tech-stack">
+      <section className="tech-section" id="tech-stack">
         <div className="container">
-          <h3 style={{ textAlign: 'center', marginBottom: 44, color: 'var(--white)' }} data-enter="">Built on proven infrastructure</h3>
-          <div className="tech-grid">
-            {[
-              { icon: '⚡', name: 'FastAPI' }, { icon: '🧠', name: 'TensorFlow' }, { icon: '⚛', name: 'React' },
-              { icon: '🎨', name: 'Tailwind' }, { icon: '📊', name: 'Scikit-learn' }, { icon: '📈', name: 'yfinance' }, { icon: '🔒', name: 'Supabase' },
-            ].map(t => (
-              <div key={t.name} className="tech-item" data-enter="">
-                <div className="tech-icon">{t.icon}</div>
-                <span className="tech-name">{t.name}</span>
-              </div>
-            ))}
+          <div className="tech-header">
+            <h3 style={{ color: 'var(--white)' }}>Built on proven infrastructure</h3>
+            <span className="tech-count-badge">07 Technologies</span>
           </div>
+          {[
+            { num: '01', icon: <polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/>, name: 'FastAPI', desc: 'High-performance async Python framework — 31 REST endpoints, Pydantic v2', tag: 'Backend' },
+            { num: '02', icon: <><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 12l10 5 10-5"/><path d="M2 17l10 5 10-5"/></>, name: 'TensorFlow / Keras', desc: '3-layer LSTM, 50 units/layer, Adam optimizer, 70-epoch training, MSE loss', tag: 'ML Engine' },
+            { num: '03', icon: <><circle cx="12" cy="12" r="1.8"/><ellipse cx="12" cy="12" rx="10" ry="3.8"/><ellipse cx="12" cy="12" rx="10" ry="3.8" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="3.8" transform="rotate(120 12 12)"/></>, name: 'React 18 + Vite', desc: 'SPA with HMR, React Router v7, TanStack Query v5, 16 custom hooks', tag: 'Frontend' },
+            { num: '04', icon: <><path d="M6.5 8C7.5 5.5 9.5 4 12 4c4 0 4.5 3 6.5 3.5C20 8 22 6.5 22 6.5"/><path d="M2 14C3 11.5 5 10 7.5 10c4 0 4.5 3 6.5 3.5C16 14 18 12.5 18 12.5"/></>, name: 'Tailwind CSS 3', desc: 'Utility-first with custom design tokens, zero-radius system, 8px base grid', tag: 'Styling' },
+            { num: '05', icon: <><circle cx="12" cy="4" r="1.8"/><circle cx="4" cy="19" r="1.8"/><circle cx="20" cy="19" r="1.8"/><line x1="12" y1="5.8" x2="5.2" y2="17.4"/><line x1="12" y1="5.8" x2="18.8" y2="17.4"/><line x1="5.8" y1="19" x2="18.2" y2="19"/></>, name: 'Scikit-learn', desc: 'MinMaxScaler normalization, walk-forward cross-validation across 5 folds', tag: 'ML Tools' },
+            { num: '06', icon: <><polyline points="3,17 7,11 11,14 15,7 21,9"/><line x1="3" y1="20" x2="21" y2="20"/></>, name: 'yfinance + Finnhub', desc: '5-year OHLCV historical pulls, real-time quotes, 30-second auto-refresh', tag: 'Data' },
+            { num: '07', icon: <><ellipse cx="12" cy="5" rx="8" ry="2.5"/><path d="M4 5v4c0 1.38 3.58 2.5 8 2.5s8-1.12 8-2.5V5"/><path d="M4 9v5c0 1.38 3.58 2.5 8 2.5s8-1.12 8-2.5V9"/><path d="M4 14v5c0 1.38 3.58 2.5 8 2.5s8-1.12 8-2.5v-5"/></>, name: 'Supabase', desc: 'PostgreSQL + Auth + Storage — 6 tables, RBAC, model artifact buckets', tag: 'Database' },
+          ].map(t => (
+            <div key={t.num} className="tech-row" data-tech="">
+              <span className="tech-num">{t.num}</span>
+              <div className="tech-icon-wrap">
+                <svg viewBox="0 0 24 24">{t.icon}</svg>
+              </div>
+              <div className="tech-info">
+                <span className="tech-name">{t.name}</span>
+                <span className="tech-desc">{t.desc}</span>
+              </div>
+              <span className="tech-tag">{t.tag}</span>
+              <span className="tech-arrow">&rarr;</span>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* Features Bento */}
-      <section className="section" id="features">
+      <section className="features-section" id="features">
         <div className="container">
-          <h3 style={{ marginBottom: 44, color: 'var(--white)' }} data-enter="">Everything you need to forecast with confidence</h3>
-          <div className="bento">
-            <div className="bento-card span-2" data-enter="">
-              <div className="bento-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
-              <h4>LSTM Prediction Engine</h4>
-              <p>Three-layer LSTM neural network processes 20-day windows of 6 technical indicators — Close, Volume, MA20, MA50, RSI, MACD — to generate multi-step forecasts with walk-forward validation across 5 folds.</p>
+          <div className="features-header">
+            <h2>Everything you need to forecast with confidence</h2>
+            <p>From neural network predictions to real-time market data and automated validation.</p>
+          </div>
+          <div className="features-bento">
+            {/* Card 1: LSTM Prediction Engine */}
+            <div className="bento-card bento-lstm" data-bento="">
+              <NeuralCanvas />
+              <div className="bento-lstm-header">
+                <h3 className="bento-lstm-title">LSTM Prediction Engine</h3>
+                <p className="bento-lstm-sub">3-Layer Neural Network</p>
+              </div>
+              <div className="lstm-stats">
+                {[
+                  { val: '3 x 50', lbl: 'LSTM Units' },
+                  { val: '20d', lbl: 'Window' },
+                  { val: '5-Fold', lbl: 'Validation' },
+                  { val: '7-Day', lbl: 'Forecast' },
+                ].map((s, i) => (
+                  <div key={i} className="lstm-stat">
+                    <div className="lstm-stat-val">{s.val}</div>
+                    <div className="lstm-stat-lbl">{s.lbl}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="bento-card" data-enter="">
-              <div className="bento-icon"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
-              <h4>Live Market Data</h4>
-              <p>Real-time quotes via Finnhub. 30-second auto-refresh on analytics pages.</p>
+
+            {/* Card 2: Live Market Data */}
+            <div className="bento-card bento-market" data-bento="">
+              <h3 className="bento-market-title">Live Market Data</h3>
+              <p className="bento-market-sub">Real-time quotes via Finnhub with 30-second auto-refresh.</p>
+              <div className="live-badge"><span className="live-dot"></span> LIVE</div>
+              <div className="chart-wrap">
+                <svg viewBox="0 0 300 100" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#FF6633" stopOpacity="0.3" />
+                      <stop offset="100%" stopColor="#FF6633" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    d="M0,80 Q30,70 60,65 T120,50 T180,40 T240,30 T300,25 L300,100 L0,100 Z"
+                    fill="url(#chartGrad)"
+                    opacity="0.4"
+                  >
+                    <animate attributeName="opacity" values="0;0.4" dur="1.5s" fill="freeze" />
+                  </path>
+                  <path
+                    d="M0,80 Q30,70 60,65 T120,50 T180,40 T240,30 T300,25"
+                    fill="none"
+                    stroke="#FF6633"
+                    strokeWidth="2"
+                    strokeDasharray="500"
+                    strokeDashoffset="500"
+                  >
+                    <animate attributeName="stroke-dashoffset" values="500;0" dur="2s" fill="freeze" />
+                  </path>
+                  <path
+                    d="M240,30 Q260,22 280,18 T300,15"
+                    fill="none"
+                    stroke="#FF6633"
+                    strokeWidth="1.5"
+                    strokeDasharray="4 3"
+                    opacity="0.6"
+                    strokeDashoffset="100"
+                  >
+                    <animate attributeName="stroke-dashoffset" values="100;0" dur="1s" begin="2s" fill="freeze" />
+                  </path>
+                  <circle cx="300" cy="15" r="4" fill="#FF6633" opacity="0">
+                    <animate attributeName="opacity" values="0;1" dur="0.3s" begin="2.5s" fill="freeze" />
+                    <animate attributeName="r" values="4;6;4" dur="2s" begin="2.8s" repeatCount="indefinite" />
+                  </circle>
+                </svg>
+              </div>
             </div>
-            <div className="bento-card" data-enter="">
-              <div className="bento-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
-              <h4>Accuracy Metrics</h4>
-              <p>RMSE, MAE, R-squared reported per model. 2% tolerance gate for deployment.</p>
+
+            {/* Card 3: Accuracy Metrics */}
+            <div className="bento-card bento-accuracy" data-bento="">
+              <div className="accuracy-header">
+                <div>
+                  <h3 className="accuracy-title">Accuracy Metrics</h3>
+                  <p className="accuracy-sub">Walk-forward validated</p>
+                </div>
+                <div className="accuracy-badge">88%</div>
+              </div>
+              <div className="gauge-wrap">
+                <svg viewBox="0 0 160 90" fill="none">
+                  <path d="M15,80 A65,65 0 0,1 145,80" stroke="#1e1e1e" strokeWidth="8" strokeLinecap="round" />
+                  <path
+                    d="M15,80 A65,65 0 0,1 145,80"
+                    stroke="#FF6633"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeDasharray="220"
+                    strokeDashoffset="220"
+                  >
+                    <animate attributeName="stroke-dashoffset" values="220;27" dur="2s" fill="freeze" />
+                  </path>
+                  <circle cx="80" cy="80" r="3" fill="#FF6633" />
+                </svg>
+              </div>
+              <div className="accuracy-stats">
+                {[
+                  { val: '0.018', lbl: 'RMSE' },
+                  { val: '0.014', lbl: 'MAE' },
+                  { val: '0.94', lbl: 'R²' },
+                  { val: '2%', lbl: 'Threshold' },
+                ].map((s, i) => (
+                  <div key={i} className="accuracy-stat">
+                    <div className="accuracy-stat-val">{s.val}</div>
+                    <div className="accuracy-stat-lbl">{s.lbl}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="bento-card" data-enter="">
-              <div className="bento-icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
-              <h4>Auto Validation</h4>
-              <p>Predictions validated against actual prices. Track direction accuracy and mean percent error per user.</p>
+
+            {/* Card 4: Auto Validation */}
+            <div className="bento-card bento-validation" data-bento="">
+              <div className="validation-left">
+                <h3 className="validation-title">Auto Validation</h3>
+                <p className="validation-sub">Predictions validated against actual prices with direction accuracy tracking.</p>
+                <div className="validation-list">
+                  {[
+                    { sym: 'NVDA', pred: 'Forecast: +4.2% — Validated' },
+                    { sym: 'AAPL', pred: 'Forecast: +1.8% — Validated' },
+                    { sym: 'MSFT', pred: 'Forecast: -0.6% — Validated' },
+                  ].map((v, i) => (
+                    <div key={i} className="validation-ticker" data-validate="">
+                      <div className="validation-check">
+                        <svg viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      </div>
+                      <span className="validation-ticker-sym">{v.sym}</span>
+                      <span className="validation-ticker-prediction">{v.pred}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="validation-right">
+                <div className="validation-counter" data-counter="">88</div>
+                <div className="validation-counter-label">Confidence Level</div>
+                <div className="validation-counter-sub">model accuracy score</div>
+              </div>
             </div>
           </div>
         </div>

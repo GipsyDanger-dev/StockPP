@@ -420,22 +420,119 @@ p,.body{font:400 16px/24px var(--font-display);letter-spacing:0}
 .marquee-change{color:var(--orange);font:500 11px/16.5px var(--font-ui)}
 .marquee-change.down{color:var(--gray-mid)}
 
-/* Tech Stack */
-.tech-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:24px;text-align:center}
-.tech-item{display:flex;flex-direction:column;align-items:center;gap:12px;padding:24px 16px;border:1px solid var(--dark-border);background:var(--dark-surface);transition:border-color .2s}
-.tech-item:hover{border-color:var(--orange)}
-.tech-icon{width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:28px}
-.tech-name{font:500 11px/16.5px var(--font-ui);color:var(--gray-mid)}
+/* Tech Stack — Row Sweep */
+.tech-section{padding:80px 0}
+.tech-section .container{max-width:1400px;margin:0 auto;padding:0 40px}
+.tech-header{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:32px;border-bottom:1px solid var(--dark-border)}
+.tech-header h3{font:400 30px/32px var(--font-display);color:var(--white);margin:0}
+.tech-count-badge{font:500 11px/16.5px var(--font-ui);color:var(--gray-mid);letter-spacing:.12em;text-transform:uppercase;padding-bottom:2px}
+.tech-row{display:grid;grid-template-columns:72px 60px 1fr auto 36px;align-items:center;gap:32px;height:92px;border-bottom:1px solid var(--dark-border);position:relative;overflow:hidden;cursor:default}
+.tech-row::after{content:'';position:absolute;inset:0;background:var(--orange);transform:scaleX(0);transform-origin:left center;transition:transform .55s cubic-bezier(.76,0,.24,1);z-index:0}
+.tech-row:hover::after{transform:scaleX(1)}
+.tech-row>*{position:relative;z-index:1}
+.tech-num{font:500 11px/1 var(--font-ui);color:var(--gray-dark);letter-spacing:.05em;transition:color .3s .05s}
+.tech-row:hover .tech-num{color:rgba(255,255,255,.25)}
+.tech-icon-wrap{width:48px;height:48px;display:flex;align-items:center;justify-content:center;border:1px solid var(--dark-border);transition:border-color .3s .05s,background .3s .05s}
+.tech-icon-wrap svg{width:26px;height:26px;stroke:var(--white);fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;transition:stroke .3s .05s}
+.tech-row:hover .tech-icon-wrap{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.08)}
+.tech-row:hover .tech-icon-wrap svg{stroke:var(--white)}
+.tech-info{display:flex;flex-direction:column;gap:6px}
+.tech-name{font:500 20px/22px var(--font-display);color:var(--white);transition:color .3s .05s}
+.tech-desc{font:400 12px/17px var(--font-ui);color:var(--gray-mid);transition:color .3s .05s}
+.tech-row:hover .tech-name{color:var(--white)}
+.tech-row:hover .tech-desc{color:rgba(255,255,255,.65)}
+.tech-tag{font:500 10px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--gray-mid);border:1px solid var(--dark-border);padding:5px 10px;white-space:nowrap;transition:color .3s .05s,border-color .3s .05s}
+.tech-row:hover .tech-tag{color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.3)}
+.tech-arrow{font-size:20px;color:var(--orange);opacity:0;transform:translateX(-12px);transition:opacity .3s .1s,transform .35s .1s cubic-bezier(.4,0,.2,1),color .3s .05s;justify-self:end}
+.tech-row:hover .tech-arrow{opacity:1;transform:translateX(0);color:var(--white)}
+.tech-row[data-tech]{opacity:0;transform:translateY(24px)}
+@media(max-width:1024px){.tech-row{grid-template-columns:56px 52px 1fr auto 28px;gap:24px}}
+@media(max-width:768px){.tech-row{grid-template-columns:40px 44px 1fr 24px;gap:16px;height:80px}.tech-tag{display:none}.tech-desc{display:none}.tech-section .container{padding:0 24px}}
+@media(max-width:480px){.tech-row{grid-template-columns:32px 40px 1fr 20px;gap:12px;height:72px}.tech-name{font-size:16px}.tech-section .container{padding:0 16px}.tech-section{padding:60px 0}}
 
 /* Features Bento */
-.bento{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:auto auto;gap:16px}
-.bento-card{border:1px solid var(--dark-border);background:var(--dark-surface);padding:40px;position:relative;transition:border-color .3s;cursor:default}
-.bento-card:hover{border-color:var(--orange)}
-.bento-card.span-2{grid-column:span 2;grid-row:span 2}
-.bento-icon{width:32px;height:32px;margin-bottom:20px;display:flex;align-items:center;justify-content:center}
-.bento-icon svg{width:24px;height:24px;stroke:var(--orange);fill:none;stroke-width:1.5}
-.bento-card h4{margin-bottom:12px;color:var(--white)}
-.bento-card p{color:var(--gray-mid);font-size:14px;line-height:20px}
+.features-section{padding:100px 0 80px}
+.features-header{text-align:center;margin-bottom:64px}
+.features-header h2{font:500 48px/1.1 var(--font-display);color:var(--white);margin-bottom:16px}
+.features-header p{font:400 16px/24px var(--font-ui);color:var(--gray-mid);max-width:560px;margin:0 auto}
+.features-bento{display:grid;grid-template-columns:1.1fr 1fr 1fr;grid-template-rows:340px 260px;gap:2px;background:var(--dark-bg);position:relative}
+
+/* Card base */
+.bento-card{border:1px solid var(--dark-border);background:#111;position:relative;overflow:hidden;transition:border-color .35s;padding:28px 32px;display:flex;flex-direction:column}
+.bento-card:hover{border-color:rgba(255,102,51,.45)}
+
+/* Card 1: LSTM — spans 2 rows */
+.bento-lstm{grid-row:1/3;padding:0}
+.bento-lstm-header{position:absolute;top:0;left:0;right:0;padding:28px 32px 0;z-index:2;pointer-events:none}
+.bento-lstm-title{font:500 22px/1 var(--font-display);color:var(--white);margin:0 0 6px}
+.bento-lstm-sub{font:400 12px/1 var(--font-ui);color:var(--gray-mid)}
+.lstm-stats{display:flex;gap:0;position:absolute;bottom:0;left:0;right:0;z-index:2;border-top:1px solid var(--dark-border)}
+.lstm-stat{flex:1;padding:16px 0;text-align:center}
+.lstm-stat:not(:last-child){border-right:1px solid var(--dark-border)}
+.lstm-stat-val{font:600 18px/1 var(--font-display);color:var(--orange);margin-bottom:4px}
+.lstm-stat-lbl{font:400 10px/1 var(--font-ui);color:var(--gray-dark);text-transform:uppercase;letter-spacing:.08em}
+
+/* Card 2: Market Chart */
+.bento-market-title{font:500 22px/1 var(--font-display);color:var(--white);margin:0 0 4px}
+.bento-market-sub{font:400 12px/18px var(--font-ui);color:var(--gray-mid);margin-bottom:24px;flex:1}
+.live-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.35);padding:6px 14px;font:500 11px/1 var(--font-ui);color:#22c55e;letter-spacing:.04em;margin-bottom:24px}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;animation:livePulse 2s ease-in-out infinite}
+@keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.chart-wrap{flex:1;display:flex;align-items:flex-end;justify-content:center;position:relative}
+.chart-wrap svg{width:100%;height:100%;max-height:160px}
+
+/* Card 3: Accuracy Gauge */
+.accuracy-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px}
+.accuracy-title{font:500 22px/1 var(--font-display);color:var(--white);margin:0 0 4px}
+.accuracy-sub{font:400 12px/1 var(--font-ui);color:var(--gray-mid)}
+.accuracy-badge{font:600 22px/1 var(--font-display);color:var(--orange)}
+.gauge-wrap{flex:1;display:flex;align-items:center;justify-content:center}
+.gauge-wrap svg{width:160px;height:90px}
+.accuracy-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:auto;padding-top:16px;border-top:1px solid var(--dark-border)}
+.accuracy-stat{text-align:center;padding:8px 0}
+.accuracy-stat-val{font:600 15px/1 var(--font-display);color:var(--white);margin-bottom:4px}
+.accuracy-stat-lbl{font:400 9px/1 var(--font-ui);color:var(--gray-dark);text-transform:uppercase;letter-spacing:.08em}
+
+/* Card 4: Validation */
+.bento-validation{grid-column:2/4;flex-direction:row;align-items:center;padding:32px 40px}
+.validation-left{flex:1}
+.validation-title{font:500 22px/1 var(--font-display);color:var(--white);margin:0 0 6px}
+.validation-sub{font:400 12px/18px var(--font-ui);color:var(--gray-mid);margin-bottom:28px}
+.validation-list{display:flex;flex-direction:column;gap:14px}
+.validation-ticker{display:flex;align-items:center;gap:10px}
+.validation-check{width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.validation-check svg{width:12px;height:12px;stroke:var(--orange);fill:none;stroke-width:2;opacity:0;transition:opacity .4s}
+.validation-check.active{border-color:var(--orange);background:rgba(255,102,51,.1)}
+.validation-check.active svg{opacity:1}
+.validation-ticker-sym{font:500 13px/1 var(--font-ui);color:var(--white);letter-spacing:.04em;min-width:56px}
+.validation-ticker-prediction{font:400 12px/1 var(--font-ui);color:var(--gray-mid)}
+.validation-right{flex-shrink:0;width:200px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.validation-counter{font:600 72px/1 var(--font-display);color:var(--orange);margin-bottom:4px}
+.validation-counter-label{font:500 13px/1 var(--font-ui);color:var(--white);letter-spacing:.04em}
+.validation-counter-sub{font:400 11px/1 var(--font-ui);color:var(--gray-dark);margin-top:8px}
+
+/* Neural canvas inside LSTM card */
+.neural-canvas{position:absolute;inset:0;z-index:0}
+
+/* Bento card entrance state (GSAP animates to visible) */
+.features-bento [data-bento]{opacity:0;transform:translateY(40px)}
+
+@media(max-width:1024px){
+  .features-bento{grid-template-columns:1fr 1fr;grid-template-rows:320px 240px 260px}
+  .bento-lstm{grid-column:1/3;grid-row:auto}
+  .bento-validation{grid-column:1/3}
+}
+@media(max-width:768px){
+  .features-section{padding:60px 0}
+  .features-header h2{font-size:32px}
+  .features-bento{grid-template-columns:1fr;grid-template-rows:auto}
+  .bento-lstm{min-height:360px}
+  .bento-market{min-height:300px}
+  .bento-accuracy{min-height:280px}
+  .bento-validation{flex-direction:column}
+  .validation-right{width:100%;flex-direction:row;gap:16px;padding-top:20px}
+  .validation-counter{font-size:48px}
+}
 
 /* Stats Band */
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
@@ -502,8 +599,6 @@ p,.body{font:400 16px/24px var(--font-display);letter-spacing:0}
   .dark-cta-inner{max-width:100%}
   .dark-cta-headline{font-size:64px;line-height:60px}
   .dark-cta-metrics{gap:24px}
-  .bento{grid-template-columns:1fr 1fr}
-  .bento-card.span-2{grid-column:span 2;grid-row:span 1}
   .pricing-grid{grid-template-columns:1fr}
   .stats-grid{grid-template-columns:repeat(2,1fr)}
   .footer-grid{grid-template-columns:1fr 1fr}
@@ -519,8 +614,6 @@ p,.body{font:400 16px/24px var(--font-display);letter-spacing:0}
   .container{padding:0 24px}
   .nav-links,.nav-actions{display:none}
   .hamburger{display:block}
-  .bento{grid-template-columns:1fr}
-  .bento-card.span-2{grid-column:span 1}
   .stats-grid{grid-template-columns:1fr 1fr}
   .tech-grid{grid-template-columns:repeat(3,1fr)}
   .footer-grid{grid-template-columns:1fr}

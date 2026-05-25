@@ -1,16 +1,29 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Activity, Eye, EyeOff, ArrowRight, Loader, AlertCircle, Lock, Mail, Shield } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Loader, AlertCircle, Lock, Mail, Shield } from 'lucide-react';
+import AuthCanvas from '../../components/AuthCanvas';
 
-const SignIn = () => {
+const S = {
+  dark: '#0a0a0a', surface: '#111', border: '#1e1e1e', mid: '#888', dark2: '#555',
+  orange: '#FF6633', hover: '#E55A22', white: '#FFF',
+  fontD: 'var(--font-display)', fontU: 'var(--font-ui)',
+};
+
+const inputStyle = {
+  flex: 1, background: 'transparent', border: 'none', outline: 'none',
+  font: `400 14px/1 ${S.fontU}`, color: S.white, padding: '16px 14px 16px 0',
+};
+
+const labelStyle = {
+  display: 'block', font: `500 11px/16.5px ${S.fontU}`, color: S.mid,
+  textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 10,
+};
+
+export default function SignIn() {
   const navigate = useNavigate();
   const { signIn } = useAuth();
-
-  const [form, setForm] = useState({
-    email: '',
-    password: '',
-  });
+  const [form, setForm] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -19,152 +32,97 @@ const SignIn = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
       const { data, error: authError } = await signIn(form.email, form.password);
-
-      if (authError) {
-        setError(authError.message);
-      } else {
-        navigate('/');
-      }
-    } catch (err) {
-      setError('An unexpected error occurred.');
-    } finally {
-      setLoading(false);
-    }
+      if (authError) setError(authError.message);
+      else navigate('/dashboard');
+    } catch { setError('An unexpected error occurred.'); }
+    finally { setLoading(false); }
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      {/* Main Content - Centered */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
-        {/* Logo & Branding */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Activity className="w-8 h-8 text-black" />
-            <span className="text-black text-2xl font-bold">PRECISION ANALYTICS</span>
-          </div>
-          <h1 className="text-[#191C1E] text-2xl font-bold mb-2">StockAI Predictor</h1>
-          <p className="text-[#45464D] text-sm max-w-xs mx-auto">
+    <div style={{ minHeight: '100vh', background: S.dark, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+      <AuthCanvas />
+
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 460, padding: '0 24px', animation: 'fadeInUp 0.6s ease-out' }}>
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <span style={{ font: `500 20px/1 ${S.fontD}`, color: S.white, letterSpacing: '-0.5px' }}>PRECISION ANALYTICS</span>
+          <p style={{ font: `400 13px/20px ${S.fontD}`, color: S.mid, marginTop: 12 }}>
             Enterprise-grade predictive analytics for financial market dynamics.
           </p>
         </div>
 
-        {/* Login Card */}
-        <div className="w-full max-w-md">
-          <div className="bg-white py-10 px-10 rounded-xl border border-[#C6C6CD] shadow-sm">
-            {error && (
-              <div className="flex items-center gap-2 p-3 mb-6 bg-red-50 border border-red-200 rounded-lg">
-                <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
-                <span className="text-red-600 text-sm">{error}</span>
+        {/* Card */}
+        <div style={{ background: 'rgba(17,17,17,0.82)', border: `1px solid ${S.border}`, padding: '44px 36px', backdropFilter: 'blur(12px)' }}>
+          {error && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', marginBottom: 24, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+              <AlertCircle size={14} color="#ef4444" />
+              <span style={{ font: `400 13px/1 ${S.fontU}`, color: '#ef4444' }}>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            {/* Email */}
+            <div style={{ marginBottom: 24 }}>
+              <label style={labelStyle}>Corporate Email</label>
+              <div style={{ display: 'flex', alignItems: 'center', background: S.dark, border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
+                <div style={{ padding: '16px 12px' }}><Mail size={14} color={S.mid} /></div>
+                <input type="email" placeholder="name@precision-analytics.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} style={inputStyle} required />
               </div>
-            )}
+            </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Email */}
-              <div>
-                <label className="block text-[#45464D] text-xs uppercase tracking-wide mb-2">
-                  Corporate Email
-                </label>
-                <div className="flex items-center bg-[#F7F9FB] rounded border border-[#C6C6CD] focus-within:border-indigo-500 transition-colors">
-                  <div className="px-3 py-4">
-                    <Mail className="w-4 h-4 text-[#45464D]" />
-                  </div>
-                  <input
-                    type="email"
-                    placeholder="name@precision-analytics.com"
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="flex-1 bg-transparent text-sm py-4 pr-4 outline-none text-gray-500 placeholder-gray-400"
-                    required
-                  />
-                </div>
+            {/* Password */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <label style={{ ...labelStyle, marginBottom: 0 }}>Access Key</label>
+                <Link to="/forgot-password" style={{ font: `400 11px/1 ${S.fontU}`, color: S.mid, textDecoration: 'none', transition: 'color .2s' }} onMouseEnter={(e) => e.currentTarget.style.color = S.orange} onMouseLeave={(e) => e.currentTarget.style.color = S.mid}>Forgot Password?</Link>
               </div>
-
-              {/* Password */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-[#45464D] text-xs uppercase tracking-wide">
-                    Access Key
-                  </label>
-                  <Link to="/forgot-password" className="text-[#505F76] text-xs hover:text-indigo-600 transition-colors">
-                    Forgot Password?
-                  </Link>
-                </div>
-                <div className="flex items-center bg-[#F7F9FB] rounded border border-[#C6C6CD] focus-within:border-indigo-500 transition-colors">
-                  <div className="px-3 py-4">
-                    <Lock className="w-4 h-4 text-[#45464D]" />
-                  </div>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••••••"
-                    value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    className="flex-1 bg-transparent text-sm py-4 outline-none text-gray-500 placeholder-gray-400"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="px-3 py-4 text-[#45464D] hover:text-black"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
+              <div style={{ display: 'flex', alignItems: 'center', background: S.dark, border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
+                <div style={{ padding: '16px 12px' }}><Lock size={14} color={S.mid} /></div>
+                <input type={showPassword ? 'text' : 'password'} placeholder="••••••••••••" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} style={inputStyle} required />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '16px 12px', display: 'flex' }}>
+                  {showPassword ? <EyeOff size={14} color={S.mid} /> : <Eye size={14} color={S.mid} />}
+                </button>
               </div>
+            </div>
 
-              {/* Security Notice */}
-              <div className="flex items-start gap-3 p-3 bg-[#F2F4F6] rounded border border-[#C6C6CD4D]">
-                <Shield className="w-3 h-3 text-[#45464D] mt-0.5 flex-shrink-0" />
-                <p className="text-[#45464D] text-[11px] leading-relaxed">
-                  Access to this terminal is restricted to authorized personnel. All activity is logged and monitored for compliance.
-                </p>
-              </div>
+            {/* Security Notice */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', marginBottom: 28, background: 'rgba(255,255,255,0.02)', border: `1px solid ${S.border}` }}>
+              <Shield size={12} color={S.mid} style={{ marginTop: 2, flexShrink: 0 }} />
+              <p style={{ font: `400 11px/16px ${S.fontU}`, color: S.mid }}>
+                Access to this terminal is restricted to authorized personnel. All activity is logged and monitored for compliance.
+              </p>
+            </div>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-black text-white py-4 rounded font-bold text-base hover:bg-gray-800 transition-colors disabled:opacity-50"
-                style={{ boxShadow: '0px 1px 2px #0000000D' }}
-              >
-                {loading ? (
-                  <Loader className="w-5 h-5 animate-spin" />
-                ) : (
-                  <>
-                    Sign In
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </form>
-          </div>
-
-          {/* Sign Up Link */}
-          <div className="mt-6 text-center">
-            <span className="text-[#45464D] text-sm">Don't have an account? </span>
-            <Link to="/signup" className="text-black text-sm font-bold hover:underline">
-              Register here
-            </Link>
-          </div>
+            {/* Submit */}
+            <button type="submit" disabled={loading} style={{
+              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              background: S.orange, color: S.white, border: 'none', padding: '16px 0', cursor: loading ? 'default' : 'pointer',
+              font: `500 13px/1 ${S.fontU}`, opacity: loading ? 0.6 : 1, transition: 'background .2s',
+            }} onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = S.hover; }} onMouseLeave={(e) => { e.currentTarget.style.background = S.orange; }}>
+              {loading ? <Loader size={16} className="animate-spin" /> : <><span>Sign In</span><ArrowRight size={14} /></>}
+            </button>
+          </form>
         </div>
 
-        {/* Footer Links */}
-        <div className="mt-12 flex flex-col items-center gap-4">
-          <div className="flex items-center gap-6">
-            <span className="text-[#76777D] text-xs">System Health</span>
-            <span className="text-[#C6C6CD]">|</span>
-            <span className="text-[#76777D] text-xs">Legal Portal</span>
+        {/* Sign Up Link */}
+        <div style={{ marginTop: 28, textAlign: 'center' }}>
+          <span style={{ font: `400 13px/1 ${S.fontD}`, color: S.mid }}>Don't have an account? </span>
+          <Link to="/signup" style={{ font: `500 13px/1 ${S.fontD}`, color: S.white, textDecoration: 'none' }} onMouseEnter={(e) => e.currentTarget.style.color = S.orange} onMouseLeave={(e) => e.currentTarget.style.color = S.white}>Register here</Link>
+        </div>
+
+        {/* Footer */}
+        <div style={{ marginTop: 48, textAlign: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 12 }}>
+            <span style={{ font: `400 10px/1 ${S.fontU}`, color: S.dark2 }}>System Health</span>
+            <span style={{ color: S.border }}>|</span>
+            <span style={{ font: `400 10px/1 ${S.fontU}`, color: S.dark2 }}>Legal Portal</span>
           </div>
-          <div className="w-12 h-0.5 bg-[#C6C6CD80]" />
-          <span className="text-[#76777D] text-[10px]">
-            © 2026 PRECISION ANALYTICS SYSTEMS. ALL RIGHTS RESERVED.
-          </span>
+          <div style={{ width: 48, height: 1, background: S.border, margin: '0 auto 12px' }} />
+          <span style={{ font: `400 9px/1 ${S.fontU}`, color: S.dark2 }}>&copy; 2026 PRECISION ANALYTICS SYSTEMS. ALL RIGHTS RESERVED.</span>
         </div>
       </div>
     </div>
   );
-};
-
-export default SignIn;
+}

@@ -87,10 +87,10 @@ export default function NewPassword() {
 
   if (!isVerified) {
     return (
-      <div style={{ minHeight: '100vh', background: S.dark, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+      <div style={{ minHeight: '100vh', background: S.dark, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: '80px 0' }}>
         <AuthCanvas />
         <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 460, padding: '0 24px', textAlign: 'center', animation: 'fadeInUp 0.6s ease-out' }}>
-          <div style={{ background: 'rgba(17,17,17,0.82)', border: `1px solid ${S.border}`, padding: '44px 36px', backdropFilter: 'blur(12px)' }}>
+          <div style={{ background: 'rgba(17,17,17,0.55)', border: `1px solid ${S.border}`, padding: '44px 36px', backdropFilter: 'blur(12px)' }}>
             <AlertCircle size={40} color="#ef4444" style={{ margin: '0 auto 16px', display: 'block' }} />
             <h2 style={{ font: `500 20px/1 ${S.fontD}`, color: S.white, marginBottom: 14 }}>Verification Required</h2>
             <p style={{ font: `400 13px/20px ${S.fontU}`, color: S.mid, marginBottom: 28 }}>
@@ -109,7 +109,7 @@ export default function NewPassword() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: S.dark, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+    <div style={{ minHeight: '100vh', background: S.dark, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: '80px 0' }}>
       <AuthCanvas />
 
       <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 460, padding: '0 24px', animation: 'fadeInUp 0.6s ease-out' }}>
@@ -122,7 +122,7 @@ export default function NewPassword() {
         </div>
 
         {/* Card */}
-        <div style={{ background: 'rgba(17,17,17,0.82)', border: `1px solid ${S.border}`, padding: '44px 36px', backdropFilter: 'blur(12px)' }}>
+        <div style={{ background: 'rgba(17,17,17,0.55)', border: `1px solid ${S.border}`, padding: '44px 36px', backdropFilter: 'blur(12px)' }}>
           {error && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', marginBottom: 24, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
               <AlertCircle size={14} color="#ef4444" />

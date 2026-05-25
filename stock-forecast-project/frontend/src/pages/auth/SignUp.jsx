@@ -23,6 +23,7 @@ const labelStyle = {
 export default function SignUp() {
   const navigate = useNavigate();
   const { signUp } = useAuth();
+  const [accountType, setAccountType] = useState('individual');
   const [form, setForm] = useState({ fullName: '', email: '', organization: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -38,7 +39,9 @@ export default function SignUp() {
     setLoading(true);
     try {
       const { data, error: authError } = await signUp(form.email, form.password, {
-        full_name: form.fullName, organization: form.organization,
+        full_name: form.fullName,
+        organization: accountType === 'enterprise' ? form.organization : '',
+        account_type: accountType,
       });
       if (authError) setError(authError.message);
       else { setSuccess('Account created! Please check your email to verify.'); setTimeout(() => navigate('/login'), 3000); }
@@ -46,8 +49,23 @@ export default function SignUp() {
     finally { setLoading(false); }
   };
 
+  const typeBtn = (type, label) => {
+    const active = accountType === type;
+    return (
+      <button type="button" onClick={() => setAccountType(type)} style={{
+        flex: 1, padding: '14px 0', background: active ? 'rgba(255,102,51,0.12)' : 'transparent',
+        border: `1px solid ${active ? S.orange : S.border}`, color: active ? S.orange : S.mid,
+        font: `500 12px/1 ${S.fontU}`, cursor: 'pointer', transition: 'all .2s',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+      }}>
+        {type === 'individual' ? <User size={14} /> : <Building size={14} />}
+        {label}
+      </button>
+    );
+  };
+
   return (
-    <div style={{ minHeight: '100vh', background: S.dark, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+    <div style={{ minHeight: '100vh', background: S.dark, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: '80px 0' }}>
       <AuthCanvas />
 
       <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 460, padding: '0 24px', animation: 'fadeInUp 0.6s ease-out' }}>
@@ -55,12 +73,12 @@ export default function SignUp() {
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <span style={{ font: `500 20px/1 ${S.fontD}`, color: S.white, letterSpacing: '-0.5px' }}>PRECISION ANALYTICS</span>
           <p style={{ font: `400 13px/20px ${S.fontD}`, color: S.mid, marginTop: 12 }}>
-            Register your organization to start predicting.
+            Create your account to start predicting.
           </p>
         </div>
 
         {/* Card */}
-        <div style={{ background: 'rgba(17,17,17,0.82)', border: `1px solid ${S.border}`, padding: '44px 36px', backdropFilter: 'blur(12px)' }}>
+        <div style={{ background: 'rgba(17,17,17,0.55)', border: `1px solid ${S.border}`, padding: '44px 36px', backdropFilter: 'blur(12px)' }}>
           {error && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', marginBottom: 24, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
               <AlertCircle size={14} color="#ef4444" />
@@ -75,6 +93,15 @@ export default function SignUp() {
           )}
 
           <form onSubmit={handleSubmit}>
+            {/* Account Type Selector */}
+            <div style={{ marginBottom: 28 }}>
+              <label style={labelStyle}>Account Type</label>
+              <div style={{ display: 'flex', gap: 10 }}>
+                {typeBtn('individual', 'Individual')}
+                {typeBtn('enterprise', 'Enterprise')}
+              </div>
+            </div>
+
             {/* Full Name */}
             <div style={{ marginBottom: 22 }}>
               <label style={labelStyle}>Full Name</label>
@@ -84,23 +111,25 @@ export default function SignUp() {
               </div>
             </div>
 
-            {/* Work Email */}
+            {/* Email */}
             <div style={{ marginBottom: 22 }}>
-              <label style={labelStyle}>Work Email</label>
+              <label style={labelStyle}>{accountType === 'enterprise' ? 'Work Email' : 'Email'}</label>
               <div style={{ display: 'flex', alignItems: 'center', background: S.dark, border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
                 <div style={{ padding: '16px 12px' }}><Mail size={14} color={S.mid} /></div>
-                <input type="email" placeholder="name@organization.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} style={inputStyle} required />
+                <input type="email" placeholder={accountType === 'enterprise' ? 'name@organization.com' : 'name@email.com'} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} style={inputStyle} required />
               </div>
             </div>
 
-            {/* Organization */}
-            <div style={{ marginBottom: 22 }}>
-              <label style={labelStyle}>Organization</label>
-              <div style={{ display: 'flex', alignItems: 'center', background: S.dark, border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
-                <div style={{ padding: '16px 12px' }}><Building size={14} color={S.mid} /></div>
-                <input type="text" placeholder="Enterprise Labs Inc." value={form.organization} onChange={(e) => setForm({ ...form, organization: e.target.value })} style={inputStyle} />
+            {/* Organization — Enterprise only */}
+            {accountType === 'enterprise' && (
+              <div style={{ marginBottom: 22, animation: 'fadeInUp 0.3s ease-out' }}>
+                <label style={labelStyle}>Organization</label>
+                <div style={{ display: 'flex', alignItems: 'center', background: S.dark, border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
+                  <div style={{ padding: '16px 12px' }}><Building size={14} color={S.mid} /></div>
+                  <input type="text" placeholder="Enterprise Labs Inc." value={form.organization} onChange={(e) => setForm({ ...form, organization: e.target.value })} style={inputStyle} required />
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Password */}
             <div style={{ marginBottom: 22 }}>
@@ -128,7 +157,9 @@ export default function SignUp() {
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', marginBottom: 28, background: 'rgba(255,255,255,0.02)', border: `1px solid ${S.border}` }}>
               <Shield size={12} color={S.mid} style={{ marginTop: 2, flexShrink: 0 }} />
               <p style={{ font: `400 11px/16px ${S.fontU}`, color: S.mid }}>
-                All accounts are subject to administrative approval. Activity is logged for compliance.
+                {accountType === 'enterprise'
+                  ? 'Enterprise accounts require admin approval. Activity is logged for compliance.'
+                  : 'All activity is logged and monitored for compliance.'}
               </p>
             </div>
 
@@ -138,7 +169,7 @@ export default function SignUp() {
               background: S.orange, color: S.white, border: 'none', padding: '16px 0', cursor: loading ? 'default' : 'pointer',
               font: `500 13px/1 ${S.fontU}`, opacity: loading ? 0.6 : 1, transition: 'background .2s',
             }} onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = S.hover; }} onMouseLeave={(e) => { e.currentTarget.style.background = S.orange; }}>
-              {loading ? <Loader size={16} className="animate-spin" /> : <><span>Register Terminal</span><ArrowRight size={14} /></>}
+              {loading ? <Loader size={16} className="animate-spin" /> : <><span>Create Account</span><ArrowRight size={14} /></>}
             </button>
           </form>
         </div>

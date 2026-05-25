@@ -83,7 +83,7 @@ export default function VerifyCode() {
   const maskedEmail = email ? `${email[0]}${'*'.repeat(Math.min(email.indexOf('@') - 2, 6))}${email.slice(email.indexOf('@'))}` : '';
 
   return (
-    <div style={{ minHeight: '100vh', background: S.dark, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+    <div style={{ minHeight: '100vh', background: S.dark, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: '80px 0' }}>
       <AuthCanvas />
 
       <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 460, padding: '0 24px', animation: 'fadeInUp 0.6s ease-out' }}>
@@ -94,7 +94,7 @@ export default function VerifyCode() {
         </div>
 
         {/* Card */}
-        <div style={{ background: 'rgba(17,17,17,0.82)', border: `1px solid ${S.border}`, padding: '44px 36px', backdropFilter: 'blur(12px)' }}>
+        <div style={{ background: 'rgba(17,17,17,0.55)', border: `1px solid ${S.border}`, padding: '44px 36px', backdropFilter: 'blur(12px)' }}>
           {/* Email Icon & Message */}
           <div style={{ textAlign: 'center', marginBottom: 36 }}>
             <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${S.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>

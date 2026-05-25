@@ -1,10 +1,27 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Activity, ArrowLeft, Loader, AlertCircle, Mail } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader, AlertCircle, Mail } from 'lucide-react';
+import AuthCanvas from '../../components/AuthCanvas';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
-const ForgotPassword = () => {
+const S = {
+  dark: '#0a0a0a', surface: '#111', border: '#1e1e1e', mid: '#888', dark2: '#555',
+  orange: '#FF6633', hover: '#E55A22', white: '#FFF',
+  fontD: 'var(--font-display)', fontU: 'var(--font-ui)',
+};
+
+const inputStyle = {
+  flex: 1, background: 'transparent', border: 'none', outline: 'none',
+  font: `400 14px/1 ${S.fontU}`, color: S.white, padding: '16px 14px 16px 0',
+};
+
+const labelStyle = {
+  display: 'block', font: `500 11px/16.5px ${S.fontU}`, color: S.mid,
+  textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 10,
+};
+
+export default function ForgotPassword() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -14,123 +31,82 @@ const ForgotPassword = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
       const response = await fetch(`${API_URL}/auth/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, delivery_method: 'email' }),
       });
-
       const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.detail || 'Failed to send OTP. Please try again.');
-      } else {
-        sessionStorage.setItem('resetEmail', email);
-        sessionStorage.setItem('deliveryMethod', 'email');
-        navigate('/verify-code');
-      }
-    } catch (err) {
-      setError('An unexpected error occurred.');
-    } finally {
-      setLoading(false);
-    }
+      if (!response.ok) setError(data.detail || 'Failed to send OTP. Please try again.');
+      else { sessionStorage.setItem('resetEmail', email); sessionStorage.setItem('deliveryMethod', 'email'); navigate('/verify-code'); }
+    } catch { setError('An unexpected error occurred.'); }
+    finally { setLoading(false); }
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      {/* Main Content - Centered */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
-        {/* Logo & Branding */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Activity className="w-8 h-8 text-black" />
-            <span className="text-black text-2xl font-bold">PRECISION ANALYTICS</span>
-          </div>
-          <h1 className="text-[#191C1E] text-2xl font-bold mb-2">Reset Access Key</h1>
-          <p className="text-[#45464D] text-sm max-w-xs mx-auto">
+    <div style={{ minHeight: '100vh', background: 'rgba(10,10,10,0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: '80px 0' }}>
+      <AuthCanvas />
+
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 460, padding: '0 24px', animation: 'fadeInUp 0.6s ease-out' }}>
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <span style={{ font: `500 20px/1 ${S.fontD}`, color: S.white, letterSpacing: '-0.5px' }}>PRECISION ANALYTICS</span>
+          <p style={{ font: `400 13px/20px ${S.fontD}`, color: S.mid, marginTop: 12 }}>
             Enter your corporate email to receive a verification code.
           </p>
         </div>
 
-        {/* Reset Card */}
-        <div className="w-full max-w-md">
-          <div className="bg-white py-10 px-10 rounded-xl border border-[#C6C6CD] shadow-sm">
-            {error && (
-              <div className="flex items-center gap-2 p-3 mb-6 bg-red-50 border border-red-200 rounded-lg">
-                <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
-                <span className="text-red-600 text-sm">{error}</span>
-              </div>
-            )}
+        {/* Card */}
+        <div style={{ background: 'rgba(17,17,17,0.35)', border: `1px solid ${S.border}`, padding: '44px 36px', backdropFilter: 'blur(12px)' }}>
+          {error && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', marginBottom: 24, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+              <AlertCircle size={14} color="#ef4444" />
+              <span style={{ font: `400 13px/1 ${S.fontU}`, color: '#ef4444' }}>{error}</span>
+            </div>
+          )}
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Email */}
-              <div>
-                <label className="block text-[#45464D] text-xs uppercase tracking-wide mb-2">
-                  Corporate Email
-                </label>
-                <div className="flex items-center bg-[#F7F9FB] rounded border border-[#C6C6CD] focus-within:border-indigo-500 transition-colors">
-                  <div className="px-3 py-4">
-                    <Mail className="w-4 h-4 text-[#45464D]" />
-                  </div>
-                  <input
-                    type="email"
-                    placeholder="name@precision-analytics.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="flex-1 bg-transparent text-sm py-4 pr-4 outline-none text-gray-500 placeholder-gray-400"
-                    required
-                  />
-                </div>
+          <form onSubmit={handleSubmit}>
+            {/* Email */}
+            <div style={{ marginBottom: 28 }}>
+              <label style={labelStyle}>Corporate Email</label>
+              <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(10,10,10,0.6)', border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
+                <div style={{ padding: '16px 12px' }}><Mail size={14} color={S.mid} /></div>
+                <input type="email" placeholder="name@precision-analytics.com" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
               </div>
+            </div>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-black text-white py-4 rounded font-bold text-base hover:bg-gray-800 transition-colors disabled:opacity-50"
-                style={{ boxShadow: '0px 1px 2px #0000000D' }}
-              >
-                {loading ? (
-                  <Loader className="w-5 h-5 animate-spin" />
-                ) : (
-                  <>
-                    Send Reset Link
-                    <ArrowLeft className="w-4 h-4 rotate-180" />
-                  </>
-                )}
+            {/* Submit */}
+            <div style={{ marginBottom: 20 }}>
+              <button type="submit" disabled={loading} style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                background: S.orange, color: S.white, border: 'none', padding: '16px 0', cursor: loading ? 'default' : 'pointer',
+                font: `500 13px/1 ${S.fontU}`, opacity: loading ? 0.6 : 1, transition: 'background .2s',
+              }} onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = S.hover; }} onMouseLeave={(e) => { e.currentTarget.style.background = S.orange; }}>
+                {loading ? <Loader size={16} className="animate-spin" /> : <><span>Send Reset Link</span><ArrowRight size={14} /></>}
               </button>
+            </div>
 
-              {/* Back to Login */}
-              <div className="text-center">
-                <Link
-                  to="/login"
-                  className="inline-flex items-center gap-2 text-sm text-[#45464D] hover:text-black transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  Back to Login
-                </Link>
-              </div>
-            </form>
-          </div>
+            {/* Back to Login */}
+            <div style={{ textAlign: 'center' }}>
+              <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, font: `400 12px/1 ${S.fontU}`, color: S.mid, textDecoration: 'none', transition: 'color .2s' }} onMouseEnter={(e) => e.currentTarget.style.color = S.white} onMouseLeave={(e) => e.currentTarget.style.color = S.mid}>
+                <ArrowLeft size={12} /> Back to Login
+              </Link>
+            </div>
+          </form>
         </div>
 
-        {/* Footer Links */}
-        <div className="mt-12 flex flex-col items-center gap-4">
-          <div className="flex items-center gap-6">
-            <span className="text-[#76777D] text-xs">System Health</span>
-            <span className="text-[#C6C6CD]">|</span>
-            <span className="text-[#76777D] text-xs">Legal Portal</span>
+        {/* Footer */}
+        <div style={{ marginTop: 48, textAlign: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 12 }}>
+            <span style={{ font: `400 10px/1 ${S.fontU}`, color: S.dark2 }}>System Health</span>
+            <span style={{ color: S.border }}>|</span>
+            <span style={{ font: `400 10px/1 ${S.fontU}`, color: S.dark2 }}>Legal Portal</span>
           </div>
-          <div className="w-12 h-0.5 bg-[#C6C6CD80]" />
-          <span className="text-[#76777D] text-[10px]">
-            © 2026 PRECISION ANALYTICS SYSTEMS. ALL RIGHTS RESERVED.
-          </span>
+          <div style={{ width: 48, height: 1, background: S.border, margin: '0 auto 12px' }} />
+          <span style={{ font: `400 9px/1 ${S.fontU}`, color: S.dark2 }}>&copy; 2026 PRECISION ANALYTICS SYSTEMS. ALL RIGHTS RESERVED.</span>
         </div>
       </div>
     </div>
   );
-};
-
-export default ForgotPassword;
+}

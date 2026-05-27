@@ -192,7 +192,7 @@ const PredictionHistory = () => {
               <p className="text-[#45464D] font-bold text-lg">No predictions yet</p>
               <p className="text-[#45464D] text-sm">Make a prediction on the Dashboard to start tracking accuracy.</p>
               <button
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/dashboard')}
                 className="mt-2 px-6 py-2 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
               >
                 Go to Dashboard

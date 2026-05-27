@@ -271,7 +271,7 @@ const Insights = () => {
               <h2 className="text-2xl font-bold text-yellow-800 mb-2">No insights available yet</h2>
               <p className="text-yellow-700 text-lg">Train a model or publish an article to see insights here.</p>
               <button
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/dashboard')}
                 className="mt-6 px-8 py-3 bg-black text-white rounded-lg font-bold hover:bg-slate-800 transition-colors"
               >
                 Go to Dashboard
@@ -288,7 +288,7 @@ const Insights = () => {
                 The more models you train, the richer your insights become. Each trained model contributes performance data, market coverage, and trend analysis to your personalized AI dashboard.
               </p>
               <button
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/dashboard')}
                 className="mt-8 px-8 py-4 bg-white text-black rounded-xl font-bold text-lg hover:bg-slate-200 transition-colors inline-flex items-center gap-3"
               >
                 <LayoutDashboard size={24} /> Start Training

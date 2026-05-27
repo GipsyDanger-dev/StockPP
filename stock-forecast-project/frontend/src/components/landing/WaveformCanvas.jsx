@@ -11,7 +11,9 @@ export default function WaveformCanvas() {
     const O = 0xFF6633
     const N = 80, F = 15, W_SPAN = 6.0
     let renderer, scene, camera, raf, ro
-    let histGeo, fGeo, pGeo
+    let histGeo, histMat, fGeo, fMat, pGeo, pMat
+    let dotMesh, dotMat, dotGeo, glowMesh, glowMat, glowGeo
+    const gridLines = []
     const clock = new THREE.Clock()
 
     function baseY(i, t) {
@@ -41,28 +43,32 @@ export default function WaveformCanvas() {
       const histPositions = new Float32Array(N * 3)
       histGeo = new THREE.BufferGeometry()
       histGeo.setAttribute('position', new THREE.BufferAttribute(histPositions, 3))
-      scene.add(new THREE.Line(histGeo, new THREE.LineBasicMaterial({ color: 0x333333 })))
+      histMat = new THREE.LineBasicMaterial({ color: 0x333333 })
+      scene.add(new THREE.Line(histGeo, histMat))
 
       const fPositions = new Float32Array(F * 3)
       fGeo = new THREE.BufferGeometry()
       fGeo.setAttribute('position', new THREE.BufferAttribute(fPositions, 3))
-      scene.add(new THREE.Line(fGeo, new THREE.LineBasicMaterial({ color: O })))
+      fMat = new THREE.LineBasicMaterial({ color: O })
+      scene.add(new THREE.Line(fGeo, fMat))
 
-      const dotGeo = new THREE.SphereGeometry(0.07, 10, 10)
-      const dotMat = new THREE.MeshBasicMaterial({ color: O })
-      const dot = new THREE.Mesh(dotGeo, dotMat)
-      scene.add(dot)
+      dotGeo = new THREE.SphereGeometry(0.07, 10, 10)
+      dotMat = new THREE.MeshBasicMaterial({ color: O })
+      dotMesh = new THREE.Mesh(dotGeo, dotMat)
+      scene.add(dotMesh)
 
-      const glowGeo = new THREE.SphereGeometry(0.16, 10, 10)
-      const glowMat = new THREE.MeshBasicMaterial({ color: O, transparent: true, opacity: 0.12 })
-      const glow = new THREE.Mesh(glowGeo, glowMat)
-      scene.add(glow)
+      glowGeo = new THREE.SphereGeometry(0.16, 10, 10)
+      glowMat = new THREE.MeshBasicMaterial({ color: O, transparent: true, opacity: 0.12 })
+      glowMesh = new THREE.Mesh(glowGeo, glowMat)
+      scene.add(glowMesh)
 
       for (let i = 0; i < 5; i++) {
         const x = (i / 4) * W_SPAN - W_SPAN / 2
         const geo = new THREE.BufferGeometry()
         geo.setAttribute('position', new THREE.Float32BufferAttribute([x, -1.5, 0, x, 1.5, 0], 3))
-        scene.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0x111111 })))
+        const mat = new THREE.LineBasicMaterial({ color: 0x111111 })
+        scene.add(new THREE.Line(geo, mat))
+        gridLines.push({ geo, mat })
       }
 
       const pCount = 40
@@ -76,7 +82,8 @@ export default function WaveformCanvas() {
       }
       pGeo = new THREE.BufferGeometry()
       pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3))
-      scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0x1E1E1E, size: 0.04 })))
+      pMat = new THREE.PointsMaterial({ color: 0x1E1E1E, size: 0.04 })
+      scene.add(new THREE.Points(pGeo, pMat))
 
       ro = new ResizeObserver(() => {
         const rw = el.clientWidth, rh = el.clientHeight
@@ -138,6 +145,12 @@ export default function WaveformCanvas() {
       if (ro) ro.disconnect()
       if (renderer) {
         renderer.dispose()
+        if (histGeo) { histGeo.dispose(); histMat.dispose() }
+        if (fGeo) { fGeo.dispose(); fMat.dispose() }
+        if (pGeo) { pGeo.dispose(); pMat.dispose() }
+        if (dotMesh) { dotGeo.dispose(); dotMat.dispose() }
+        if (glowMesh) { glowGeo.dispose(); glowMat.dispose() }
+        gridLines.forEach(gl => { gl.geo.dispose(); gl.mat.dispose() })
         if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement)
       }
     }

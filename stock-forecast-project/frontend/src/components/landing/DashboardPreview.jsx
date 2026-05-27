@@ -1,7 +1,9 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import { gsap } from 'gsap/dist/gsap'
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger'
+
+gsap.registerPlugin(ScrollTrigger)
 
 const CARDS = [
   { ticker: 'NVDA', price: '$875.40', pred: '$892.10', change: '+1.9%', conf: 91, trend: 'up', live: true },
@@ -11,6 +13,14 @@ const CARDS = [
   { ticker: 'AMZN', price: '$185.60', pred: '$190.30', change: '+2.5%', conf: 86, trend: 'up', live: true },
   { ticker: 'BBCA.JK', price: 'IDR 9,350', pred: 'IDR 9,500', change: '+1.6%', conf: 82, trend: 'up', live: false },
 ]
+
+// Memoized volume bar data — stable across re-renders
+const VOL_BARS = CARDS.map(() =>
+  Array.from({ length: 24 }, () => ({
+    h: 8 + Math.random() * 24,
+    hl: Math.random() < 0.15,
+  }))
+)
 
 function generateChartData(trend, points = 60, forecastFrom = 45) {
   const data = []
@@ -136,6 +146,7 @@ function drawChart(canvas, trend, onComplete) {
   let drawProgress = 0
   let pulsePhase = 0
   let done = false
+  let raf
   const SPEED = 0.018
 
   function frame() {
@@ -149,9 +160,12 @@ function drawChart(canvas, trend, onComplete) {
       drawProgress = Math.min(1, drawProgress + SPEED)
       if (drawProgress >= 1) { done = true; onComplete?.() }
     }
-    requestAnimationFrame(frame)
+    raf = requestAnimationFrame(frame)
   }
   frame()
+
+  // Return cancel function to stop the RAF loop
+  return () => { cancelAnimationFrame(raf) }
 }
 
 export default function DashboardPreview() {
@@ -187,18 +201,23 @@ export default function DashboardPreview() {
     ro.observe(section)
 
     const gridGroup = new THREE.Group()
+    const gridGeos = [], gridMats = []
     const cols = 16, rows = 8
     for (let i = 0; i <= cols; i++) {
       const x = (i / cols) * 14 - 7
       const g = new THREE.BufferGeometry()
       g.setAttribute('position', new THREE.Float32BufferAttribute([x, -5, -2, x, 5, -2], 3))
-      gridGroup.add(new THREE.Line(g, new THREE.LineBasicMaterial({ color: 0x111111 })))
+      const m = new THREE.LineBasicMaterial({ color: 0x111111 })
+      gridGroup.add(new THREE.Line(g, m))
+      gridGeos.push(g); gridMats.push(m)
     }
     for (let i = 0; i <= rows; i++) {
       const y = (i / rows) * 8 - 4
       const g = new THREE.BufferGeometry()
       g.setAttribute('position', new THREE.Float32BufferAttribute([-7, y, -2, 7, y, -2], 3))
-      gridGroup.add(new THREE.Line(g, new THREE.LineBasicMaterial({ color: 0x111111 })))
+      const m = new THREE.LineBasicMaterial({ color: 0x111111 })
+      gridGroup.add(new THREE.Line(g, m))
+      gridGeos.push(g); gridMats.push(m)
     }
     scene.add(gridGroup)
 
@@ -220,7 +239,8 @@ export default function DashboardPreview() {
     const pGeo = new THREE.BufferGeometry()
     pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3))
     pGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3))
-    scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ size: 0.05, vertexColors: true, transparent: true, opacity: 0.8 })))
+    const pMat = new THREE.PointsMaterial({ size: 0.05, vertexColors: true, transparent: true, opacity: 0.8 })
+    scene.add(new THREE.Points(pGeo, pMat))
 
     let raf
     function tick() {
@@ -242,6 +262,9 @@ export default function DashboardPreview() {
     return () => {
       cancelAnimationFrame(raf)
       ro.disconnect()
+      gridGeos.forEach(g => g.dispose())
+      gridMats.forEach(m => m.dispose())
+      pGeo.dispose(); pMat.dispose()
       renderer.dispose()
     }
   }, [])
@@ -255,8 +278,12 @@ export default function DashboardPreview() {
     const section = sectionRef.current
     if (!overflow || !track || !section) return
 
-    let ctx, io
+    let ctx, io, initialized = false
+    const cancels = []
+
     function init() {
+      if (initialized) return
+      initialized = true
       const maxScroll = track.scrollWidth - overflow.clientWidth + 80
       if (maxScroll <= 0) return
 
@@ -278,7 +305,6 @@ export default function DashboardPreview() {
         })
       }, section)
 
-      // Draw charts when section enters viewport
       io = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting) {
           const cards = section.querySelectorAll('.ticker-card')
@@ -286,7 +312,8 @@ export default function DashboardPreview() {
             const canvas = card.querySelector('.chart-cv')
             const trend = card.dataset.trend
             setTimeout(() => {
-              drawChart(canvas, trend, () => card.classList.add('drawn'))
+              const cancel = drawChart(canvas, trend, () => card.classList.add('drawn'))
+              cancels.push(cancel)
             }, i * 180)
           })
           io.disconnect()
@@ -300,6 +327,7 @@ export default function DashboardPreview() {
 
     return () => {
       clearTimeout(t1); clearTimeout(t2)
+      cancels.forEach(fn => fn())
       if (ctx) ctx.revert()
       if (io) io.disconnect()
     }
@@ -343,9 +371,9 @@ export default function DashboardPreview() {
                 <canvas className="chart-cv" width={332} height={150} />
               </div>
               <div className="card-volume">
-                {Array.from({ length: 24 }, (_, j) => (
-                  <div key={j} className={`vol-bar${Math.random() < 0.15 ? ' highlight' : ''}`}
-                    style={{ height: `${8 + Math.random() * 24}px` }} />
+                {VOL_BARS[i].map((bar, j) => (
+                  <div key={j} className={`vol-bar${bar.hl ? ' highlight' : ''}`}
+                    style={{ height: `${bar.h}px` }} />
                 ))}
               </div>
               <div className="card-bottom">

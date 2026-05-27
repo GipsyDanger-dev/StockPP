@@ -370,6 +370,7 @@ p,.body{font:400 16px/24px var(--font-display);letter-spacing:0}
 .container{max-width:1400px;margin:0 auto;padding:0 40px}
 .section{padding:80px 0}
 .section-orange{background:var(--orange);color:var(--white)}
+.how-steps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
 .section-dark{background:var(--black);color:var(--white)}
 
 /* Announcement Bar */
@@ -649,6 +650,7 @@ p,.body{font:400 16px/24px var(--font-display);letter-spacing:0}
   .stats-grid{grid-template-columns:1fr 1fr}
   .tech-grid{grid-template-columns:repeat(3,1fr)}
   .footer-grid{grid-template-columns:1fr}
+  .how-steps-grid{grid-template-columns:1fr 1fr}
 }
 @media(max-width:480px){
   h1{font-size:36px;line-height:34px}
@@ -658,4 +660,5 @@ p,.body{font:400 16px/24px var(--font-display);letter-spacing:0}
   .stats-grid{grid-template-columns:1fr}
   .pricing-card{padding:24px}
   .stat-value{font-size:36px}
+  .how-steps-grid{grid-template-columns:1fr}
 }

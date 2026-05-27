@@ -11,7 +11,10 @@ export default function OrbitalCanvas() {
     const O = 0xFF6633
     let renderer, scene, camera, raf, ro
     let core, coreMat, ringMeshes = [], orbiters = []
+    let glowMesh, glowMat, glowGeo
+    let pGeo, pMat
     let mx = 0, my = 0
+    let cardEl = null, onMove = null
     const clock = new THREE.Clock()
 
     function init() {
@@ -33,9 +36,10 @@ export default function OrbitalCanvas() {
       core = new THREE.Mesh(coreGeo, coreMat)
       scene.add(core)
 
-      const glowGeo = new THREE.SphereGeometry(0.55, 16, 16)
-      const glowMat = new THREE.MeshBasicMaterial({ color: O, transparent: true, opacity: 0.06, side: THREE.BackSide })
-      scene.add(new THREE.Mesh(glowGeo, glowMat))
+      glowGeo = new THREE.SphereGeometry(0.55, 16, 16)
+      glowMat = new THREE.MeshBasicMaterial({ color: O, transparent: true, opacity: 0.06, side: THREE.BackSide })
+      glowMesh = new THREE.Mesh(glowGeo, glowMat)
+      scene.add(glowMesh)
 
       const rings = [
         { r: 1.2, tube: 0.012, rot: [0, 0, 0], speed: 0.28, color: 0xFFFFFF, opacity: 0.55 },
@@ -71,18 +75,19 @@ export default function OrbitalCanvas() {
         pPos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
         pPos[i * 3 + 2] = r * Math.cos(phi)
       }
-      const pGeo = new THREE.BufferGeometry()
+      pGeo = new THREE.BufferGeometry()
       pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3))
-      scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ color: O, size: 0.03, transparent: true, opacity: 0.5 })))
+      pMat = new THREE.PointsMaterial({ color: O, size: 0.03, transparent: true, opacity: 0.5 })
+      scene.add(new THREE.Points(pGeo, pMat))
 
-      // Mouse tilt on parent card
-      const card = el.closest('.bento-accuracy')
-      if (card) {
-        card.addEventListener('mousemove', e => {
-          const rect = card.getBoundingClientRect()
+      cardEl = el.closest('.bento-accuracy')
+      if (cardEl) {
+        onMove = e => {
+          const rect = cardEl.getBoundingClientRect()
           mx = (e.clientX - rect.left) / rect.width - 0.5
           my = (e.clientY - rect.top) / rect.height - 0.5
-        })
+        }
+        cardEl.addEventListener('mousemove', onMove)
       }
 
       ro = new ResizeObserver(() => {
@@ -139,8 +144,14 @@ export default function OrbitalCanvas() {
     return () => {
       cancelAnimationFrame(raf)
       if (ro) ro.disconnect()
+      if (cardEl && onMove) cardEl.removeEventListener('mousemove', onMove)
       if (renderer) {
         renderer.dispose()
+        if (core) { core.geometry.dispose(); coreMat.dispose() }
+        if (glowMesh) { glowGeo.dispose(); glowMat.dispose() }
+        ringMeshes.forEach(rm => { rm.mesh.geometry.dispose(); rm.mesh.material.dispose() })
+        orbiters.forEach(ob => { ob.mesh.geometry.dispose(); ob.mesh.material.dispose() })
+        if (pGeo) { pGeo.dispose(); pMat.dispose() }
         if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement)
       }
     }

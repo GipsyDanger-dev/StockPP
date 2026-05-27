@@ -11,7 +11,8 @@ export default function ValidationCanvas() {
     const O = 0xFF6633
     const PCOUNT = 120, GATE_X = 0.2
     let renderer, scene, camera, raf, ro
-    let greyGeo, orangeGeo, gateMat, glowPlaneMat
+    let greyGeo, greyMat, orangeGeo, orangeMat, gateGeo, gateMat
+    let glowPlaneGeo, glowPlaneMat, glowPlane
     const clock = new THREE.Clock()
 
     const particles = Array.from({ length: PCOUNT }, () => ({
@@ -44,17 +45,19 @@ export default function ValidationCanvas() {
       greyGeo.setAttribute('position', new THREE.BufferAttribute(greyPositions, 3))
       orangeGeo.setAttribute('position', new THREE.BufferAttribute(orangePositions, 3))
 
-      scene.add(new THREE.Points(greyGeo, new THREE.PointsMaterial({ color: 0x222222, size: 0.05 })))
-      scene.add(new THREE.Points(orangeGeo, new THREE.PointsMaterial({ color: O, size: 0.065 })))
+      greyMat = new THREE.PointsMaterial({ color: 0x222222, size: 0.05 })
+      orangeMat = new THREE.PointsMaterial({ color: O, size: 0.065 })
+      scene.add(new THREE.Points(greyGeo, greyMat))
+      scene.add(new THREE.Points(orangeGeo, orangeMat))
 
-      const gateGeo = new THREE.BufferGeometry()
+      gateGeo = new THREE.BufferGeometry()
       gateGeo.setAttribute('position', new THREE.Float32BufferAttribute([GATE_X, -2, 0, GATE_X, 2, 0], 3))
       gateMat = new THREE.LineBasicMaterial({ color: O, transparent: true, opacity: 0.25 })
       scene.add(new THREE.Line(gateGeo, gateMat))
 
-      const glowPlaneGeo = new THREE.PlaneGeometry(0.06, 4)
+      glowPlaneGeo = new THREE.PlaneGeometry(0.06, 4)
       glowPlaneMat = new THREE.MeshBasicMaterial({ color: O, transparent: true, opacity: 0.06, side: THREE.DoubleSide })
-      const glowPlane = new THREE.Mesh(glowPlaneGeo, glowPlaneMat)
+      glowPlane = new THREE.Mesh(glowPlaneGeo, glowPlaneMat)
       glowPlane.position.x = GATE_X
       scene.add(glowPlane)
 
@@ -132,6 +135,10 @@ export default function ValidationCanvas() {
       if (ro) ro.disconnect()
       if (renderer) {
         renderer.dispose()
+        if (greyGeo) { greyGeo.dispose(); greyMat.dispose() }
+        if (orangeGeo) { orangeGeo.dispose(); orangeMat.dispose() }
+        if (gateGeo) { gateGeo.dispose(); gateMat.dispose() }
+        if (glowPlaneGeo) { glowPlaneGeo.dispose(); glowPlaneMat.dispose() }
         if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement)
       }
     }

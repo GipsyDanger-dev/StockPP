@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { X } from 'lucide-react'
 import NeuralPulseCanvas from '../components/landing/NeuralPulseCanvas'
 import WaveformCanvas from '../components/landing/WaveformCanvas'
 import OrbitalCanvas from '../components/landing/OrbitalCanvas'
@@ -633,7 +632,7 @@ export default function Landing() {
       <section className="section section-orange" id="how-it-works">
         <div className="container">
           <h3 style={{ textAlign: 'center', color: 'var(--white)', marginBottom: 52 }} data-enter="">How It Works</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 }}>
+          <div className="how-steps-grid">
             {[
               { n: '01', title: 'Fetch Data', desc: '5 years of historical data pulled from Yahoo Finance. 6 technical indicators computed in real-time.' },
               { n: '02', title: 'Normalize', desc: 'MinMaxScaler transforms features to 0–1 range. 20-day sliding windows created for sequence input.' },

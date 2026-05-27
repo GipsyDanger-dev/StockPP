@@ -16,7 +16,15 @@ export default function NeuralPulseCanvas() {
     let path = null
     let nodeMeshes = [], edgeGroups = []
     let pulseSphere, pulseLight
+    let cardEl = null, onMove = null
+    const timeouts = []
     const clock = new THREE.Clock()
+
+    function addTimeout(fn, ms) {
+      const id = setTimeout(fn, ms)
+      timeouts.push(id)
+      return id
+    }
 
     function init() {
       const w = el.clientWidth, h = el.clientHeight
@@ -84,14 +92,15 @@ export default function NeuralPulseCanvas() {
       pulseLight = new THREE.PointLight(O, 0, 2.5)
       scene.add(pulseLight)
 
-      // Mouse parallax on parent card
-      const card = el.closest('.bento-main')
-      if (card) {
-        card.addEventListener('mousemove', e => {
-          const r = card.getBoundingClientRect()
+      // Mouse parallax on parent card — store reference for cleanup
+      cardEl = el.closest('.bento-main')
+      if (cardEl) {
+        onMove = e => {
+          const r = cardEl.getBoundingClientRect()
           mx = (e.clientX - r.left) / r.width - 0.5
           my = (e.clientY - r.top) / r.height - 0.5
-        })
+        }
+        cardEl.addEventListener('mousemove', onMove)
       }
 
       ro = new ResizeObserver(() => {
@@ -103,7 +112,7 @@ export default function NeuralPulseCanvas() {
       })
       ro.observe(el)
 
-      setTimeout(startPulse, 400)
+      addTimeout(startPulse, 400)
       raf = requestAnimationFrame(tick)
       return true
     }
@@ -154,7 +163,7 @@ export default function NeuralPulseCanvas() {
         if (!path) path = pickNextPath()
         if (!path) {
           pulseActive = false; pulseWaiting = true
-          setTimeout(() => { pulseWaiting = false; startPulse() }, 1800)
+          addTimeout(() => { pulseWaiting = false; startPulse() }, 1800)
           return
         }
         pulseProgress += 0.025
@@ -184,7 +193,7 @@ export default function NeuralPulseCanvas() {
             pulseSphere.visible = false
             pulseLight.intensity = 0
             pulseWaiting = true
-            setTimeout(() => { resetColors(); pulseWaiting = false; startPulse() }, 2000)
+            addTimeout(() => { resetColors(); pulseWaiting = false; startPulse() }, 2000)
           }
         }
       }
@@ -192,24 +201,25 @@ export default function NeuralPulseCanvas() {
       renderer.render(scene, camera)
     }
 
-    // Defer init until container has dimensions (GSAP starts cards at opacity:0)
     if (!init()) {
       const io = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && init()) io.disconnect()
       }, { threshold: 0 })
       io.observe(el)
-      // Fallback: try again after a short delay
       const fallback = setTimeout(() => { if (!renderer) init() }, 200)
       return () => { clearTimeout(fallback); io.disconnect() }
     }
 
     return () => {
+      timeouts.forEach(clearTimeout)
       cancelAnimationFrame(raf)
       if (ro) ro.disconnect()
+      if (cardEl && onMove) cardEl.removeEventListener('mousemove', onMove)
       if (renderer) {
         renderer.dispose()
         nodeMeshes.flat().forEach(n => { n.mesh.geometry.dispose(); n.mat.dispose() })
         edgeGroups.forEach(eg => { eg.lines.geometry.dispose(); eg.mat.dispose() })
+        if (pulseSphere) { pulseSphere.geometry.dispose(); pulseSphere.material.dispose() }
         if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement)
       }
     }

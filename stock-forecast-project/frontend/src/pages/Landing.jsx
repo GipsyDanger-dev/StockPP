@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { X } from 'lucide-react'
-import NeuralCanvas from '../components/landing/NeuralCanvas'
+import NeuralPulseCanvas from '../components/landing/NeuralPulseCanvas'
+import WaveformCanvas from '../components/landing/WaveformCanvas'
+import OrbitalCanvas from '../components/landing/OrbitalCanvas'
+import ValidationCanvas from '../components/landing/ValidationCanvas'
 
 import * as THREE from 'three'
 import { gsap } from 'gsap/dist/gsap'
@@ -343,36 +346,28 @@ export default function Landing() {
       scrollTrigger: { trigger: '#tech-stack', start: 'top 85%', once: true },
     })
 
-    // Features bento cards entrance
-    gsap.to('[data-bento]', {
-      opacity: 1, y: 0, duration: 0.6, ease: 'power3.out', stagger: 0.12,
-      scrollTrigger: { trigger: '#features', start: 'top 75%', once: true },
+    // Features bento entrance
+    gsap.from('#featHead', {
+      opacity: 0, y: 20, duration: 0.6, ease: 'power3.out',
+      scrollTrigger: { trigger: '#features', start: 'top 85%', once: true },
     })
-
-    // Validation checkmarks
-    ScrollTrigger.create({
-      trigger: '.bento-validation',
-      start: 'top 80%',
-      once: true,
-      onEnter: () => {
-        document.querySelectorAll('[data-validate]').forEach((row, i) => {
-          const check = row.querySelector('.validation-check')
-          setTimeout(() => {
-            check.classList.add('active')
-          }, 200 + i * 150)
-        })
-      },
+    gsap.from('.bento-card', {
+      opacity: 0, y: 30, duration: 0.7, ease: 'power3.out', stagger: 0.1,
+      scrollTrigger: { trigger: '#features', start: 'top 78%', once: true },
     })
 
     // Validation counter
-    gsap.utils.toArray('[data-counter]').forEach(el => {
-      const target = parseInt(el.textContent)
-      const obj = { val: 0 }
-      gsap.to(obj, {
-        val: target, duration: 2.5, ease: 'power1.inOut',
-        scrollTrigger: { trigger: el, start: 'top 85%', once: true },
-        onUpdate: () => { el.textContent = Math.round(obj.val) },
-      })
+    ScrollTrigger.create({
+      trigger: '#c4', start: 'top 80%', once: true,
+      onEnter: () => {
+        const el = document.querySelector('[data-counter-val]')
+        if (!el) return
+        const obj = { v: 0 }
+        gsap.to(obj, {
+          v: 88, duration: 2, ease: 'power1.inOut', delay: 0.4,
+          onUpdate: () => { el.textContent = Math.round(obj.v) + '%' },
+        })
+      },
     })
 
     // Stat counters
@@ -388,20 +383,6 @@ export default function Landing() {
       })
     })
 
-    // Bento tilt
-    document.querySelectorAll('.bento-card').forEach(card => {
-      card.addEventListener('mousemove', e => {
-        const rect = card.getBoundingClientRect()
-        gsap.to(card, {
-          rotateX: ((e.clientY - rect.top) / rect.height - 0.5) * -12,
-          rotateY: ((e.clientX - rect.left) / rect.width - 0.5) * 12,
-          transformPerspective: 800, duration: 0.4, ease: 'power3.out',
-        })
-      })
-      card.addEventListener('mouseleave', () => {
-        gsap.to(card, { rotateX: 0, rotateY: 0, duration: 0.5, ease: 'power3.out' })
-      })
-    })
   }, { scope: ref })
 
   return (
@@ -543,149 +524,84 @@ export default function Landing() {
       {/* Features Bento */}
       <section className="features-section" id="features">
         <div className="container">
-          <div className="features-header">
-            <h2>Everything you need to forecast with confidence</h2>
-            <p>From neural network predictions to real-time market data and automated validation.</p>
+          <div className="features-header" id="featHead">
+            <h2>Everything you need to<br/>forecast with confidence</h2>
+            <span className="features-eyebrow">04 Features</span>
           </div>
+
           <div className="features-bento">
-            {/* Card 1: LSTM Prediction Engine */}
-            <div className="bento-card bento-lstm" data-bento="">
-              <NeuralCanvas />
-              <div className="bento-lstm-header">
-                <h3 className="bento-lstm-title">LSTM Prediction Engine</h3>
-                <p className="bento-lstm-sub">3-Layer Neural Network</p>
-              </div>
-              <div className="lstm-stats">
-                {[
-                  { val: '3 x 50', lbl: 'LSTM Units' },
-                  { val: '20d', lbl: 'Window' },
-                  { val: '5-Fold', lbl: 'Validation' },
-                  { val: '7-Day', lbl: 'Forecast' },
-                ].map((s, i) => (
-                  <div key={i} className="lstm-stat">
-                    <div className="lstm-stat-val">{s.val}</div>
-                    <div className="lstm-stat-lbl">{s.lbl}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Card 2: Live Market Data */}
-            <div className="bento-card bento-market" data-bento="">
-              <h3 className="bento-market-title">Live Market Data</h3>
-              <p className="bento-market-sub">Real-time quotes via Finnhub with 30-second auto-refresh.</p>
-              <div className="live-badge"><span className="live-dot"></span> LIVE</div>
-              <div className="chart-wrap">
-                <svg viewBox="0 0 300 100" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#FF6633" stopOpacity="0.3" />
-                      <stop offset="100%" stopColor="#FF6633" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  <path
-                    d="M0,80 Q30,70 60,65 T120,50 T180,40 T240,30 T300,25 L300,100 L0,100 Z"
-                    fill="url(#chartGrad)"
-                    opacity="0.4"
-                  >
-                    <animate attributeName="opacity" values="0;0.4" dur="1.5s" fill="freeze" />
-                  </path>
-                  <path
-                    d="M0,80 Q30,70 60,65 T120,50 T180,40 T240,30 T300,25"
-                    fill="none"
-                    stroke="#FF6633"
-                    strokeWidth="2"
-                    strokeDasharray="500"
-                    strokeDashoffset="500"
-                  >
-                    <animate attributeName="stroke-dashoffset" values="500;0" dur="2s" fill="freeze" />
-                  </path>
-                  <path
-                    d="M240,30 Q260,22 280,18 T300,15"
-                    fill="none"
-                    stroke="#FF6633"
-                    strokeWidth="1.5"
-                    strokeDasharray="4 3"
-                    opacity="0.6"
-                    strokeDashoffset="100"
-                  >
-                    <animate attributeName="stroke-dashoffset" values="100;0" dur="1s" begin="2s" fill="freeze" />
-                  </path>
-                  <circle cx="300" cy="15" r="4" fill="#FF6633" opacity="0">
-                    <animate attributeName="opacity" values="0;1" dur="0.3s" begin="2.5s" fill="freeze" />
-                    <animate attributeName="r" values="4;6;4" dur="2s" begin="2.8s" repeatCount="indefinite" />
-                  </circle>
-                </svg>
-              </div>
-            </div>
-
-            {/* Card 3: Accuracy Metrics */}
-            <div className="bento-card bento-accuracy" data-bento="">
-              <div className="accuracy-header">
-                <div>
-                  <h3 className="accuracy-title">Accuracy Metrics</h3>
-                  <p className="accuracy-sub">Walk-forward validated</p>
+            {/* Card 1 — LSTM Neural Network 3D */}
+            <div className="bento-card bento-main" id="c1">
+              <div className="card-canvas"><NeuralPulseCanvas /></div>
+              <div className="card-content">
+                <span className="card-label">Core Engine</span>
+                <div className="card-icon" style={{ marginBottom: 8 }}>
+                  <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 12l10 5 10-5M2 17l10 5 10-5"/></svg>
                 </div>
-                <div className="accuracy-badge">88%</div>
-              </div>
-              <div className="gauge-wrap">
-                <svg viewBox="0 0 160 90" fill="none">
-                  <path d="M15,80 A65,65 0 0,1 145,80" stroke="#1e1e1e" strokeWidth="8" strokeLinecap="round" />
-                  <path
-                    d="M15,80 A65,65 0 0,1 145,80"
-                    stroke="#FF6633"
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                    strokeDasharray="220"
-                    strokeDashoffset="220"
-                  >
-                    <animate attributeName="stroke-dashoffset" values="220;27" dur="2s" fill="freeze" />
-                  </path>
-                  <circle cx="80" cy="80" r="3" fill="#FF6633" />
-                </svg>
-              </div>
-              <div className="accuracy-stats">
-                {[
-                  { val: '0.018', lbl: 'RMSE' },
-                  { val: '0.014', lbl: 'MAE' },
-                  { val: '0.94', lbl: 'R²' },
-                  { val: '2%', lbl: 'Threshold' },
-                ].map((s, i) => (
-                  <div key={i} className="accuracy-stat">
-                    <div className="accuracy-stat-val">{s.val}</div>
-                    <div className="accuracy-stat-lbl">{s.lbl}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Card 4: Auto Validation */}
-            <div className="bento-card bento-validation" data-bento="">
-              <div className="validation-left">
-                <h3 className="validation-title">Auto Validation</h3>
-                <p className="validation-sub">Predictions validated against actual prices with direction accuracy tracking.</p>
-                <div className="validation-list">
-                  {[
-                    { sym: 'NVDA', pred: 'Forecast: +4.2% — Validated' },
-                    { sym: 'AAPL', pred: 'Forecast: +1.8% — Validated' },
-                    { sym: 'MSFT', pred: 'Forecast: -0.6% — Validated' },
-                  ].map((v, i) => (
-                    <div key={i} className="validation-ticker" data-validate="">
-                      <div className="validation-check">
-                        <svg viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                      </div>
-                      <span className="validation-ticker-sym">{v.sym}</span>
-                      <span className="validation-ticker-prediction">{v.pred}</span>
-                    </div>
-                  ))}
+                <p className="card-title">LSTM Prediction Engine</p>
+                <p className="card-body">Three-layer LSTM processes 20-day windows of 6 technical indicators. Walk-forward validation, 5 folds, 2% tolerance gate.</p>
+                <div className="lstm-stats">
+                  <div className="lstm-stat"><span className="lstm-stat-val">3x50</span><span className="lstm-stat-lbl">LSTM Units</span></div>
+                  <div className="lstm-stat"><span className="lstm-stat-val">20d</span><span className="lstm-stat-lbl">Window</span></div>
+                  <div className="lstm-stat"><span className="lstm-stat-val">5-Fold</span><span className="lstm-stat-lbl">Validation</span></div>
+                  <div className="lstm-stat"><span className="lstm-stat-val">7-Day</span><span className="lstm-stat-lbl">Forecast</span></div>
                 </div>
               </div>
-              <div className="validation-right">
-                <div className="validation-counter" data-counter="">88</div>
-                <div className="validation-counter-label">Confidence Level</div>
-                <div className="validation-counter-sub">model accuracy score</div>
+            </div>
+
+            {/* Card 2 — Live Market: Waveform 3D */}
+            <div className="bento-card bento-market" id="c2">
+              <div className="card-canvas"><WaveformCanvas /></div>
+              <div className="card-content">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div className="card-icon" style={{ marginBottom: 0 }}>
+                    <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                  </div>
+                  <span className="live-badge"><span className="live-dot"></span>Live Feed</span>
+                </div>
+                <p className="card-title" style={{ marginTop: 12 }}>Live Market Data</p>
+                <p className="card-body">Real-time quotes via Finnhub. 30-second auto-refresh on all analytics pages.</p>
+              </div>
+            </div>
+
+            {/* Card 3 — Accuracy: Orbital System */}
+            <div className="bento-card bento-accuracy" id="c3">
+              <div className="card-canvas"><OrbitalCanvas /></div>
+              <div className="card-content">
+                <div className="card-icon">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                </div>
+                <p className="card-title">Accuracy Metrics</p>
+                <p className="card-body">RMSE, MAE, R² per model. 2% tolerance gate before deployment.</p>
+                <div className="acc-stats">
+                  <div className="acc-stat"><span className="acc-stat-val">0.024</span><span className="acc-stat-lbl">RMSE</span></div>
+                  <div className="acc-stat"><span className="acc-stat-val">0.018</span><span className="acc-stat-lbl">MAE</span></div>
+                  <div className="acc-stat"><span className="acc-stat-val">0.94</span><span className="acc-stat-lbl">R²</span></div>
+                  <div className="acc-stat" style={{ borderLeft: '1px solid #1C1C1C' }}><span className="acc-stat-val">88%</span><span className="acc-stat-lbl">Confidence</span></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 4 — Auto Validation: Particle Stream */}
+            <div className="bento-card bento-validation" id="c4">
+              <div className="card-canvas"><ValidationCanvas /></div>
+              <div className="card-content" style={{ flexDirection: 'row', gap: 32, alignItems: 'center' }}>
+                <div className="val-left">
+                  <div className="card-icon" style={{ marginBottom: 8 }}>
+                    <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                  </div>
+                  <p className="card-title">Auto Validation</p>
+                  <p className="card-body">Predictions validated daily against actual closes. Direction accuracy and mean percent error tracked per ticker.</p>
+                  <div className="val-list">
+                    <div className="val-row"><div className="val-chk"><svg viewBox="0 0 12 12"><polyline points="1,6 4,9.5 11,2"/></svg></div><span className="val-ticker">NVDA</span><span className="val-match">↑ Match</span><span className="val-pct">+1.9%</span></div>
+                    <div className="val-row"><div className="val-chk"><svg viewBox="0 0 12 12"><polyline points="1,6 4,9.5 11,2"/></svg></div><span className="val-ticker">AAPL</span><span className="val-match">↑ Match</span><span className="val-pct">+1.1%</span></div>
+                    <div className="val-row"><div className="val-chk"><svg viewBox="0 0 12 12"><polyline points="1,6 4,9.5 11,2"/></svg></div><span className="val-ticker">BBCA.JK</span><span className="val-match">↑ Match</span><span className="val-pct">+0.8%</span></div>
+                  </div>
+                </div>
+                <div className="val-right">
+                  <div className="val-big" data-counter-val="">0%</div>
+                  <div className="val-big-lbl">Direction Accuracy</div>
+                </div>
               </div>
             </div>
           </div>

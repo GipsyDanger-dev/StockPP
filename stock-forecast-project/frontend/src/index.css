@@ -451,87 +451,76 @@ p,.body{font:400 16px/24px var(--font-display);letter-spacing:0}
 @media(max-width:480px){.tech-row{grid-template-columns:32px 40px 1fr 20px;gap:12px;height:72px}.tech-name{font-size:16px}.tech-section .container{padding:0 16px}.tech-section{padding:60px 0}}
 
 /* Features Bento */
-.features-section{padding:100px 0 80px}
-.features-header{text-align:center;margin-bottom:64px}
-.features-header h2{font:500 48px/1.1 var(--font-display);color:var(--white);margin-bottom:16px}
-.features-header p{font:400 16px/24px var(--font-ui);color:var(--gray-mid);max-width:560px;margin:0 auto}
-.features-bento{display:grid;grid-template-columns:1.1fr 1fr 1fr;grid-template-rows:340px 260px;gap:2px;background:var(--dark-bg);position:relative}
+.features-section{background:#000;padding:80px 0}
+.features-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:40px}
+.features-header h2{font:400 30px/32px var(--font-display);color:#fff;margin:0}
+.features-eyebrow{font:500 11px/16.5px var(--font-ui);color:#333;letter-spacing:.15em;text-transform:uppercase}
+.features-bento{display:grid;grid-template-columns:55% 1fr 1fr;grid-template-rows:340px 280px;gap:2px;background:#111}
 
-/* Card base */
-.bento-card{border:1px solid var(--dark-border);background:#111;position:relative;overflow:hidden;transition:border-color .35s;padding:28px 32px;display:flex;flex-direction:column}
-.bento-card:hover{border-color:rgba(255,102,51,.45)}
+/* Base card */
+.bento-card{background:#0D0D0D;padding:32px;position:relative;overflow:hidden;transition:background .3s}
+.bento-card::after{content:'';position:absolute;inset:0;border:1px solid transparent;transition:border-color .4s;pointer-events:none;z-index:20}
+.bento-card:hover{background:#111}
+.bento-card:hover::after{border-color:var(--orange)}
+.card-canvas{position:absolute;inset:0;width:100%!important;height:100%!important;z-index:1;pointer-events:auto}
+.card-content{position:relative;z-index:2;height:100%;display:flex;flex-direction:column}
+.card-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.card-icon svg{width:20px;height:20px;stroke:var(--orange);fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.card-label{font:500 11px/1 var(--font-ui);color:#333;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}
+.card-title{font:500 18px/21px var(--font-display);color:#fff;margin-bottom:8px}
+.card-body{font:400 12px/18px var(--font-display);color:#444}
 
-/* Card 1: LSTM — spans 2 rows */
-.bento-lstm{grid-row:1/3;padding:0}
-.bento-lstm-header{position:absolute;top:0;left:0;right:0;padding:28px 32px 0;z-index:2;pointer-events:none}
-.bento-lstm-title{font:500 22px/1 var(--font-display);color:var(--white);margin:0 0 6px}
-.bento-lstm-sub{font:400 12px/1 var(--font-ui);color:var(--gray-mid)}
-.lstm-stats{display:flex;gap:0;position:absolute;bottom:0;left:0;right:0;z-index:2;border-top:1px solid var(--dark-border)}
-.lstm-stat{flex:1;padding:16px 0;text-align:center}
-.lstm-stat:not(:last-child){border-right:1px solid var(--dark-border)}
-.lstm-stat-val{font:600 18px/1 var(--font-display);color:var(--orange);margin-bottom:4px}
-.lstm-stat-lbl{font:400 10px/1 var(--font-ui);color:var(--gray-dark);text-transform:uppercase;letter-spacing:.08em}
+/* Card 1: LSTM main */
+.bento-main{grid-column:1;grid-row:1/3}
+.lstm-stats{display:flex;gap:0;margin-top:auto;border:1px solid #1C1C1C}
+.lstm-stat{flex:1;padding:10px 14px;border-right:1px solid #1C1C1C}
+.lstm-stat:last-child{border-right:none}
+.lstm-stat-val{font:500 18px/1 var(--font-display);color:var(--orange);display:block;margin-bottom:4px}
+.lstm-stat-lbl{font:500 9px/12px var(--font-ui);color:#333;text-transform:uppercase;letter-spacing:.08em}
 
-/* Card 2: Market Chart */
-.bento-market-title{font:500 22px/1 var(--font-display);color:var(--white);margin:0 0 4px}
-.bento-market-sub{font:400 12px/18px var(--font-ui);color:var(--gray-mid);margin-bottom:24px;flex:1}
-.live-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.35);padding:6px 14px;font:500 11px/1 var(--font-ui);color:#22c55e;letter-spacing:.04em;margin-bottom:24px}
-.live-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;animation:livePulse 2s ease-in-out infinite}
-@keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
-.chart-wrap{flex:1;display:flex;align-items:flex-end;justify-content:center;position:relative}
-.chart-wrap svg{width:100%;height:100%;max-height:160px}
+/* Card 2: Market */
+.bento-market{grid-column:2;grid-row:1}
+.live-badge{display:inline-flex;align-items:center;gap:6px;font:500 9px/1 var(--font-ui);color:#444;letter-spacing:.1em;text-transform:uppercase}
+.live-dot{width:5px;height:5px;border-radius:50%;background:#22c55e;animation:blink 1.8s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
-/* Card 3: Accuracy Gauge */
-.accuracy-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px}
-.accuracy-title{font:500 22px/1 var(--font-display);color:var(--white);margin:0 0 4px}
-.accuracy-sub{font:400 12px/1 var(--font-ui);color:var(--gray-mid)}
-.accuracy-badge{font:600 22px/1 var(--font-display);color:var(--orange)}
-.gauge-wrap{flex:1;display:flex;align-items:center;justify-content:center}
-.gauge-wrap svg{width:160px;height:90px}
-.accuracy-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:auto;padding-top:16px;border-top:1px solid var(--dark-border)}
-.accuracy-stat{text-align:center;padding:8px 0}
-.accuracy-stat-val{font:600 15px/1 var(--font-display);color:var(--white);margin-bottom:4px}
-.accuracy-stat-lbl{font:400 9px/1 var(--font-ui);color:var(--gray-dark);text-transform:uppercase;letter-spacing:.08em}
+/* Card 3: Accuracy */
+.bento-accuracy{grid-column:3;grid-row:1}
+.acc-stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#1C1C1C;margin:0 -32px -32px;margin-top:auto;border-top:1px solid #1C1C1C}
+.acc-stat{background:#0D0D0D;padding:10px 14px}
+.acc-stat-val{font:500 14px/1 var(--font-display);color:#fff;display:block;margin-bottom:3px}
+.acc-stat-lbl{font:500 9px/12px var(--font-ui);color:#333;text-transform:uppercase;letter-spacing:.08em}
 
 /* Card 4: Validation */
-.bento-validation{grid-column:2/4;flex-direction:row;align-items:center;padding:32px 40px}
-.validation-left{flex:1}
-.validation-title{font:500 22px/1 var(--font-display);color:var(--white);margin:0 0 6px}
-.validation-sub{font:400 12px/18px var(--font-ui);color:var(--gray-mid);margin-bottom:28px}
-.validation-list{display:flex;flex-direction:column;gap:14px}
-.validation-ticker{display:flex;align-items:center;gap:10px}
-.validation-check{width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.validation-check svg{width:12px;height:12px;stroke:var(--orange);fill:none;stroke-width:2;opacity:0;transition:opacity .4s}
-.validation-check.active{border-color:var(--orange);background:rgba(255,102,51,.1)}
-.validation-check.active svg{opacity:1}
-.validation-ticker-sym{font:500 13px/1 var(--font-ui);color:var(--white);letter-spacing:.04em;min-width:56px}
-.validation-ticker-prediction{font:400 12px/1 var(--font-ui);color:var(--gray-mid)}
-.validation-right{flex-shrink:0;width:200px;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.validation-counter{font:600 72px/1 var(--font-display);color:var(--orange);margin-bottom:4px}
-.validation-counter-label{font:500 13px/1 var(--font-ui);color:var(--white);letter-spacing:.04em}
-.validation-counter-sub{font:400 11px/1 var(--font-ui);color:var(--gray-dark);margin-top:8px}
-
-/* Neural canvas inside LSTM card */
-.neural-canvas{position:absolute;inset:0;z-index:0}
-
-/* Bento card entrance state (GSAP animates to visible) */
-.features-bento [data-bento]{opacity:0;transform:translateY(40px)}
+.bento-validation{grid-column:2/4;grid-row:2;display:flex;gap:32px;align-items:center}
+.val-left{flex:1;display:flex;flex-direction:column;height:100%}
+.val-right{width:180px;flex-shrink:0;display:flex;flex-direction:column;justify-content:center}
+.val-big{font:500 56px/52px var(--font-display);color:var(--orange);letter-spacing:-2px}
+.val-big-lbl{font:500 9px/12px var(--font-ui);color:#333;text-transform:uppercase;letter-spacing:.12em;margin-top:6px}
+.val-list{margin-top:auto;display:flex;flex-direction:column;gap:0}
+.val-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #1A1A1A}
+.val-row:last-child{border:none}
+.val-chk{width:14px;height:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.val-chk svg{width:12px;height:12px;stroke:var(--orange);fill:none;stroke-width:2;stroke-linecap:round}
+.val-ticker{font:500 10px/1 var(--font-ui);color:#fff;flex:1;letter-spacing:.05em}
+.val-match{font:400 10px/1 var(--font-ui);color:#333}
+.val-pct{font:500 10px/1 var(--font-ui);color:var(--orange)}
 
 @media(max-width:1024px){
-  .features-bento{grid-template-columns:1fr 1fr;grid-template-rows:320px 240px 260px}
-  .bento-lstm{grid-column:1/3;grid-row:auto}
-  .bento-validation{grid-column:1/3}
+  .features-bento{grid-template-columns:1fr 1fr;grid-template-rows:360px 300px 260px}
+  .bento-main{grid-column:1/3;grid-row:1}
+  .bento-market{grid-column:1;grid-row:2}
+  .bento-accuracy{grid-column:2;grid-row:2}
+  .bento-validation{grid-column:1/3;grid-row:3}
 }
 @media(max-width:768px){
-  .features-section{padding:60px 0}
-  .features-header h2{font-size:32px}
-  .features-bento{grid-template-columns:1fr;grid-template-rows:auto}
-  .bento-lstm{min-height:360px}
-  .bento-market{min-height:300px}
-  .bento-accuracy{min-height:280px}
-  .bento-validation{flex-direction:column}
-  .validation-right{width:100%;flex-direction:row;gap:16px;padding-top:20px}
-  .validation-counter{font-size:48px}
+  .features-bento{grid-template-columns:1fr;grid-template-rows:380px auto auto auto}
+  .bento-main{grid-column:1;grid-row:1;height:380px}
+  .bento-market,.bento-accuracy,.bento-validation{grid-column:1;height:280px}
+  .bento-market{grid-row:2}.bento-accuracy{grid-row:3}
+  .bento-validation{grid-row:4;flex-direction:column;gap:16px;height:auto}
+  .val-right{width:100%}
+  .features-section .container{padding:0 24px}
 }
 
 /* Stats Band */

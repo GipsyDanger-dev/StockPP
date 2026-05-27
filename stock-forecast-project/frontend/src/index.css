@@ -530,7 +530,7 @@ p,.body{font:400 16px/24px var(--font-display);letter-spacing:0}
 .stat-label{font:400 11px/16.5px var(--font-ui);color:var(--gray-dark);text-transform:uppercase}
 
 /* Dashboard Preview — Full */
-.dash-section{background:#000;position:relative;min-height:100vh}
+.dash-section{background:#000;position:relative}
 .dash-bg-canvas{position:absolute;inset:0;width:100%!important;height:100%!important;pointer-events:none;z-index:0;opacity:.45}
 .dash-header{position:relative;z-index:5;padding:80px 40px 0;max-width:1400px;margin:0 auto}
 .dash-header-inner{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:40px;border-bottom:1px solid #1A1A1A}

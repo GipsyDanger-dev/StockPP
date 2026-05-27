@@ -265,12 +265,10 @@ export default function DashboardPreview() {
           x: () => -maxScroll,
           ease: 'none',
           scrollTrigger: {
-            trigger: section,
-            pin: true,
-            start: 'top top',
-            end: () => '+=' + (maxScroll * 1.4),
+            trigger: overflow,
+            start: 'top bottom',
+            end: () => '+=' + maxScroll,
             scrub: 1.2,
-            anticipatePin: 1,
             onUpdate: (self) => {
               const pct = Math.round(self.progress * 100)
               if (fill) fill.style.width = pct + '%'

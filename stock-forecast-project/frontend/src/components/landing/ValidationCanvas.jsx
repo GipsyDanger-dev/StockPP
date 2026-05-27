@@ -10,15 +10,9 @@ export default function ValidationCanvas() {
 
     const O = 0xFF6633
     const PCOUNT = 120, GATE_X = 0.2
-
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5))
-    renderer.setClearColor(0x000000, 0)
-    el.appendChild(renderer.domElement)
-
-    const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100)
-    camera.position.set(0, 0, 6)
+    let renderer, scene, camera, raf, ro
+    let greyGeo, orangeGeo, gateMat, glowPlaneMat
+    const clock = new THREE.Clock()
 
     const particles = Array.from({ length: PCOUNT }, () => ({
       x: (Math.random() - 0.5) * 10 - 5,
@@ -28,46 +22,61 @@ export default function ValidationCanvas() {
       validated: false,
     }))
 
-    const greyPositions = new Float32Array(PCOUNT * 3)
-    const orangePositions = new Float32Array(PCOUNT * 3)
-
-    const greyGeo = new THREE.BufferGeometry()
-    const orangeGeo = new THREE.BufferGeometry()
-    greyGeo.setAttribute('position', new THREE.BufferAttribute(greyPositions, 3))
-    orangeGeo.setAttribute('position', new THREE.BufferAttribute(orangePositions, 3))
-
-    scene.add(new THREE.Points(greyGeo, new THREE.PointsMaterial({ color: 0x222222, size: 0.05 })))
-    scene.add(new THREE.Points(orangeGeo, new THREE.PointsMaterial({ color: O, size: 0.065 })))
-
-    const gateGeo = new THREE.BufferGeometry()
-    gateGeo.setAttribute('position', new THREE.Float32BufferAttribute([GATE_X, -2, 0, GATE_X, 2, 0], 3))
-    const gateMat = new THREE.LineBasicMaterial({ color: O, transparent: true, opacity: 0.25 })
-    scene.add(new THREE.Line(gateGeo, gateMat))
-
-    const glowPlaneGeo = new THREE.PlaneGeometry(0.06, 4)
-    const glowPlaneMat = new THREE.MeshBasicMaterial({ color: O, transparent: true, opacity: 0.06, side: THREE.DoubleSide })
-    const glowPlane = new THREE.Mesh(glowPlaneGeo, glowPlaneMat)
-    glowPlane.position.x = GATE_X
-    scene.add(glowPlane)
-
-    function resize() {
+    function init() {
       const w = el.clientWidth, h = el.clientHeight
-      if (!w || !h) return
-      renderer.setSize(w, h)
-      camera.aspect = w / h
-      camera.updateProjectionMatrix()
-    }
-    resize()
-    const ro = new ResizeObserver(resize)
-    ro.observe(el)
+      if (!w || !h) return false
 
-    let raf
-    const clock = new THREE.Clock()
+      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
+      renderer.setClearColor(0x000000, 0)
+      renderer.setSize(w, h)
+      el.appendChild(renderer.domElement)
+
+      scene = new THREE.Scene()
+      camera = new THREE.PerspectiveCamera(42, w / h, 0.1, 100)
+      camera.position.set(0, 0, 6)
+
+      const greyPositions = new Float32Array(PCOUNT * 3)
+      const orangePositions = new Float32Array(PCOUNT * 3)
+
+      greyGeo = new THREE.BufferGeometry()
+      orangeGeo = new THREE.BufferGeometry()
+      greyGeo.setAttribute('position', new THREE.BufferAttribute(greyPositions, 3))
+      orangeGeo.setAttribute('position', new THREE.BufferAttribute(orangePositions, 3))
+
+      scene.add(new THREE.Points(greyGeo, new THREE.PointsMaterial({ color: 0x222222, size: 0.05 })))
+      scene.add(new THREE.Points(orangeGeo, new THREE.PointsMaterial({ color: O, size: 0.065 })))
+
+      const gateGeo = new THREE.BufferGeometry()
+      gateGeo.setAttribute('position', new THREE.Float32BufferAttribute([GATE_X, -2, 0, GATE_X, 2, 0], 3))
+      gateMat = new THREE.LineBasicMaterial({ color: O, transparent: true, opacity: 0.25 })
+      scene.add(new THREE.Line(gateGeo, gateMat))
+
+      const glowPlaneGeo = new THREE.PlaneGeometry(0.06, 4)
+      glowPlaneMat = new THREE.MeshBasicMaterial({ color: O, transparent: true, opacity: 0.06, side: THREE.DoubleSide })
+      const glowPlane = new THREE.Mesh(glowPlaneGeo, glowPlaneMat)
+      glowPlane.position.x = GATE_X
+      scene.add(glowPlane)
+
+      ro = new ResizeObserver(() => {
+        const rw = el.clientWidth, rh = el.clientHeight
+        if (!rw || !rh) return
+        renderer.setSize(rw, rh)
+        camera.aspect = rw / rh
+        camera.updateProjectionMatrix()
+      })
+      ro.observe(el)
+
+      raf = requestAnimationFrame(tick)
+      return true
+    }
 
     function tick() {
       raf = requestAnimationFrame(tick)
       const time = clock.getElapsedTime()
 
+      const greyPositions = greyGeo.attributes.position.array
+      const orangePositions = orangeGeo.attributes.position.array
       let greyCount = 0, orangeCount = 0
 
       particles.forEach(p => {
@@ -108,18 +117,25 @@ export default function ValidationCanvas() {
 
       renderer.render(scene, camera)
     }
-    raf = requestAnimationFrame(tick)
+
+    if (!init()) {
+      const io = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && init()) io.disconnect()
+      }, { threshold: 0 })
+      io.observe(el)
+      const fallback = setTimeout(() => { if (!renderer) init() }, 200)
+      return () => { clearTimeout(fallback); io.disconnect() }
+    }
 
     return () => {
       cancelAnimationFrame(raf)
-      ro.disconnect()
-      renderer.dispose()
-      greyGeo.dispose(); orangeGeo.dispose()
-      gateGeo.dispose(); gateMat.dispose()
-      glowPlaneGeo.dispose(); glowPlaneMat.dispose()
-      if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement)
+      if (ro) ro.disconnect()
+      if (renderer) {
+        renderer.dispose()
+        if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement)
+      }
     }
   }, [])
 
-  return <div ref={ref} style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }} />
+  return <div ref={ref} style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }} />
 }

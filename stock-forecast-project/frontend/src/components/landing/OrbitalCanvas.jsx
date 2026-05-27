@@ -9,84 +9,94 @@ export default function OrbitalCanvas() {
     if (!el) return
 
     const O = 0xFF6633
-
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5))
-    renderer.setClearColor(0x000000, 0)
-    el.appendChild(renderer.domElement)
-
-    const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(46, 1, 0.1, 100)
-    camera.position.set(0, 0, 5)
-
-    const coreGeo = new THREE.SphereGeometry(0.35, 20, 20)
-    const coreMat = new THREE.MeshBasicMaterial({ color: O, transparent: true, opacity: 0.85 })
-    const core = new THREE.Mesh(coreGeo, coreMat)
-    scene.add(core)
-
-    const glowGeo = new THREE.SphereGeometry(0.55, 16, 16)
-    const glowMat = new THREE.MeshBasicMaterial({ color: O, transparent: true, opacity: 0.06, side: THREE.BackSide })
-    scene.add(new THREE.Mesh(glowGeo, glowMat))
-
-    const rings = [
-      { r: 1.2, tube: 0.012, rot: [0, 0, 0], speed: 0.28, color: 0xFFFFFF, opacity: 0.55 },
-      { r: 1.5, tube: 0.010, rot: [Math.PI / 3, 0, 0], speed: -0.18, color: O, opacity: 0.70 },
-      { r: 1.0, tube: 0.009, rot: [0, Math.PI / 4, Math.PI / 6], speed: 0.22, color: 0xFFFFFF, opacity: 0.30 },
-      { r: 1.8, tube: 0.008, rot: [Math.PI / 5, Math.PI / 3, 0], speed: -0.12, color: 0xFFFFFF, opacity: 0.15 },
-    ]
-
-    const ringMeshes = rings.map(cfg => {
-      const geo = new THREE.TorusGeometry(cfg.r, cfg.tube, 8, 80)
-      const mat = new THREE.MeshBasicMaterial({ color: cfg.color, transparent: true, opacity: cfg.opacity })
-      const mesh = new THREE.Mesh(geo, mat)
-      mesh.rotation.set(...cfg.rot)
-      scene.add(mesh)
-      return { mesh, speed: cfg.speed, baseRot: [...cfg.rot] }
-    })
-
-    const orbiters = []
-    for (let i = 0; i < 3; i++) {
-      const geo = new THREE.SphereGeometry(0.055, 8, 8)
-      const mat = new THREE.MeshBasicMaterial({ color: i === 0 ? O : 0xFFFFFF, transparent: true, opacity: 0.8 })
-      const mesh = new THREE.Mesh(geo, mat)
-      scene.add(mesh)
-      orbiters.push({ mesh, angle: (i / 3) * Math.PI * 2, speed: 0.6 + i * 0.15, radius: 1.5 })
-    }
-
-    const pCount = 50
-    const pPos = new Float32Array(pCount * 3)
-    for (let i = 0; i < pCount; i++) {
-      const phi = Math.acos(2 * Math.random() - 1)
-      const theta = Math.random() * Math.PI * 2
-      const r = 2.2 + Math.random() * 0.8
-      pPos[i * 3] = r * Math.sin(phi) * Math.cos(theta)
-      pPos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
-      pPos[i * 3 + 2] = r * Math.cos(phi)
-    }
-    const pGeo = new THREE.BufferGeometry()
-    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3))
-    scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ color: O, size: 0.03, transparent: true, opacity: 0.5 })))
-
-    function resize() {
-      const w = el.clientWidth, h = el.clientHeight
-      if (!w || !h) return
-      renderer.setSize(w, h)
-      camera.aspect = w / h
-      camera.updateProjectionMatrix()
-    }
-    resize()
-    const ro = new ResizeObserver(resize)
-    ro.observe(el)
-
+    let renderer, scene, camera, raf, ro
+    let core, coreMat, ringMeshes = [], orbiters = []
     let mx = 0, my = 0
-    el.addEventListener('mousemove', e => {
-      const rect = el.getBoundingClientRect()
-      mx = (e.clientX - rect.left) / rect.width - 0.5
-      my = (e.clientY - rect.top) / rect.height - 0.5
-    })
-
-    let raf
     const clock = new THREE.Clock()
+
+    function init() {
+      const w = el.clientWidth, h = el.clientHeight
+      if (!w || !h) return false
+
+      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
+      renderer.setClearColor(0x000000, 0)
+      renderer.setSize(w, h)
+      el.appendChild(renderer.domElement)
+
+      scene = new THREE.Scene()
+      camera = new THREE.PerspectiveCamera(46, w / h, 0.1, 100)
+      camera.position.set(0, 0, 5)
+
+      const coreGeo = new THREE.SphereGeometry(0.35, 20, 20)
+      coreMat = new THREE.MeshBasicMaterial({ color: O, transparent: true, opacity: 0.85 })
+      core = new THREE.Mesh(coreGeo, coreMat)
+      scene.add(core)
+
+      const glowGeo = new THREE.SphereGeometry(0.55, 16, 16)
+      const glowMat = new THREE.MeshBasicMaterial({ color: O, transparent: true, opacity: 0.06, side: THREE.BackSide })
+      scene.add(new THREE.Mesh(glowGeo, glowMat))
+
+      const rings = [
+        { r: 1.2, tube: 0.012, rot: [0, 0, 0], speed: 0.28, color: 0xFFFFFF, opacity: 0.55 },
+        { r: 1.5, tube: 0.010, rot: [Math.PI / 3, 0, 0], speed: -0.18, color: O, opacity: 0.70 },
+        { r: 1.0, tube: 0.009, rot: [0, Math.PI / 4, Math.PI / 6], speed: 0.22, color: 0xFFFFFF, opacity: 0.30 },
+        { r: 1.8, tube: 0.008, rot: [Math.PI / 5, Math.PI / 3, 0], speed: -0.12, color: 0xFFFFFF, opacity: 0.15 },
+      ]
+
+      ringMeshes = rings.map(cfg => {
+        const geo = new THREE.TorusGeometry(cfg.r, cfg.tube, 8, 80)
+        const mat = new THREE.MeshBasicMaterial({ color: cfg.color, transparent: true, opacity: cfg.opacity })
+        const mesh = new THREE.Mesh(geo, mat)
+        mesh.rotation.set(...cfg.rot)
+        scene.add(mesh)
+        return { mesh, speed: cfg.speed, baseRot: [...cfg.rot] }
+      })
+
+      for (let i = 0; i < 3; i++) {
+        const geo = new THREE.SphereGeometry(0.055, 8, 8)
+        const mat = new THREE.MeshBasicMaterial({ color: i === 0 ? O : 0xFFFFFF, transparent: true, opacity: 0.8 })
+        const mesh = new THREE.Mesh(geo, mat)
+        scene.add(mesh)
+        orbiters.push({ mesh, angle: (i / 3) * Math.PI * 2, speed: 0.6 + i * 0.15, radius: 1.5 })
+      }
+
+      const pCount = 50
+      const pPos = new Float32Array(pCount * 3)
+      for (let i = 0; i < pCount; i++) {
+        const phi = Math.acos(2 * Math.random() - 1)
+        const theta = Math.random() * Math.PI * 2
+        const r = 2.2 + Math.random() * 0.8
+        pPos[i * 3] = r * Math.sin(phi) * Math.cos(theta)
+        pPos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
+        pPos[i * 3 + 2] = r * Math.cos(phi)
+      }
+      const pGeo = new THREE.BufferGeometry()
+      pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3))
+      scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ color: O, size: 0.03, transparent: true, opacity: 0.5 })))
+
+      // Mouse tilt on parent card
+      const card = el.closest('.bento-accuracy')
+      if (card) {
+        card.addEventListener('mousemove', e => {
+          const rect = card.getBoundingClientRect()
+          mx = (e.clientX - rect.left) / rect.width - 0.5
+          my = (e.clientY - rect.top) / rect.height - 0.5
+        })
+      }
+
+      ro = new ResizeObserver(() => {
+        const rw = el.clientWidth, rh = el.clientHeight
+        if (!rw || !rh) return
+        renderer.setSize(rw, rh)
+        camera.aspect = rw / rh
+        camera.updateProjectionMatrix()
+      })
+      ro.observe(el)
+
+      raf = requestAnimationFrame(tick)
+      return true
+    }
 
     function tick() {
       raf = requestAnimationFrame(tick)
@@ -116,20 +126,25 @@ export default function OrbitalCanvas() {
 
       renderer.render(scene, camera)
     }
-    raf = requestAnimationFrame(tick)
+
+    if (!init()) {
+      const io = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && init()) io.disconnect()
+      }, { threshold: 0 })
+      io.observe(el)
+      const fallback = setTimeout(() => { if (!renderer) init() }, 200)
+      return () => { clearTimeout(fallback); io.disconnect() }
+    }
 
     return () => {
       cancelAnimationFrame(raf)
-      ro.disconnect()
-      renderer.dispose()
-      coreGeo.dispose(); coreMat.dispose()
-      glowGeo.dispose(); glowMat.dispose()
-      ringMeshes.forEach(rm => { rm.mesh.geometry.dispose(); rm.mesh.material.dispose() })
-      orbiters.forEach(ob => { ob.mesh.geometry.dispose(); ob.mesh.material.dispose() })
-      pGeo.dispose()
-      if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement)
+      if (ro) ro.disconnect()
+      if (renderer) {
+        renderer.dispose()
+        if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement)
+      }
     }
   }, [])
 
-  return <div ref={ref} style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }} />
+  return <div ref={ref} style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }} />
 }

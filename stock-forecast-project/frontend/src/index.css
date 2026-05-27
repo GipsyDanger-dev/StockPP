@@ -462,7 +462,7 @@ p,.body{font:400 16px/24px var(--font-display);letter-spacing:0}
 .bento-card::after{content:'';position:absolute;inset:0;border:1px solid transparent;transition:border-color .4s;pointer-events:none;z-index:20}
 .bento-card:hover{background:#111}
 .bento-card:hover::after{border-color:var(--orange)}
-.card-canvas{position:absolute;inset:0;width:100%!important;height:100%!important;z-index:1;pointer-events:auto}
+.card-canvas{position:absolute;inset:0;width:100%!important;height:100%!important;z-index:1;pointer-events:none}
 .card-content{position:relative;z-index:2;height:100%;display:flex;flex-direction:column}
 .card-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
 .card-icon svg{width:20px;height:20px;stroke:var(--orange);fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}

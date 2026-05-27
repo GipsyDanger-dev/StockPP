@@ -6,6 +6,7 @@ import WaveformCanvas from '../components/landing/WaveformCanvas'
 import OrbitalCanvas from '../components/landing/OrbitalCanvas'
 import ValidationCanvas from '../components/landing/ValidationCanvas'
 import DashboardPreview from '../components/landing/DashboardPreview'
+import StockPPLogo from '../components/landing/StockPPLogo'
 
 import * as THREE from 'three'
 import { gsap } from 'gsap/dist/gsap'
@@ -391,7 +392,10 @@ export default function Landing() {
       {/* Navbar */}
       <nav className={`navbar ${scrolled ? 'scrolled' : ''}`} style={{ top: showAnnounce ? 36 : 0 }}>
         <div className="container">
-          <span onClick={() => navigate('/')} className="nav-logo" style={{ cursor: 'pointer' }}>StockPP</span>
+          <span onClick={() => navigate('/')} className="nav-logo" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <StockPPLogo size={28} />
+            StockPP
+          </span>
           <div className="nav-links">
             <a href="#features">Features</a>
             <a href="#how-it-works">How It Works</a>
@@ -410,7 +414,10 @@ export default function Landing() {
       {/* Mobile Drawer */}
       <div className={`mobile-drawer ${drawer ? 'open' : ''}`}>
         <div className="mobile-drawer-header">
-          <span className="nav-logo">StockPP</span>
+          <span className="nav-logo" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <StockPPLogo size={28} />
+            StockPP
+          </span>
           <button className="mobile-drawer-close" onClick={() => setDrawer(false)}>×</button>
         </div>
         <a href="#features" onClick={() => setDrawer(false)}>Features</a>
@@ -675,7 +682,10 @@ export default function Landing() {
         <div className="container">
           <div className="footer-grid">
             <div className="footer-brand">
-              <span className="nav-logo" style={{ color: 'var(--white)' }}>StockPP</span>
+              <span className="nav-logo" style={{ color: 'var(--white)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <StockPPLogo size={28} />
+                StockPP
+              </span>
               <p>AI-powered stock forecasting using LSTM neural networks. Predict the market before it moves.</p>
             </div>
             {[

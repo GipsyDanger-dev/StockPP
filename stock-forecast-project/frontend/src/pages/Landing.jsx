@@ -5,6 +5,7 @@ import NeuralPulseCanvas from '../components/landing/NeuralPulseCanvas'
 import WaveformCanvas from '../components/landing/WaveformCanvas'
 import OrbitalCanvas from '../components/landing/OrbitalCanvas'
 import ValidationCanvas from '../components/landing/ValidationCanvas'
+import DashboardPreview from '../components/landing/DashboardPreview'
 
 import * as THREE from 'three'
 import { gsap } from 'gsap/dist/gsap'
@@ -24,15 +25,6 @@ const MARQUEE_ITEMS = [
   { symbol: 'AMD', price: '$164.30', change: '−0.6%', up: false },
   { symbol: 'PLTR', price: '$22.45', change: '+3.4%', up: true },
   { symbol: 'BBCA.JK', price: 'IDR 9,350', change: '+0.5%', up: true },
-]
-
-const DASH_CARDS = [
-  { ticker: 'NVDA', price: '$875.40', pred: '$892.10', change: '+1.9%', up: true, pts: '0,60 30,55 60,50 90,45 120,40 150,35 180,30 210,25 240,20 270,15 300,10' },
-  { ticker: 'AAPL', price: '$198.11', pred: '$201.50', change: '+1.7%', up: true, pts: '0,40 30,42 60,38 90,45 120,43 150,40 180,38 210,35 240,33 270,30 300,28' },
-  { ticker: 'MSFT', price: '$420.55', pred: '$418.20', change: '−0.6%', up: false, pts: '0,30 30,32 60,28 90,35 120,38 150,36 180,40 210,42 240,38 270,35 300,33' },
-  { ticker: 'GOOGL', price: '$174.23', pred: '$178.90', change: '+2.7%', up: true, pts: '0,50 30,48 60,45 90,40 120,38 150,35 180,33 210,30 240,28 270,25 300,22' },
-  { ticker: 'AMZN', price: '$185.60', pred: '$190.30', change: '+2.5%', up: true, pts: '0,45 30,40 60,38 90,35 120,32 150,30 180,28 210,25 240,22 270,20 300,18' },
-  { ticker: 'BBCA.JK', price: 'IDR 9,350', pred: 'IDR 9,500', change: '+1.6%', up: true, pts: '0,50 30,48 60,46 90,44 120,42 150,40 180,38 210,36 240,35 270,34 300,33' },
 ]
 
 export default function Landing() {
@@ -628,30 +620,7 @@ export default function Landing() {
       </section>
 
       {/* Dashboard Preview */}
-      <section className="section" id="dashboard-preview">
-        <div className="container">
-          <h3 style={{ marginBottom: 44, color: 'var(--white)' }} data-enter="">See the dashboard in action</h3>
-        </div>
-        <div className="dash-scroll" data-enter="">
-          <div className="dash-track" id="dashTrack">
-            {DASH_CARDS.map((d, i) => (
-              <div key={i} className="dash-card">
-                <div className="dash-card-header">
-                  <span className="dash-card-symbol">{d.ticker}</span>
-                  <span className="dash-card-price">{d.price}</span>
-                </div>
-                <div className="dash-card-chart">
-                  <svg viewBox="0 0 300 80"><polyline points={d.pts} fill="none" stroke={d.up ? '#FF6633' : '#888'} strokeWidth="2"/></svg>
-                </div>
-                <div className="dash-card-footer">
-                  <span>Predicted: {d.pred}</span>
-                  <span className="dash-card-pred">{d.change}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <DashboardPreview />
 
       {/* How It Works */}
       <section className="section section-orange" id="how-it-works">

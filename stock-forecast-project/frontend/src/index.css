@@ -468,7 +468,7 @@ p,.body{font:400 16px/24px var(--font-display);letter-spacing:0}
 .card-icon svg{width:20px;height:20px;stroke:var(--orange);fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
 .card-label{font:500 11px/1 var(--font-ui);color:#333;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}
 .card-title{font:500 18px/21px var(--font-display);color:#fff;margin-bottom:8px}
-.card-body{font:400 12px/18px var(--font-display);color:#444}
+.card-body{font:400 12px/18px var(--font-display);color:#999}
 
 /* Card 1: LSTM main */
 .bento-main{grid-column:1;grid-row:1/3}

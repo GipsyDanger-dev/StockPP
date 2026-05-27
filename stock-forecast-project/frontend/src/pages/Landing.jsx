@@ -391,7 +391,7 @@ export default function Landing() {
       {/* Navbar */}
       <nav className={`navbar ${scrolled ? 'scrolled' : ''}`} style={{ top: showAnnounce ? 36 : 0 }}>
         <div className="container">
-          <span onClick={() => navigate('/')} className="nav-logo" style={{ cursor: 'pointer' }}>PRECISION ANALYTICS</span>
+          <span onClick={() => navigate('/')} className="nav-logo" style={{ cursor: 'pointer' }}>StockPP</span>
           <div className="nav-links">
             <a href="#features">Features</a>
             <a href="#how-it-works">How It Works</a>
@@ -410,7 +410,7 @@ export default function Landing() {
       {/* Mobile Drawer */}
       <div className={`mobile-drawer ${drawer ? 'open' : ''}`}>
         <div className="mobile-drawer-header">
-          <span className="nav-logo">PRECISION ANALYTICS</span>
+          <span className="nav-logo">StockPP</span>
           <button className="mobile-drawer-close" onClick={() => setDrawer(false)}>×</button>
         </div>
         <a href="#features" onClick={() => setDrawer(false)}>Features</a>
@@ -675,7 +675,7 @@ export default function Landing() {
         <div className="container">
           <div className="footer-grid">
             <div className="footer-brand">
-              <span className="nav-logo" style={{ color: 'var(--white)' }}>PRECISION ANALYTICS</span>
+              <span className="nav-logo" style={{ color: 'var(--white)' }}>StockPP</span>
               <p>AI-powered stock forecasting using LSTM neural networks. Predict the market before it moves.</p>
             </div>
             {[
@@ -690,7 +690,7 @@ export default function Landing() {
             ))}
           </div>
           <div className="footer-bottom">
-            <span className="footer-copy">&copy; 2026 Precision Analytics. All rights reserved.</span>
+            <span className="footer-copy">&copy; 2026 StockPP. All rights reserved.</span>
             <div className="footer-socials">
               {['Twitter', 'GitHub', 'LinkedIn'].map(s => <a key={s} href="#">{s}</a>)}
             </div>

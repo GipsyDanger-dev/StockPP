@@ -11,7 +11,7 @@ export default function WaveformCanvas() {
     const O = 0xFF6633
     const N = 80, F = 15, W_SPAN = 6.0
     let renderer, scene, camera, raf, ro
-    let histGeo, fGeo
+    let histGeo, fGeo, pGeo
     const clock = new THREE.Clock()
 
     function baseY(i, t) {
@@ -67,12 +67,14 @@ export default function WaveformCanvas() {
 
       const pCount = 40
       const pPos = new Float32Array(pCount * 3)
+      const pBaseY = new Float32Array(pCount)
       for (let i = 0; i < pCount; i++) {
         pPos[i * 3] = (Math.random() - 0.5) * W_SPAN
-        pPos[i * 3 + 1] = (Math.random() - 0.5) * 2
+        pBaseY[i] = (Math.random() - 0.5) * 2
+        pPos[i * 3 + 1] = pBaseY[i]
         pPos[i * 3 + 2] = (Math.random() - 0.5) * 0.5
       }
-      const pGeo = new THREE.BufferGeometry()
+      pGeo = new THREE.BufferGeometry()
       pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3))
       scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0x1E1E1E, size: 0.04 })))
 
@@ -109,6 +111,15 @@ export default function WaveformCanvas() {
         fp[i * 3 + 2] = 0
       }
       fGeo.attributes.position.needsUpdate = true
+
+      const pp = pGeo.attributes.position.array
+      for (let i = 0; i < 40; i++) {
+        const nx = (pp[i * 3] + W_SPAN / 2) / W_SPAN
+        const wi = nx * (N - 1)
+        const waveY = baseY(wi, time)
+        pp[i * 3 + 1] += (waveY - pp[i * 3 + 1]) * 0.06
+      }
+      pGeo.attributes.position.needsUpdate = true
 
       renderer.render(scene, camera)
     }

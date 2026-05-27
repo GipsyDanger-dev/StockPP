@@ -255,7 +255,7 @@ export default function DashboardPreview() {
     const section = sectionRef.current
     if (!overflow || !track || !section) return
 
-    let ctx
+    let ctx, io
     function init() {
       const maxScroll = track.scrollWidth - overflow.clientWidth + 80
       if (maxScroll <= 0) return
@@ -278,34 +278,23 @@ export default function DashboardPreview() {
             },
           },
         })
-
-        gsap.from('.dash-header-inner', {
-          opacity: 0, y: 24, duration: 0.7, ease: 'power3.out',
-          scrollTrigger: { trigger: section, start: 'top 85%', once: true },
-        })
-
-        gsap.from('.ticker-card', {
-          opacity: 0, y: 40, scale: 0.97, duration: 0.6, ease: 'power3.out', stagger: 0.1,
-          scrollTrigger: {
-            trigger: section, start: 'top 75%', once: true,
-            onEnter: () => {
-              const cards = document.querySelectorAll('.ticker-card')
-              cards.forEach((card, i) => {
-                const canvas = card.querySelector('.chart-cv')
-                const trend = card.dataset.trend
-                setTimeout(() => {
-                  drawChart(canvas, trend, () => card.classList.add('drawn'))
-                }, i * 180)
-              })
-            },
-          },
-        })
-
-        gsap.from('.dash-progress', {
-          opacity: 0, y: 12, duration: 0.5, ease: 'power3.out',
-          scrollTrigger: { trigger: section, start: 'top 80%', once: true },
-        })
       }, section)
+
+      // Draw charts when section enters viewport
+      io = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          const cards = section.querySelectorAll('.ticker-card')
+          cards.forEach((card, i) => {
+            const canvas = card.querySelector('.chart-cv')
+            const trend = card.dataset.trend
+            setTimeout(() => {
+              drawChart(canvas, trend, () => card.classList.add('drawn'))
+            }, i * 180)
+          })
+          io.disconnect()
+        }
+      }, { threshold: 0.1 })
+      io.observe(section)
     }
 
     const t1 = setTimeout(init, 200)
@@ -314,6 +303,7 @@ export default function DashboardPreview() {
     return () => {
       clearTimeout(t1); clearTimeout(t2)
       if (ctx) ctx.revert()
+      if (io) io.disconnect()
     }
   }, [])
 

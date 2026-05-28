@@ -169,8 +169,8 @@ const Admin = () => {
       if (data.success) {
         setUsers(data.users);
       }
-    } catch (err) {
-      console.error('Error fetching users:', err);
+    } catch {
+      // user fetch failed
     } finally {
       setUsersLoading(false);
     }
@@ -211,8 +211,8 @@ const Admin = () => {
       queryClient.invalidateQueries(['articleStats']);
       queryClient.invalidateQueries(['insights']);
       setDeleteConfirm(null);
-    } catch (err) {
-      console.error('Error deleting article:', err);
+    } catch {
+      // article deletion failed
     } finally {
       setActionLoading(null);
     }
@@ -226,8 +226,8 @@ const Admin = () => {
       queryClient.invalidateQueries(['articles']);
       queryClient.invalidateQueries(['articleStats']);
       queryClient.invalidateQueries(['insights']);
-    } catch (err) {
-      console.error('Error updating article status:', err);
+    } catch {
+      // article status update failed
     } finally {
       setActionLoading(null);
     }

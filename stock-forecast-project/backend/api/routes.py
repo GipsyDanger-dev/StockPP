@@ -1,9 +1,8 @@
 from fastapi import APIRouter, HTTPException, Query, Path, UploadFile, File, Depends
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr
-import numpy as np
+from pydantic import BaseModel, EmailStr, ConfigDict
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 import secrets
 import time
 import sys
@@ -38,14 +37,13 @@ class PredictionRequest(BaseModel):
     period: str = "1y"
     user_id: Optional[str] = None
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "ticker": "AAPL",
-                "days_ahead": 5,
-                "period": "1y"
-            }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "ticker": "AAPL",
+            "days_ahead": 5,
+            "period": "1y"
         }
+    })
 
 class PricePoint(BaseModel):
     """Single price data point"""
@@ -212,14 +210,6 @@ def get_forecasting_service():
             logger.error(f"Error initializing forecasting service: {str(e)}", exc_info=True)
             raise
     return _forecasting_service
-
-def initialize_forecasting_service():
-    try:
-        svc = get_forecasting_service()
-        logger.info("Forecasting service ready")
-    except Exception as e:
-        logger.error(f"Error initializing forecasting service: {str(e)}", exc_info=True)
-        raise
 
 @router.post("/forecast")
 async def forecast_stock(request: PredictionRequest, user: dict = Depends(get_current_user)):
@@ -586,6 +576,8 @@ async def get_market_summary(user: dict = Depends(get_current_user)):
     Returns:
         List of tickers with current price and trend info
     """
+    import asyncio
+    from concurrent.futures import ThreadPoolExecutor
     try:
         from core.supabase_client import get_all_tickers
         from core.finnhub_client import FinnhubClient
@@ -600,18 +592,13 @@ async def get_market_summary(user: dict = Depends(get_current_user)):
                 "timestamp": datetime.now().isoformat()
             }
 
-        market_data = []
-
-        for ticker_info in tickers_data:
+        def fetch_quote(ticker_info):
+            ticker = ticker_info.get("symbol")
             try:
-                ticker = ticker_info.get("symbol")
-
                 quote = FinnhubClient.get_quote(ticker)
-
                 if quote is None:
-                    continue
-
-                market_data.append({
+                    return None
+                return {
                     "ticker": ticker,
                     "name": ticker_info.get("name", ticker),
                     "sector": ticker_info.get("sector", "Unknown"),
@@ -624,11 +611,17 @@ async def get_market_summary(user: dict = Depends(get_current_user)):
                     "prev_close": round(quote["prev_close"], 2),
                     "is_active": ticker_info.get("is_active", True),
                     "last_trained": ticker_info.get("last_trained_at")
-                })
-
+                }
             except Exception as e:
                 logger.warning(f"Error fetching data for {ticker}: {str(e)}")
-                continue
+                return None
+
+        loop = asyncio.get_event_loop()
+        with ThreadPoolExecutor(max_workers=10) as pool:
+            tasks = [loop.run_in_executor(pool, fetch_quote, ti) for ti in tickers_data]
+            results = await asyncio.gather(*tasks)
+
+        market_data = [r for r in results if r is not None]
 
         return {
             "tickers": market_data,
@@ -659,7 +652,7 @@ async def get_reports_history(
         List of training reports
     """
     try:
-        from core.supabase_client import get_training_logs, SupabaseClient
+        from core.supabase_client import get_training_logs
 
         logs = get_training_logs(ticker=ticker, limit=limit)
 
@@ -924,7 +917,7 @@ async def update_article(
             raise HTTPException(status_code=404, detail="Article not found")
 
         updates = {}
-        for field, value in request.dict(exclude_unset=True).items():
+        for field, value in request.model_dump(exclude_unset=True).items():
             if value is not None:
                 updates[field] = value
 
@@ -1053,6 +1046,10 @@ async def validate_single_prediction(prediction_id: str, user: dict = Depends(ge
         raise HTTPException(status_code=404, detail="Prediction not found")
 
     prediction = result.data[0]
+
+    if prediction.get("user_id") != user["id"]:
+        raise HTTPException(status_code=403, detail="Not authorized to validate this prediction")
+
     validation = validate_prediction(prediction)
 
     if "error" in validation:
@@ -1072,29 +1069,42 @@ async def validate_single_prediction(prediction_id: str, user: dict = Depends(ge
 @router.post("/predictions/validate-all")
 async def validate_all_predictions(user: dict = Depends(require_admin)):
     """Batch validate all pending predictions"""
-    from core.prediction_validator import batch_validate
+    from core.prediction_validator import validate_prediction
 
     pending = get_pending_validations(limit=50)
 
     if not pending:
         return {"status": "no_pending", "message": "No predictions pending validation"}
 
-    results = batch_validate(pending)
+    results = {"total": len(pending), "validated": 0, "failed": 0, "details": []}
 
-    for detail in results["details"]:
-        if detail["status"] == "validated":
-            pred = next((p for p in pending if p["id"] == detail["pred_id"]), None)
-            if pred:
-                from core.prediction_validator import validate_prediction
-                validation = validate_prediction(pred)
-                if "error" not in validation:
-                    update_prediction_validation(
-                        pred_id=detail["pred_id"],
-                        actual_prices=validation["actual_prices"],
-                        actual_change_percent=validation["actual_change_percent"],
-                        direction_correct=validation["direction_correct"],
-                        mean_absolute_error=validation["mean_absolute_error"],
-                        mean_percent_error=validation["mean_percent_error"]
-                    )
+    for pred in pending:
+        validation = validate_prediction(pred)
+        if "error" in validation:
+            results["failed"] += 1
+            results["details"].append({
+                "pred_id": pred.get("id"),
+                "ticker": pred.get("ticker"),
+                "status": "failed",
+                "error": validation["error"]
+            })
+        else:
+            update_prediction_validation(
+                pred_id=pred["id"],
+                actual_prices=validation["actual_prices"],
+                actual_change_percent=validation["actual_change_percent"],
+                direction_correct=validation["direction_correct"],
+                mean_absolute_error=validation["mean_absolute_error"],
+                mean_percent_error=validation["mean_percent_error"]
+            )
+            results["validated"] += 1
+            results["details"].append({
+                "pred_id": pred["id"],
+                "ticker": pred.get("ticker"),
+                "status": "validated",
+                "mae": validation["mean_absolute_error"],
+                "mpe": validation["mean_percent_error"],
+                "direction_correct": validation["direction_correct"]
+            })
 
     return results

@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Loader } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useMarketSummary } from '../hooks/useApi';
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+import * as apiService from '../services/apiService';
 
 const Market = () => {
   const navigate = useNavigate();
@@ -24,8 +22,8 @@ const Market = () => {
     const timeoutId = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const res = await axios.get(`${API_BASE_URL}/search/${encodeURIComponent(searchTerm)}`);
-        setSearchResults(res.data.results || []);
+        const res = await apiService.searchTickers(searchTerm);
+        setSearchResults(res.results || []);
       } catch (err) {
         setSearchResults([]);
       }

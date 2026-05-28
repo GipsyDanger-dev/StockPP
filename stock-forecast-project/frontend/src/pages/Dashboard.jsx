@@ -63,7 +63,8 @@ const Dashboard = () => {
     if (searchInput) setTicker(searchInput.toUpperCase());
   };
 
-  if (data?.status === "error") {
+  if (error || data?.status === "error") {
+    const msg = data?.message || (error?.message || "Failed to load forecast data");
     return (
       <div className="flex min-h-[60vh] items-center justify-center bg-white">
         <div className="text-center max-w-md px-6">
@@ -71,7 +72,7 @@ const Dashboard = () => {
             <Activity size={28} className="text-slate-400" />
           </div>
           <p className="text-lg font-bold text-[#191C1E] mb-2">Unable to load forecast</p>
-          <p className="text-sm text-[#76777D] mb-6">{data.message}</p>
+          <p className="text-sm text-[#76777D] mb-6">{msg}</p>
           <form onSubmit={handleSearch} className="flex gap-2">
             <input
               type="text"

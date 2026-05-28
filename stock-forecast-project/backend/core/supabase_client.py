@@ -1,5 +1,9 @@
 import os
 import logging
+import secrets
+import string
+import time
+from collections import defaultdict
 from typing import Optional
 from supabase import create_client, Client
 from dotenv import load_dotenv
@@ -276,11 +280,6 @@ def get_article_stats() -> dict:
         logger.error(f"Error fetching article stats: {str(e)}")
         return {"total": 0, "published": 0, "draft": 0}
 
-
-import secrets
-import string
-import time
-from collections import defaultdict
 
 _otp_attempts = defaultdict(list)
 MAX_OTP_ATTEMPTS = 5

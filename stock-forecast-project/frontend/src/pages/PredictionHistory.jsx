@@ -38,8 +38,8 @@ const PredictionHistory = () => {
     try {
       await apiService.validatePrediction(predId);
       refetch();
-    } catch (err) {
-      console.error('Validation error:', err);
+    } catch {
+      // validation failed
     } finally {
       setValidating(null);
     }
@@ -50,8 +50,8 @@ const PredictionHistory = () => {
     try {
       await apiService.validateAllPredictions();
       refetch();
-    } catch (err) {
-      console.error('Batch validation error:', err);
+    } catch {
+      // batch validation failed
     } finally {
       setValidating(null);
     }

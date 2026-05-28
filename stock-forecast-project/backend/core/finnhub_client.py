@@ -6,7 +6,6 @@ Replaces yfinance with Finnhub API for better reliability
 import os
 import finnhub
 import pandas as pd
-import numpy as np
 from datetime import datetime, timedelta
 from typing import Dict, Optional, List
 import logging

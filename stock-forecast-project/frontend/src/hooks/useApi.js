@@ -64,7 +64,7 @@ export const useMarketSummary = (enabled = true) => {
     refetchIntervalInBackground: true,
     refetchOnWindowFocus: true,
     retry: 1,
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
   });
 };
 

@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Analytics from './pages/Analytics';
@@ -26,6 +27,7 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <ErrorBoundary>
       <AuthProvider>
         <BrowserRouter>
           <Routes>
@@ -73,6 +75,7 @@ function App() {
           </Routes>
         </BrowserRouter>
       </AuthProvider>
+      </ErrorBoundary>
     </QueryClientProvider>
   );
 }

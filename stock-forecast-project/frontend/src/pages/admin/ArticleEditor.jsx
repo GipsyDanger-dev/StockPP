@@ -57,8 +57,8 @@ const ArticleEditor = () => {
             header: data.header_image || null,
             thumbnail: data.thumbnail || null
           });
-        } catch (err) {
-          console.error('Error fetching article:', err);
+        } catch {
+          // article fetch failed
         } finally {
           setLoading(false);
         }
@@ -123,8 +123,7 @@ const ArticleEditor = () => {
           }, 0);
         }
       }
-    } catch (err) {
-      console.error('Error uploading image:', err);
+    } catch {
       alert('Failed to upload image. Please try again.');
     } finally {
       setUploadingImage(null);
@@ -165,8 +164,7 @@ const ArticleEditor = () => {
       queryClient.invalidateQueries(['insights']);
       setSaveStatus('success');
       setTimeout(() => setSaveStatus(null), 3000);
-    } catch (err) {
-      console.error('Error saving article:', err);
+    } catch {
       setSaveStatus('error');
     } finally {
       setSaving(false);

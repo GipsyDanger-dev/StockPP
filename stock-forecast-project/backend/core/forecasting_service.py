@@ -42,10 +42,17 @@ class ForecastingService:
                 self.data_engine = None
                 self.model_manager = None
             self.cache = {}
+            self._cache_max_size = 128
         except Exception as e:
             logger.warning(f"Error initializing ML components: {str(e)}")
             self.data_engine = None
             self.model_manager = None
+
+    def _evict_expired_cache(self):
+        now = datetime.now()
+        expired = [k for k, v in self.cache.items() if (now - v['timestamp']).total_seconds() / 3600 >= 1]
+        for k in expired:
+            del self.cache[k]
 
     def predict(self, ticker: str, days_ahead: int = 5, period: str = "1y", user_id: str = None) -> Dict:
         try:
@@ -53,6 +60,7 @@ class ForecastingService:
 
             # Check cache (1 hour TTL)
             cache_key = f"{ticker_upper}_{period}_{days_ahead}"
+            self._evict_expired_cache()
             if cache_key in self.cache:
                 cached_data = self.cache[cache_key]
                 cache_age = (datetime.now() - cached_data['timestamp']).total_seconds() / 3600
@@ -222,6 +230,9 @@ class ForecastingService:
                 except Exception as pred_err:
                     logger.warning(f"Could not save prediction history: {str(pred_err)}")
 
+            if len(self.cache) >= self._cache_max_size:
+                oldest_key = min(self.cache, key=lambda k: self.cache[k]['timestamp'])
+                del self.cache[oldest_key]
             self.cache[cache_key] = {'data': response, 'timestamp': datetime.now()}
             return response
 

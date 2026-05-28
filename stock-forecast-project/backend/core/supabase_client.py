@@ -277,12 +277,28 @@ def get_article_stats() -> dict:
         return {"total": 0, "published": 0, "draft": 0}
 
 
-import random
+import secrets
 import string
+import time
+from collections import defaultdict
+
+_otp_attempts = defaultdict(list)
+MAX_OTP_ATTEMPTS = 5
+OTP_WINDOW_SECONDS = 300
+
+
+def check_otp_rate_limit(email: str) -> bool:
+    now = time.time()
+    _otp_attempts[email] = [t for t in _otp_attempts[email] if now - t < OTP_WINDOW_SECONDS]
+    return len(_otp_attempts[email]) < MAX_OTP_ATTEMPTS
+
+
+def record_otp_attempt(email: str):
+    _otp_attempts[email].append(time.time())
+
 
 def generate_otp_code(length: int = 6) -> str:
-    """Generate a random numeric OTP code"""
-    return ''.join(random.choices(string.digits, k=length))
+    return ''.join(secrets.choice(string.digits) for _ in range(length))
 
 def create_otp(email: str, delivery_method: str, phone_number: str = None) -> dict:
     """Create and store an OTP code"""

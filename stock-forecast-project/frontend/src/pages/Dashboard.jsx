@@ -3,7 +3,6 @@ import {
   TrendingUp, TrendingDown, Search, Activity, Zap, ArrowUpRight, ArrowDownRight,
 } from "lucide-react";
 import { useForecastTracked } from "../hooks/useApi";
-import { useAuth } from "../contexts/AuthContext";
 import PriceChart from "../components/PriceChart";
 import { formatCurrency, formatPercent } from "../utils/formatting";
 import { useNavigate } from "react-router-dom";
@@ -54,9 +53,8 @@ const Dashboard = () => {
   const [searchInput, setSearchInput] = useState("");
   const [mounted, setMounted] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
 
-  const { data, isLoading, error } = useForecastTracked(ticker, 7, "1y", user?.id);
+  const { data, isLoading, error } = useForecastTracked(ticker, 7, "1y");
 
   useEffect(() => { setMounted(true); }, []);
 

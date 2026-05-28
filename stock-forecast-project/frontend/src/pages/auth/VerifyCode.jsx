@@ -2,8 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader, AlertCircle, Mail } from 'lucide-react';
 import AuthCanvas from '../../components/AuthCanvas';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+import apiClient from '../../services/apiService';
 
 const S = {
   dark: '#0a0a0a', surface: '#111', border: '#1e1e1e', mid: '#888', dark2: '#555',
@@ -52,15 +51,13 @@ export default function VerifyCode() {
     setError('');
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/auth/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code: fullCode }),
-      });
-      const data = await response.json();
-      if (!response.ok) setError(data.detail || 'Invalid or expired code.');
-      else { sessionStorage.setItem('otpVerified', 'true'); navigate('/new-password'); }
-    } catch { setError('An unexpected error occurred.'); }
+      const { data } = await apiClient.post('/auth/verify-otp', { email, code: fullCode });
+      sessionStorage.setItem('otpVerified', 'true');
+      sessionStorage.setItem('resetToken', data.reset_token);
+      navigate('/new-password');
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Invalid or expired code.');
+    }
     finally { setLoading(false); }
   };
 
@@ -68,15 +65,12 @@ export default function VerifyCode() {
     if (!email) { setError('Email address not found. Please go back and enter your email.'); return; }
     setResending(true); setResendSuccess(false); setError('');
     try {
-      const response = await fetch(`${API_URL}/auth/send-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, delivery_method: 'email' }),
-      });
-      const data = await response.json();
-      if (!response.ok) setError(data.detail || 'Failed to resend code.');
-      else { setResendSuccess(true); setTimeout(() => setResendSuccess(false), 3000); }
-    } catch { setError('An unexpected error occurred.'); }
+      await apiClient.post('/auth/send-otp', { email, delivery_method: 'email' });
+      setResendSuccess(true);
+      setTimeout(() => setResendSuccess(false), 3000);
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to resend code.');
+    }
     finally { setResending(false); }
   };
 

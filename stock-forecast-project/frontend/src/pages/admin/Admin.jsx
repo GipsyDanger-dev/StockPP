@@ -165,9 +165,7 @@ const Admin = () => {
   const fetchUsers = async () => {
     setUsersLoading(true);
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
-      const response = await fetch(`${API_URL}/users`);
-      const data = await response.json();
+      const { data } = await apiService.default.get('/users');
       if (data.success) {
         setUsers(data.users);
       }
@@ -181,13 +179,7 @@ const Admin = () => {
   const handleSetRole = async (userId, newRole) => {
     setRoleUpdating(userId);
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
-      const response = await fetch(`${API_URL}/users/set-role`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, role: newRole }),
-      });
-      const data = await response.json();
+      const { data } = await apiService.default.post('/users/set-role', { user_id: userId, role: newRole });
       if (data.success) {
         setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
       }

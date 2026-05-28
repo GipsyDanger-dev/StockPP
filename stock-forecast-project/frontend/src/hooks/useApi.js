@@ -183,21 +183,21 @@ export const useArticleStats = (enabled = true) => {
   });
 };
 
-export const usePredictionHistory = (userId, ticker = null, status = null, limit = 50, enabled = true) => {
+export const usePredictionHistory = (ticker = null, status = null, limit = 50, enabled = true) => {
   return useQuery({
-    queryKey: ['predictionHistory', userId, ticker, status, limit],
-    queryFn: () => apiService.getPredictionHistory(userId, ticker, status, limit),
-    enabled: enabled && !!userId,
+    queryKey: ['predictionHistory', ticker, status, limit],
+    queryFn: () => apiService.getPredictionHistory(ticker, status, limit),
+    enabled,
     staleTime: 30 * 1000,
     refetchOnWindowFocus: true,
     retry: 1,
   });
 };
 
-export const useForecastTracked = (ticker, daysAhead = 1, period = '1y', userId = null, enabled = true) => {
+export const useForecastTracked = (ticker, daysAhead = 1, period = '1y', enabled = true) => {
   return useQuery({
-    queryKey: ['forecastTracked', ticker, daysAhead, period, userId],
-    queryFn: () => apiService.getForecastWithUser(ticker, daysAhead, period, userId),
+    queryKey: ['forecastTracked', ticker, daysAhead, period],
+    queryFn: () => apiService.getForecastWithUser(ticker, daysAhead, period),
     enabled: enabled && !!ticker,
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,

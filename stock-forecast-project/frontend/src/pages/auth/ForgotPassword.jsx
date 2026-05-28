@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Loader, AlertCircle, Mail } from 'lucide-react';
 import AuthCanvas from '../../components/AuthCanvas';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+import apiClient from '../../services/apiService';
 
 const S = {
   dark: '#0a0a0a', surface: '#111', border: '#1e1e1e', mid: '#888', dark2: '#555',
@@ -32,15 +31,13 @@ export default function ForgotPassword() {
     setError('');
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/auth/send-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, delivery_method: 'email' }),
-      });
-      const data = await response.json();
-      if (!response.ok) setError(data.detail || 'Failed to send OTP. Please try again.');
-      else { sessionStorage.setItem('resetEmail', email); sessionStorage.setItem('deliveryMethod', 'email'); navigate('/verify-code'); }
-    } catch { setError('An unexpected error occurred.'); }
+      await apiClient.post('/auth/send-otp', { email, delivery_method: 'email' });
+      sessionStorage.setItem('resetEmail', email);
+      sessionStorage.setItem('deliveryMethod', 'email');
+      navigate('/verify-code');
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to send OTP. Please try again.');
+    }
     finally { setLoading(false); }
   };
 

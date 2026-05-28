@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff, ArrowRight, Loader, AlertCircle, Lock, Check, X, Shield } from 'lucide-react';
 import AuthCanvas from '../../components/AuthCanvas';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+import apiClient from '../../services/apiService';
 
 const S = {
   dark: '#0a0a0a', surface: '#111', border: '#1e1e1e', mid: '#888', dark2: '#555',
@@ -65,15 +64,21 @@ export default function NewPassword() {
     if (!passwordChecks.minLength || !passwordChecks.hasUppercase || !passwordChecks.hasNumber || !passwordChecks.hasSpecial) { setError('Password does not meet all requirements.'); return; }
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/auth/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, new_password: form.password }),
+      const resetToken = sessionStorage.getItem('resetToken');
+      await apiClient.post('/auth/reset-password', {
+        email,
+        new_password: form.password,
+        reset_token: resetToken,
       });
-      const data = await response.json();
-      if (!response.ok) setError(data.detail || 'Failed to reset password. Please try again.');
-      else { sessionStorage.removeItem('resetEmail'); sessionStorage.removeItem('otpVerified'); sessionStorage.removeItem('deliveryMethod'); sessionStorage.removeItem('phoneNumber'); navigate('/login'); }
-    } catch { setError('An unexpected error occurred.'); }
+      sessionStorage.removeItem('resetEmail');
+      sessionStorage.removeItem('otpVerified');
+      sessionStorage.removeItem('deliveryMethod');
+      sessionStorage.removeItem('phoneNumber');
+      sessionStorage.removeItem('resetToken');
+      navigate('/login');
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to reset password. Please try again.');
+    }
     finally { setLoading(false); }
   };
 

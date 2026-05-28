@@ -1,15 +1,18 @@
-from fastapi import APIRouter, HTTPException, Query, Path, UploadFile, File
+from fastapi import APIRouter, HTTPException, Query, Path, UploadFile, File, Depends
 from typing import Optional, List
 from pydantic import BaseModel, EmailStr
 import numpy as np
 import logging
 from datetime import datetime, timedelta
+import secrets
+import time
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from core.forecasting_service import ForecastingService
-from core.supabase_client import create_otp, verify_otp, cleanup_expired_otps, verify_otp_completed, reset_user_password, set_user_role, list_users, get_user_predictions, get_pending_validations, update_prediction_validation
+from core.supabase_client import create_otp, verify_otp, cleanup_expired_otps, reset_user_password, set_user_role, list_users, get_user_predictions, get_pending_validations, update_prediction_validation, check_otp_rate_limit, record_otp_attempt
 from core.otp_service import send_otp
+from core.auth import get_current_user, require_admin
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +29,7 @@ class VerifyOtpRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     email: EmailStr
     new_password: str
+    reset_token: str
 
 class PredictionRequest(BaseModel):
     """Request model for stock prediction"""
@@ -58,6 +62,8 @@ class ForecastResponse(BaseModel):
     timestamp: str
 
 router = APIRouter(tags=["forecasting"])
+
+_reset_tokens = {}  # email -> (token, expiry_timestamp)
 
 
 @router.post("/auth/send-otp")
@@ -116,6 +122,12 @@ async def send_otp_endpoint(request: SendOtpRequest):
 @router.post("/auth/verify-otp")
 async def verify_otp_endpoint(request: VerifyOtpRequest):
     try:
+        if not check_otp_rate_limit(request.email):
+            raise HTTPException(
+                status_code=429,
+                detail="Too many attempts. Please try again later."
+            )
+
         if len(request.code) != 6 or not request.code.isdigit():
             raise HTTPException(
                 status_code=400,
@@ -125,15 +137,20 @@ async def verify_otp_endpoint(request: VerifyOtpRequest):
         is_valid = verify_otp(email=request.email, code=request.code)
 
         if not is_valid:
+            record_otp_attempt(request.email)
             raise HTTPException(
                 status_code=400,
                 detail="Invalid or expired OTP code"
             )
 
+        reset_token = secrets.token_urlsafe(32)
+        _reset_tokens[request.email] = (reset_token, time.time() + 900)
+
         return {
             "success": True,
             "message": "OTP verified successfully",
-            "email": request.email
+            "email": request.email,
+            "reset_token": reset_token
         }
 
     except HTTPException:
@@ -152,12 +169,14 @@ async def reset_password_endpoint(request: ResetPasswordRequest):
                 detail="Password must be at least 6 characters"
             )
 
-        otp_valid = verify_otp_completed(request.email)
-        if not otp_valid:
+        stored = _reset_tokens.get(request.email)
+        if not stored or stored[0] != request.reset_token or time.time() > stored[1]:
             raise HTTPException(
                 status_code=403,
-                detail="OTP verification required or expired. Please verify your code again."
+                detail="Invalid or expired reset token. Please verify your code again."
             )
+
+        del _reset_tokens[request.email]
 
         result = reset_user_password(request.email, request.new_password)
 
@@ -203,16 +222,7 @@ def initialize_forecasting_service():
         raise
 
 @router.post("/forecast")
-async def forecast_stock(request: PredictionRequest):
-    """
-    Get stock price forecast
-
-    Args:
-        request: PredictionRequest with ticker, days_ahead, period
-
-    Returns:
-        ForecastResponse with historical, forecast, and metrics
-    """
+async def forecast_stock(request: PredictionRequest, user: dict = Depends(get_current_user)):
     try:
         service = get_forecasting_service()
 
@@ -220,7 +230,7 @@ async def forecast_stock(request: PredictionRequest):
             ticker=request.ticker,
             days_ahead=request.days_ahead,
             period=request.period,
-            user_id=request.user_id
+            user_id=user["id"]
         )
 
         return result
@@ -234,7 +244,8 @@ async def forecast_stock(request: PredictionRequest):
 @router.get("/forecast/{ticker}")
 async def get_forecast_by_ticker(
     ticker: str = Path(..., description="Stock ticker symbol"),
-    days: int = Query(1, ge=1, le=30, description="Days to forecast")
+    days: int = Query(1, ge=1, le=30, description="Days to forecast"),
+    user: dict = Depends(get_current_user),
 ):
     """
     Get forecast for a specific ticker (simplified endpoint)
@@ -369,7 +380,8 @@ async def get_live_quote(ticker: str = Path(..., description="Stock ticker symbo
 @router.get("/historical/{ticker}")
 async def get_historical_data(
     ticker: str = Path(..., description="Stock ticker symbol"),
-    days: int = Query(365, ge=30, le=3650, description="Number of days of history")
+    days: int = Query(365, ge=30, le=3650, description="Number of days of history"),
+    user: dict = Depends(get_current_user),
 ):
     """
     Get historical price data for a ticker
@@ -400,7 +412,7 @@ async def get_historical_data(
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 @router.get("/metrics/{ticker}")
-async def get_model_metrics(ticker: str = Path(..., description="Stock ticker symbol")):
+async def get_model_metrics(ticker: str = Path(..., description="Stock ticker symbol"), user: dict = Depends(get_current_user)):
     """
     Get model performance metrics for a ticker
 
@@ -431,7 +443,7 @@ async def get_model_metrics(ticker: str = Path(..., description="Stock ticker sy
 
 
 @router.post("/retrain/{ticker}")
-async def trigger_retrain(ticker: str = Path(..., description="Stock ticker symbol")):
+async def trigger_retrain(ticker: str = Path(..., description="Stock ticker symbol"), user: dict = Depends(require_admin)):
     """
     Manually trigger model retraining for a specific ticker
 
@@ -466,7 +478,7 @@ async def trigger_retrain(ticker: str = Path(..., description="Stock ticker symb
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 @router.get("/retrain/status/{ticker}")
-async def get_retrain_status(ticker: str = Path(..., description="Stock ticker symbol")):
+async def get_retrain_status(ticker: str = Path(..., description="Stock ticker symbol"), user: dict = Depends(get_current_user)):
     """
     Get retraining status and model info for a ticker
 
@@ -498,7 +510,7 @@ async def get_retrain_status(ticker: str = Path(..., description="Stock ticker s
         raise HTTPException(status_code=500, detail="Internal server error")
 
 @router.get("/models/status")
-async def get_all_models_status():
+async def get_all_models_status(user: dict = Depends(get_current_user)):
     """
     Get status of all models
 
@@ -534,7 +546,8 @@ async def get_all_models_status():
 @router.post("/batch-retrain")
 async def trigger_batch_retrain(
     tickers: Optional[List[str]] = None,
-    force: bool = False
+    force: bool = False,
+    user: dict = Depends(require_admin),
 ):
     """
     Trigger batch retraining for multiple tickers
@@ -566,7 +579,7 @@ async def trigger_batch_retrain(
 
 
 @router.get("/market/summary")
-async def get_market_summary():
+async def get_market_summary(user: dict = Depends(get_current_user)):
     """
     Get market summary with all active tickers and latest data
 
@@ -631,7 +644,8 @@ async def get_market_summary():
 async def get_reports_history(
     ticker: Optional[str] = Query(None, description="Filter by ticker"),
     limit: int = Query(50, ge=1, le=500, description="Maximum records to return"),
-    status: Optional[str] = Query(None, description="Filter by status (Completed, Processing, Failed)")
+    status: Optional[str] = Query(None, description="Filter by status (Completed, Processing, Failed)"),
+    user: dict = Depends(get_current_user),
 ):
     """
     Get training history and reports from Supabase
@@ -678,7 +692,7 @@ async def get_reports_history(
         raise HTTPException(status_code=500, detail="Error fetching reports")
 
 @router.get("/health/database")
-async def health_check_database():
+async def health_check_database(user: dict = Depends(get_current_user)):
     """
     Check if Supabase database connection is healthy
 
@@ -769,7 +783,8 @@ async def get_articles(
 async def upload_article_image_endpoint(
     file: UploadFile = File(...),
     article_id: Optional[str] = Query(None, description="Article ID for organizing images"),
-    image_type: Optional[str] = Query("general", description="Image type: header, thumbnail, inline, general")
+    image_type: Optional[str] = Query("general", description="Image type: header, thumbnail, inline, general"),
+    user: dict = Depends(require_admin),
 ):
     """
     Upload an image for an article
@@ -808,6 +823,23 @@ async def upload_article_image_endpoint(
         logger.error(f"Error uploading image: {str(e)}")
         raise HTTPException(status_code=500, detail="Error uploading image")
 
+@router.get("/articles/stats")
+async def get_article_statistics(user: dict = Depends(get_current_user)):
+    try:
+        from core.supabase_client import get_article_stats
+
+        stats = get_article_stats()
+
+        return {
+            "stats": stats,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Error fetching article stats: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error fetching stats")
+
+
 @router.get("/articles/{article_id}")
 async def get_article(article_id: str = Path(..., description="Article ID")):
     """
@@ -836,7 +868,7 @@ async def get_article(article_id: str = Path(..., description="Article ID")):
         raise HTTPException(status_code=500, detail="Error fetching article")
 
 @router.post("/articles")
-async def create_article(request: ArticleRequest):
+async def create_article(request: ArticleRequest, user: dict = Depends(require_admin)):
     """
     Create a new article
 
@@ -871,7 +903,8 @@ async def create_article(request: ArticleRequest):
 @router.put("/articles/{article_id}")
 async def update_article(
     article_id: str = Path(..., description="Article ID"),
-    request: ArticleUpdateRequest = None
+    request: ArticleUpdateRequest = None,
+    user: dict = Depends(require_admin),
 ):
     """
     Update an existing article
@@ -908,7 +941,7 @@ async def update_article(
         raise HTTPException(status_code=500, detail="Error updating article")
 
 @router.delete("/articles/{article_id}")
-async def delete_article(article_id: str = Path(..., description="Article ID")):
+async def delete_article(article_id: str = Path(..., description="Article ID"), user: dict = Depends(require_admin)):
     """
     Delete an article
 
@@ -938,31 +971,8 @@ async def delete_article(article_id: str = Path(..., description="Article ID")):
         logger.error(f"Error deleting article: {str(e)}")
         raise HTTPException(status_code=500, detail="Error deleting article")
 
-@router.get("/articles/stats")
-async def get_article_statistics():
-    """
-    Get article statistics
-
-    Returns:
-        Article counts by status
-    """
-    try:
-        from core.supabase_client import get_article_stats
-
-        stats = get_article_stats()
-
-        return {
-            "stats": stats,
-            "timestamp": datetime.now().isoformat()
-        }
-
-    except Exception as e:
-        logger.error(f"Error fetching article stats: {str(e)}")
-        raise HTTPException(status_code=500, detail="Error fetching stats")
-
-
 @router.get("/insights")
-async def get_insights():
+async def get_insights(user: dict = Depends(get_current_user)):
     """
     Get AI-driven market insights based on trained models and market data
 
@@ -1005,15 +1015,14 @@ class SetRoleRequest(BaseModel):
     role: str  # 'admin' or 'user'
 
 @router.get("/users")
-async def get_users():
-    """List all users (admin only)"""
+async def get_users(user: dict = Depends(require_admin)):
     result = list_users()
     if not result["success"]:
         raise HTTPException(status_code=500, detail=result["message"])
     return result
 
 @router.post("/users/set-role")
-async def set_role(request: SetRoleRequest):
+async def set_role(request: SetRoleRequest, user: dict = Depends(require_admin)):
     """Set a user's role (admin only)"""
     result = set_user_role(request.user_id, request.role)
     if not result["success"]:
@@ -1023,17 +1032,16 @@ async def set_role(request: SetRoleRequest):
 
 @router.get("/predictions/history")
 async def get_predictions_history(
-    user_id: str = Query(..., description="User ID"),
     ticker: Optional[str] = Query(None, description="Filter by ticker"),
     status: Optional[str] = Query(None, description="Filter by status"),
-    limit: int = Query(50, ge=1, le=200)
+    limit: int = Query(50, ge=1, le=200),
+    user: dict = Depends(get_current_user),
 ):
-    """Get prediction history for a user"""
-    predictions = get_user_predictions(user_id, ticker=ticker, status=status, limit=limit)
+    predictions = get_user_predictions(user["id"], ticker=ticker, status=status, limit=limit)
     return {"predictions": predictions, "total": len(predictions)}
 
 @router.post("/predictions/validate/{prediction_id}")
-async def validate_single_prediction(prediction_id: str):
+async def validate_single_prediction(prediction_id: str, user: dict = Depends(get_current_user)):
     """Validate a single prediction against actual prices"""
     from core.prediction_validator import validate_prediction
 
@@ -1062,7 +1070,7 @@ async def validate_single_prediction(prediction_id: str):
     return {"status": "validated", "validation": validation, "updated": updated}
 
 @router.post("/predictions/validate-all")
-async def validate_all_predictions():
+async def validate_all_predictions(user: dict = Depends(require_admin)):
     """Batch validate all pending predictions"""
     from core.prediction_validator import batch_validate
 

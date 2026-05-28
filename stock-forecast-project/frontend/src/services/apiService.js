@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { supabase } from '../lib/supabase';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
@@ -11,7 +12,11 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use(
-  (config) => {
+  async (config) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      config.headers.Authorization = `Bearer ${session.access_token}`;
+    }
     return config;
   },
   (error) => {
@@ -225,9 +230,9 @@ export const uploadArticleImage = async (file, articleId = null, imageType = 'ge
   }
 };
 
-export const getPredictionHistory = async (userId, ticker = null, status = null, limit = 50) => {
+export const getPredictionHistory = async (ticker = null, status = null, limit = 50) => {
   try {
-    const params = { user_id: userId, limit };
+    const params = { limit };
     if (ticker) params.ticker = ticker.toUpperCase();
     if (status) params.status = status;
     const response = await apiClient.get('/predictions/history', { params });
@@ -255,15 +260,13 @@ export const validateAllPredictions = async () => {
   }
 };
 
-export const getForecastWithUser = async (ticker, daysAhead = 1, period = '1y', userId = null) => {
+export const getForecastWithUser = async (ticker, daysAhead = 1, period = '1y') => {
   try {
-    const body = {
+    const response = await apiClient.post('/forecast', {
       ticker: ticker.toUpperCase(),
       days_ahead: daysAhead,
       period: period,
-    };
-    if (userId) body.user_id = userId;
-    const response = await apiClient.post('/forecast', body);
+    });
     return response.data;
   } catch (error) {
     throw error.response?.data || { error: 'Failed to fetch forecast' };

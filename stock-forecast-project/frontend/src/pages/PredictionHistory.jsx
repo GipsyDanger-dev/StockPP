@@ -5,19 +5,17 @@ import {
   Clock, Loader, RefreshCw, Search, ChevronRight, BarChart3,
   Target, Zap, ArrowUpRight, ArrowDownRight, Filter,
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
 import { usePredictionHistory } from '../hooks/useApi';
 import * as apiService from '../services/apiService';
 
 const PredictionHistory = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [tickerFilter, setTickerFilter] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null);
   const [validating, setValidating] = useState(null);
 
   const { data, isLoading, refetch, isFetching } = usePredictionHistory(
-    user?.id, tickerFilter, statusFilter, 50, true
+    tickerFilter, statusFilter, 50, true
   );
 
   const predictions = data?.predictions || [];

@@ -35,8 +35,8 @@ export default function ForgotPassword() {
       sessionStorage.setItem('resetEmail', email);
       sessionStorage.setItem('deliveryMethod', 'email');
       navigate('/verify-code');
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to send OTP. Please try again.');
+    } catch {
+      setError('Failed to send verification code. Please try again.');
     }
     finally { setLoading(false); }
   };
@@ -66,10 +66,10 @@ export default function ForgotPassword() {
           <form onSubmit={handleSubmit}>
             {/* Email */}
             <div style={{ marginBottom: 28 }}>
-              <label style={labelStyle}>Corporate Email</label>
+              <label htmlFor="forgot-email" style={labelStyle}>Corporate Email</label>
               <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(10,10,10,0.6)', border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
                 <div style={{ padding: '16px 12px' }}><Mail size={14} color={S.mid} /></div>
-                <input type="email" placeholder="name@precision-analytics.com" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
+                <input id="forgot-email" type="email" placeholder="name@precision-analytics.com" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
               </div>
             </div>
 

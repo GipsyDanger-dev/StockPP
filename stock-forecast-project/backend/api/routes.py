@@ -161,14 +161,14 @@ async def verify_otp_endpoint(request: VerifyOtpRequest):
 @router.post("/auth/reset-password")
 async def reset_password_endpoint(request: ResetPasswordRequest):
     try:
-        if len(request.new_password) < 6:
+        if len(request.new_password) < 8:
             raise HTTPException(
                 status_code=400,
-                detail="Password must be at least 6 characters"
+                detail="Password must be at least 8 characters"
             )
 
         stored = _reset_tokens.get(request.email)
-        if not stored or stored[0] != request.reset_token or time.time() > stored[1]:
+        if not stored or not secrets.compare_digest(stored[0], request.reset_token) or time.time() > stored[1]:
             raise HTTPException(
                 status_code=403,
                 detail="Invalid or expired reset token. Please verify your code again."

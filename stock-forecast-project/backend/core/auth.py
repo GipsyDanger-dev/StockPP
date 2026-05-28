@@ -14,6 +14,9 @@ security = HTTPBearer()
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
+if not SUPABASE_URL or not SUPABASE_KEY:
+    logger.warning("SUPABASE_URL or SUPABASE_KEY not set — auth will fail at runtime")
+
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),

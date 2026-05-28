@@ -76,8 +76,8 @@ export default function NewPassword() {
       sessionStorage.removeItem('phoneNumber');
       sessionStorage.removeItem('resetToken');
       navigate('/login');
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to reset password. Please try again.');
+    } catch {
+      setError('Failed to reset password. Please try again.');
     }
     finally { setLoading(false); }
   };
@@ -138,11 +138,11 @@ export default function NewPassword() {
           <form onSubmit={handleSubmit}>
             {/* New Password */}
             <div style={{ marginBottom: 22 }}>
-              <label style={labelStyle}>New Password</label>
+              <label htmlFor="new-password" style={labelStyle}>New Password</label>
               <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(10,10,10,0.6)', border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
                 <div style={{ padding: '16px 12px' }}><Lock size={14} color={S.mid} /></div>
-                <input type={showPassword ? 'text' : 'password'} placeholder="••••••••••••" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} style={inputStyle} required />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '16px 12px', display: 'flex' }}>
+                <input id="new-password" type={showPassword ? 'text' : 'password'} placeholder="••••••••••••" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} style={inputStyle} required />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '16px 12px', display: 'flex' }} aria-label={showPassword ? 'Hide password' : 'Show password'}>
                   {showPassword ? <EyeOff size={14} color={S.mid} /> : <Eye size={14} color={S.mid} />}
                 </button>
               </div>
@@ -164,11 +164,11 @@ export default function NewPassword() {
 
             {/* Confirm Password */}
             <div style={{ marginBottom: 22 }}>
-              <label style={labelStyle}>Confirm New Password</label>
+              <label htmlFor="confirm-password" style={labelStyle}>Confirm New Password</label>
               <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(10,10,10,0.6)', border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
                 <div style={{ padding: '16px 12px' }}><Lock size={14} color={S.mid} /></div>
-                <input type={showConfirm ? 'text' : 'password'} placeholder="••••••••••••" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} style={inputStyle} required />
-                <button type="button" onClick={() => setShowConfirm(!showConfirm)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '16px 12px', display: 'flex' }}>
+                <input id="confirm-password" type={showConfirm ? 'text' : 'password'} placeholder="••••••••••••" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} style={inputStyle} required />
+                <button type="button" onClick={() => setShowConfirm(!showConfirm)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '16px 12px', display: 'flex' }} aria-label={showConfirm ? 'Hide password' : 'Show password'}>
                   {showConfirm ? <EyeOff size={14} color={S.mid} /> : <Eye size={14} color={S.mid} />}
                 </button>
               </div>

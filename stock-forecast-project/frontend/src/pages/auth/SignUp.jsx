@@ -35,7 +35,7 @@ export default function SignUp() {
     e.preventDefault();
     setError('');
     if (!agreed) { setError('You must agree to the Terms of Service.'); return; }
-    if (form.password.length < 6) { setError('Password must be at least 6 characters.'); return; }
+    if (form.password.length < 8) { setError('Password must be at least 8 characters.'); return; }
     setLoading(true);
     try {
       const { data, error: authError } = await signUp(form.email, form.password, {
@@ -43,8 +43,8 @@ export default function SignUp() {
         organization: accountType === 'enterprise' ? form.organization : '',
         account_type: accountType,
       });
-      if (authError) setError(authError.message);
-      else { setSuccess('Account created! Please check your email to verify.'); setTimeout(() => navigate('/login'), 3000); }
+      if (authError) setError('Unable to create account. Please try again.');
+      else { setSuccess('Account created! Please check your email to verify.'); }
     } catch { setError('An unexpected error occurred.'); }
     finally { setLoading(false); }
   };
@@ -86,9 +86,10 @@ export default function SignUp() {
             </div>
           )}
           {success && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', marginBottom: 24, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', marginBottom: 24, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)' }} aria-live="polite">
               <CheckCircle size={14} color="#22c55e" />
               <span style={{ font: `400 13px/1 ${S.fontU}`, color: '#22c55e' }}>{success}</span>
+              <Link to="/login" style={{ font: `500 13px/1 ${S.fontD}`, color: S.white, textDecoration: 'none', marginLeft: 'auto' }}>Log in</Link>
             </div>
           )}
 
@@ -104,47 +105,54 @@ export default function SignUp() {
 
             {/* Full Name */}
             <div style={{ marginBottom: 22 }}>
-              <label style={labelStyle}>Full Name</label>
+              <label htmlFor="signup-name" style={labelStyle}>Full Name</label>
               <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(10,10,10,0.6)', border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
                 <div style={{ padding: '16px 12px' }}><User size={14} color={S.mid} /></div>
-                <input type="text" placeholder="Alex Chen" value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} style={inputStyle} required />
+                <input id="signup-name" type="text" placeholder="Alex Chen" value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} style={inputStyle} required />
               </div>
             </div>
 
             {/* Email */}
             <div style={{ marginBottom: 22 }}>
-              <label style={labelStyle}>{accountType === 'enterprise' ? 'Work Email' : 'Email'}</label>
+              <label htmlFor="signup-email" style={labelStyle}>{accountType === 'enterprise' ? 'Work Email' : 'Email'}</label>
               <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(10,10,10,0.6)', border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
                 <div style={{ padding: '16px 12px' }}><Mail size={14} color={S.mid} /></div>
-                <input type="email" placeholder={accountType === 'enterprise' ? 'name@organization.com' : 'name@email.com'} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} style={inputStyle} required />
+                <input id="signup-email" type="email" placeholder={accountType === 'enterprise' ? 'name@organization.com' : 'name@email.com'} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} style={inputStyle} required />
               </div>
             </div>
 
             {/* Organization — Enterprise only */}
             {accountType === 'enterprise' && (
               <div style={{ marginBottom: 22, animation: 'fadeInUp 0.3s ease-out' }}>
-                <label style={labelStyle}>Organization</label>
+                <label htmlFor="signup-org" style={labelStyle}>Organization</label>
                 <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(10,10,10,0.6)', border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
                   <div style={{ padding: '16px 12px' }}><Building size={14} color={S.mid} /></div>
-                  <input type="text" placeholder="Enterprise Labs Inc." value={form.organization} onChange={(e) => setForm({ ...form, organization: e.target.value })} style={inputStyle} required />
+                  <input id="signup-org" type="text" placeholder="Enterprise Labs Inc." value={form.organization} onChange={(e) => setForm({ ...form, organization: e.target.value })} style={inputStyle} required />
                 </div>
               </div>
             )}
 
             {/* Password */}
             <div style={{ marginBottom: 22 }}>
-              <label style={labelStyle}>Password</label>
+              <label htmlFor="signup-password" style={labelStyle}>Password</label>
               <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(10,10,10,0.6)', border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
                 <div style={{ padding: '16px 12px' }}><Lock size={14} color={S.mid} /></div>
-                <input type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} style={inputStyle} required minLength={6} />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '16px 12px', display: 'flex' }}>
+                <input id="signup-password" type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} style={inputStyle} required minLength={8} />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '16px 12px', display: 'flex' }} aria-label={showPassword ? 'Hide password' : 'Show password'}>
                   {showPassword ? <EyeOff size={14} color={S.mid} /> : <Eye size={14} color={S.mid} />}
                 </button>
               </div>
             </div>
 
             {/* Terms Checkbox */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 24, cursor: 'pointer' }} onClick={() => setAgreed(!agreed)}>
+            <div
+              role="checkbox"
+              aria-checked={agreed}
+              tabIndex={0}
+              style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 24, cursor: 'pointer' }}
+              onClick={() => setAgreed(!agreed)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAgreed(!agreed); } }}
+            >
               <div style={{ width: 16, height: 16, border: `1px solid ${S.border}`, background: agreed ? S.orange : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2, transition: 'background .2s' }}>
                 {agreed && <span style={{ color: S.white, fontSize: 10, lineHeight: 1 }}>&#10003;</span>}
               </div>

@@ -34,7 +34,7 @@ export default function SignIn() {
     setLoading(true);
     try {
       const { data, error: authError } = await signIn(form.email, form.password);
-      if (authError) setError(authError.message);
+      if (authError) setError('Invalid email or password.');
       else navigate('/dashboard');
     } catch { setError('An unexpected error occurred.'); }
     finally { setLoading(false); }
@@ -65,23 +65,23 @@ export default function SignIn() {
           <form onSubmit={handleSubmit}>
             {/* Email */}
             <div style={{ marginBottom: 24 }}>
-              <label style={labelStyle}>Corporate Email</label>
+              <label htmlFor="signin-email" style={labelStyle}>Corporate Email</label>
               <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(10,10,10,0.6)', border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
                 <div style={{ padding: '16px 12px' }}><Mail size={14} color={S.mid} /></div>
-                <input type="email" placeholder="name@precision-analytics.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} style={inputStyle} required />
+                <input id="signin-email" type="email" placeholder="name@precision-analytics.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} style={inputStyle} required />
               </div>
             </div>
 
             {/* Password */}
             <div style={{ marginBottom: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                <label style={{ ...labelStyle, marginBottom: 0 }}>Access Key</label>
+                <label htmlFor="signin-password" style={{ ...labelStyle, marginBottom: 0 }}>Access Key</label>
                 <Link to="/forgot-password" style={{ font: `400 11px/1 ${S.fontU}`, color: S.mid, textDecoration: 'none', transition: 'color .2s' }} onMouseEnter={(e) => e.currentTarget.style.color = S.orange} onMouseLeave={(e) => e.currentTarget.style.color = S.mid}>Forgot Password?</Link>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(10,10,10,0.6)', border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
                 <div style={{ padding: '16px 12px' }}><Lock size={14} color={S.mid} /></div>
-                <input type={showPassword ? 'text' : 'password'} placeholder="••••••••••••" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} style={inputStyle} required />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '16px 12px', display: 'flex' }}>
+                <input id="signin-password" type={showPassword ? 'text' : 'password'} placeholder="••••••••••••" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} style={inputStyle} required />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '16px 12px', display: 'flex' }} aria-label={showPassword ? 'Hide password' : 'Show password'}>
                   {showPassword ? <EyeOff size={14} color={S.mid} /> : <Eye size={14} color={S.mid} />}
                 </button>
               </div>

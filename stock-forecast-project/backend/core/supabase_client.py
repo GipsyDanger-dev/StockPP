@@ -3,6 +3,7 @@ import logging
 import secrets
 import string
 import time
+import hashlib
 from collections import defaultdict
 from typing import Optional
 from supabase import create_client, Client
@@ -299,6 +300,10 @@ def record_otp_attempt(email: str):
 def generate_otp_code(length: int = 6) -> str:
     return ''.join(secrets.choice(string.digits) for _ in range(length))
 
+
+def _hash_otp(code: str) -> str:
+    return hashlib.sha256(code.encode()).hexdigest()
+
 def create_otp(email: str, delivery_method: str, phone_number: str = None) -> dict:
     """Create and store an OTP code"""
     try:
@@ -310,6 +315,7 @@ def create_otp(email: str, delivery_method: str, phone_number: str = None) -> di
         }).eq("email", email).eq("used", False).execute()
 
         code = generate_otp_code()
+        code_hash = _hash_otp(code)
 
         # Set expiry (5 minutes from now)
         from datetime import datetime, timedelta, timezone
@@ -317,7 +323,7 @@ def create_otp(email: str, delivery_method: str, phone_number: str = None) -> di
 
         result = client.table("otp_codes").insert({
             "email": email,
-            "code": code,
+            "code": code_hash,
             "delivery_method": delivery_method,
             "phone_number": phone_number,
             "expires_at": expires_at,
@@ -343,10 +349,12 @@ def verify_otp(email: str, code: str) -> bool:
 
         from datetime import datetime, timezone
 
+        code_hash = _hash_otp(code)
+
         result = client.table("otp_codes").select("*").eq(
             "email", email
         ).eq(
-            "code", code
+            "code", code_hash
         ).eq(
             "used", False
         ).execute()
@@ -479,6 +487,7 @@ def set_user_role(user_id: str, role: str) -> dict:
     """Set a user's role via Supabase Admin API (updates user_metadata.role)"""
     try:
         import httpx
+        import uuid
 
         supabase_url = os.getenv("SUPABASE_URL")
         service_key = os.getenv("SUPABASE_KEY")
@@ -488,6 +497,11 @@ def set_user_role(user_id: str, role: str) -> dict:
 
         if role not in ("admin", "user"):
             return {"success": False, "message": "Invalid role. Must be 'admin' or 'user'"}
+
+        try:
+            uuid.UUID(user_id)
+        except ValueError:
+            return {"success": False, "message": "Invalid user ID format"}
 
         headers = {
             "apikey": service_key,

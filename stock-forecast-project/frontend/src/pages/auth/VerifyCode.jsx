@@ -23,6 +23,7 @@ export default function VerifyCode() {
   useEffect(() => {
     const storedEmail = sessionStorage.getItem('resetEmail');
     if (storedEmail) setEmail(storedEmail);
+    else navigate('/forgot-password');
   }, []);
 
   const handleChange = (index, value) => {
@@ -55,8 +56,8 @@ export default function VerifyCode() {
       sessionStorage.setItem('otpVerified', 'true');
       sessionStorage.setItem('resetToken', data.reset_token);
       navigate('/new-password');
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Invalid or expired code.');
+    } catch {
+      setError('Invalid or expired code. Please try again.');
     }
     finally { setLoading(false); }
   };
@@ -68,13 +69,13 @@ export default function VerifyCode() {
       await apiClient.post('/auth/send-otp', { email, delivery_method: 'email' });
       setResendSuccess(true);
       setTimeout(() => setResendSuccess(false), 3000);
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to resend code.');
+    } catch {
+      setError('Failed to resend code. Please try again.');
     }
     finally { setResending(false); }
   };
 
-  const maskedEmail = email ? `${email[0]}${'*'.repeat(Math.min(email.indexOf('@') - 2, 6))}${email.slice(email.indexOf('@'))}` : '';
+  const maskedEmail = email && email.includes('@') ? `${email[0]}${'*'.repeat(Math.min(email.indexOf('@') - 2, 6))}${email.slice(email.indexOf('@'))}` : email;
 
   return (
     <div style={{ minHeight: '100vh', background: 'rgba(10,10,10,0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: '80px 0' }}>
@@ -120,6 +121,7 @@ export default function VerifyCode() {
                   inputMode="numeric"
                   maxLength={6}
                   value={digit}
+                  aria-label={`Digit ${index + 1} of 6`}
                   onChange={(e) => handleChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   style={{

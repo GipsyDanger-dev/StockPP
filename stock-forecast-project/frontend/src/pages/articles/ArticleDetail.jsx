@@ -115,10 +115,10 @@ const ArticleDetail = () => {
             <span className="font-medium">Back to Insights</span>
           </button>
           <div className="flex items-center gap-3">
-            <button className="p-2 hover:bg-[#F7F9FB] rounded-lg transition-colors">
+            <button className="p-2 hover:bg-[#F7F9FB] rounded-lg transition-colors" aria-label="Share article">
               <Share2 className="w-5 h-5 text-[#45464D]" />
             </button>
-            <button className="p-2 hover:bg-[#F7F9FB] rounded-lg transition-colors">
+            <button className="p-2 hover:bg-[#F7F9FB] rounded-lg transition-colors" aria-label="Bookmark article">
               <BookOpen className="w-5 h-5 text-[#45464D]" />
             </button>
           </div>
@@ -219,6 +219,7 @@ const ArticleDetail = () => {
         <button
           onClick={scrollToTop}
           className="fixed bottom-8 right-8 w-12 h-12 bg-black text-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-800 transition-all z-50"
+          aria-label="Scroll to top"
         >
           <ChevronUp className="w-5 h-5" />
         </button>

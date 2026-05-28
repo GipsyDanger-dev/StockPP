@@ -72,6 +72,9 @@ const Layout = ({ children }) => {
         <div
           className="p-5 flex items-center gap-3 border-b border-[#E0E3E5] cursor-pointer hover:bg-[#E8EAED] transition-colors"
           onClick={() => handleNav('/dashboard')}
+          role="button"
+          aria-label="Go to Dashboard"
+          tabIndex={0}
         >
           <div className="w-9 h-9 bg-[#131B2E] rounded-lg flex items-center justify-center">
             <Activity className="text-white" size={18} />
@@ -99,6 +102,9 @@ const Layout = ({ children }) => {
                     ? 'bg-[#131B2E] text-white shadow-sm'
                     : 'text-[#45464D] hover:bg-[#E8EAED] hover:text-[#191C1E]'
                 }`}
+                role="button"
+                aria-label={item.label}
+                tabIndex={0}
               >
                 <Icon size={18} strokeWidth={active ? 2 : 1.5} />
                 <span className={`text-sm ${active ? 'font-semibold' : 'font-medium'}`}>
@@ -128,6 +134,9 @@ const Layout = ({ children }) => {
                         ? 'bg-[#131B2E] text-white shadow-sm'
                         : 'text-[#45464D] hover:bg-[#E8EAED] hover:text-[#191C1E]'
                     }`}
+                    role="button"
+                    aria-label={item.label}
+                    tabIndex={0}
                   >
                     <Icon size={18} strokeWidth={active ? 2 : 1.5} />
                     <span className={`text-sm ${active ? 'font-semibold' : 'font-medium'}`}>
@@ -174,6 +183,7 @@ const Layout = ({ children }) => {
         <div
           className="fixed inset-0 bg-black/40 z-30 lg:hidden backdrop-blur-sm"
           onClick={() => setSidebarOpen(false)}
+          aria-label="Close sidebar"
         />
       )}
 
@@ -210,6 +220,9 @@ const Layout = ({ children }) => {
           <div
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => navigate('/dashboard')}
+            role="button"
+            aria-label="Go to Dashboard"
+            tabIndex={0}
           >
             <span className="text-sm font-bold text-[#191C1E] tracking-wide">PRECISION</span>
             <span className="text-[10px] text-[#76777D] font-medium">ANALYTICS</span>

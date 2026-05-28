@@ -79,6 +79,9 @@ const AnalyticsOverview = () => {
                       key={result.symbol}
                       onClick={() => navigate(`/analytics/${result.symbol}`)}
                       className="flex justify-between items-center p-4 hover:bg-indigo-50 cursor-pointer transition-colors"
+                      role="button"
+                      aria-label={`Analyze ${result.symbol}`}
+                      tabIndex={0}
                     >
                       <div>
                         <span className="font-bold text-lg">{result.symbol}</span>
@@ -122,6 +125,9 @@ const AnalyticsOverview = () => {
                       key={stock.ticker}
                       onClick={() => navigate(`/analytics/${stock.ticker}`)}
                       className="flex justify-between items-center p-5 px-6 hover:bg-slate-50 cursor-pointer transition-colors"
+                      role="button"
+                      aria-label={`View ${stock.ticker} analysis`}
+                      tabIndex={0}
                     >
                       <div>
                         <span className="font-bold text-xl">{stock.ticker}</span>
@@ -150,6 +156,9 @@ const AnalyticsOverview = () => {
                       key={stock.ticker}
                       onClick={() => navigate(`/analytics/${stock.ticker}`)}
                       className="flex justify-between items-center p-5 px-6 hover:bg-slate-50 cursor-pointer transition-colors"
+                      role="button"
+                      aria-label={`View ${stock.ticker} analysis`}
+                      tabIndex={0}
                     >
                       <div>
                         <span className="font-bold text-xl">{stock.ticker}</span>
@@ -188,6 +197,7 @@ const AnalyticsOverview = () => {
                         key={stock.ticker}
                         onClick={() => navigate(`/analytics/${stock.ticker}`)}
                         className="hover:bg-indigo-50 cursor-pointer transition-colors"
+                        aria-label={`View ${stock.ticker} analysis`}
                       >
                         <td className="p-5 font-bold text-lg">{stock.ticker}</td>
                         <td className="p-5 text-[#45464D]">{stock.name}</td>
@@ -287,7 +297,7 @@ const AnalyticsDetail = ({ ticker }) => {
     <div className="min-h-screen bg-white text-[#191C1E]">
       {/* HEADER */}
       <header className="bg-[#F7F9FB] px-6 lg:px-12 py-8 flex items-center border-b border-[#E0E3E5]">
-        <button onClick={() => navigate('/analytics')} className="mr-6 p-2 hover:bg-slate-200 rounded-full transition-colors">
+        <button onClick={() => navigate('/analytics')} className="mr-6 p-2 hover:bg-slate-200 rounded-full transition-colors" aria-label="Back to Analytics Overview">
           <ChevronLeft size={32} />
         </button>
         <div className="flex items-center gap-4">
@@ -296,7 +306,7 @@ const AnalyticsDetail = ({ ticker }) => {
           </div>
           <h1 className="text-3xl lg:text-5xl font-bold tracking-tight text-black">PRECISION ANALYTICS</h1>
         </div>
-        <button onClick={fetchLiveQuote} className="ml-auto p-3 hover:bg-slate-200 rounded-full transition-colors" title="Refresh live price">
+        <button onClick={fetchLiveQuote} className="ml-auto p-3 hover:bg-slate-200 rounded-full transition-colors" title="Refresh live price" aria-label="Refresh live price">
           <RefreshCw size={24} className={quoteLoading ? 'animate-spin' : ''} />
         </button>
       </header>

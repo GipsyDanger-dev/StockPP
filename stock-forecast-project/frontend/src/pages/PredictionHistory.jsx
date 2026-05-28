@@ -295,6 +295,7 @@ const PredictionHistory = () => {
                           <button
                             onClick={() => navigate(`/analytics/${pred.ticker}`)}
                             className="p-1.5 hover:bg-[#E6E8EA] rounded transition-colors"
+                            aria-label={`View ${pred.ticker} analytics`}
                           >
                             <ChevronRight className="w-4 h-4 text-[#45464D]" />
                           </button>

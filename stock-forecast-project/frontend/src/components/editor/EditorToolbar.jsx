@@ -10,6 +10,7 @@ const EditorToolbar = ({ onInsertMarkdown, onInlineImage, uploadingImage, inline
         onClick={() => onInsertMarkdown('**', '**')}
         className="p-2 hover:bg-[#F7F9FB] rounded transition-colors text-[#45464D]"
         title="Bold"
+        aria-label="Bold"
       >
         <Bold className="w-4 h-4" />
       </button>
@@ -17,6 +18,7 @@ const EditorToolbar = ({ onInsertMarkdown, onInlineImage, uploadingImage, inline
         onClick={() => onInsertMarkdown('*', '*')}
         className="p-2 hover:bg-[#F7F9FB] rounded transition-colors text-[#45464D]"
         title="Italic"
+        aria-label="Italic"
       >
         <Italic className="w-4 h-4" />
       </button>
@@ -24,6 +26,7 @@ const EditorToolbar = ({ onInsertMarkdown, onInlineImage, uploadingImage, inline
         onClick={() => onInsertMarkdown('## ')}
         className="p-2 hover:bg-[#F7F9FB] rounded transition-colors text-[#45464D]"
         title="Heading"
+        aria-label="Heading"
       >
         <Heading2 className="w-4 h-4" />
       </button>
@@ -31,6 +34,7 @@ const EditorToolbar = ({ onInsertMarkdown, onInlineImage, uploadingImage, inline
         onClick={() => onInsertMarkdown('- ')}
         className="p-2 hover:bg-[#F7F9FB] rounded transition-colors text-[#45464D]"
         title="List"
+        aria-label="List"
       >
         <List className="w-4 h-4" />
       </button>
@@ -38,6 +42,7 @@ const EditorToolbar = ({ onInsertMarkdown, onInlineImage, uploadingImage, inline
         onClick={() => onInsertMarkdown('> ')}
         className="p-2 hover:bg-[#F7F9FB] rounded transition-colors text-[#45464D]"
         title="Quote"
+        aria-label="Quote"
       >
         <Quote className="w-4 h-4" />
       </button>
@@ -45,6 +50,7 @@ const EditorToolbar = ({ onInsertMarkdown, onInlineImage, uploadingImage, inline
         onClick={() => onInsertMarkdown('`', '`')}
         className="p-2 hover:bg-[#F7F9FB] rounded transition-colors text-[#45464D]"
         title="Code"
+        aria-label="Code"
       >
         <Code className="w-4 h-4" />
       </button>
@@ -54,6 +60,7 @@ const EditorToolbar = ({ onInsertMarkdown, onInlineImage, uploadingImage, inline
         disabled={uploadingImage === 'inline'}
         className="p-2 hover:bg-[#F7F9FB] rounded transition-colors text-[#45464D]"
         title="Insert Image"
+        aria-label="Insert Image"
       >
         <Image className="w-4 h-4" />
       </button>
@@ -61,6 +68,7 @@ const EditorToolbar = ({ onInsertMarkdown, onInlineImage, uploadingImage, inline
         onClick={() => onInsertMarkdown('\n---\n')}
         className="p-2 hover:bg-[#F7F9FB] rounded transition-colors text-[#45464D]"
         title="Divider"
+        aria-label="Divider"
       >
         <Minus className="w-4 h-4" />
       </button>

@@ -688,20 +688,37 @@ export default function Landing() {
               <p>AI-powered stock forecasting using LSTM neural networks. Predict the market before it moves.</p>
             </div>
             {[
-              { title: 'Product', links: ['Features', 'Pricing', 'Dashboard', 'API'] },
-              { title: 'Company', links: ['About', 'Blog', 'Careers', 'Contact'] },
-              { title: 'Resources', links: ['Documentation', 'Market Insights', 'Status', 'Changelog'] },
+              { title: 'Product', links: [
+                { label: 'Features', href: '#features' },
+                { label: 'Pricing', href: '#pricing' },
+                { label: 'Dashboard', href: '/dashboard' },
+                { label: 'API', href: '#' },
+              ]},
+              { title: 'Company', links: [
+                { label: 'About', href: '#' },
+                { label: 'Blog', href: '/insights' },
+                { label: 'Careers', href: '#' },
+                { label: 'Contact', href: '#' },
+              ]},
+              { title: 'Resources', links: [
+                { label: 'Documentation', href: '#' },
+                { label: 'Market Insights', href: '/insights' },
+                { label: 'Status', href: '#' },
+                { label: 'Changelog', href: '#' },
+              ]},
             ].map(col => (
               <div key={col.title} className="footer-col">
                 <h4>{col.title}</h4>
-                {col.links.map(l => <a key={l} href="#">{l}</a>)}
+                {col.links.map(l => <a key={l.label} href={l.href}>{l.label}</a>)}
               </div>
             ))}
           </div>
           <div className="footer-bottom">
             <span className="footer-copy">&copy; 2026 StockPP. All rights reserved.</span>
             <div className="footer-socials">
-              {['Twitter', 'GitHub', 'LinkedIn'].map(s => <a key={s} href="#">{s}</a>)}
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">Twitter</a>
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub</a>
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">LinkedIn</a>
             </div>
           </div>
         </div>

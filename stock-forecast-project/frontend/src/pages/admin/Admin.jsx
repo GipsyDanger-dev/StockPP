@@ -266,6 +266,7 @@ const Admin = () => {
                 <button
                   onClick={() => setSearchQuery('')}
                   className="text-[#76777D] hover:text-[#191C1E] transition-colors"
+                  aria-label="Clear search"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -587,6 +588,7 @@ const Admin = () => {
                           disabled={actionLoading === article.id}
                           className="p-1.5 hover:bg-[#E6E8EA] rounded transition-colors"
                           title={article.status === 'published' ? 'Unpublish' : 'Publish'}
+                          aria-label={article.status === 'published' ? 'Unpublish article' : 'Publish article'}
                         >
                           {article.status === 'published' ? (
                             <Eye className="w-3.5 h-3.5 text-green-600" />
@@ -598,6 +600,7 @@ const Admin = () => {
                           onClick={() => navigate(`/admin/editor/${article.id}`)}
                           className="p-1.5 hover:bg-[#E6E8EA] rounded transition-colors"
                           title="Edit"
+                          aria-label="Edit article"
                         >
                           <Edit2 className="w-3.5 h-3.5 text-[#45464D]" />
                         </button>
@@ -605,6 +608,7 @@ const Admin = () => {
                           onClick={() => setDeleteConfirm(article.id)}
                           className="p-1.5 hover:bg-red-50 rounded transition-colors"
                           title="Delete"
+                          aria-label="Delete article"
                         >
                           <Trash2 className="w-3.5 h-3.5 text-red-500" />
                         </button>

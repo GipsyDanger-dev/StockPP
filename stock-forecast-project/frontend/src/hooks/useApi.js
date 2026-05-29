@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import * as apiService from '../services/apiService';
 
 export const useForecast = (ticker, daysAhead = 1, period = '1y', enabled = true) => {
@@ -203,5 +203,22 @@ export const useForecastTracked = (ticker, daysAhead = 1, period = '1y', enabled
     gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
     retry: 2,
+  });
+};
+
+export const useStockScore = (ticker, enabled = true) => {
+  return useQuery({
+    queryKey: ['stockScore', ticker],
+    queryFn: () => apiService.getStockScore(ticker),
+    enabled: enabled && !!ticker,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 1,
+  });
+};
+
+export const useRankStocks = () => {
+  return useMutation({
+    mutationFn: ({ tickers, period }) => apiService.rankStocks(tickers, period),
   });
 };

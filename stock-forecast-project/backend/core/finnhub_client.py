@@ -161,6 +161,37 @@ class FinnhubClient:
             return []
 
     @classmethod
+    def get_company_financials(cls, ticker: str) -> Optional[Dict]:
+        """Get basic financial metrics from Finnhub (PE, PBV, ROE, etc.)"""
+        try:
+            client = cls.get_client()
+            metrics = client.company_basic_financials(ticker, 'all')
+
+            if not metrics or not metrics.get('metric'):
+                return None
+
+            m = metrics['metric']
+            return {
+                "pe_ratio": m.get('peNormalizedAnnual'),
+                "pb_ratio": m.get('pbAnnual'),
+                "roe": m.get('roeTTM') or m.get('roeAnnual'),
+                "roa": m.get('roaTTM') or m.get('roaAnnual'),
+                "gross_margin": m.get('grossMarginTTM') or m.get('grossMarginAnnual'),
+                "net_margin": m.get('netProfitMarginTTM') or m.get('netProfitMarginAnnual'),
+                "debt_to_equity": m.get('totalDebt/totalEquityAnnual'),
+                "current_ratio": m.get('currentRatioAnnual'),
+                "dividend_yield": m.get('dividendYieldIndicatedAnnual'),
+                "beta": m.get('beta'),
+                "52w_high": m.get('52WeekHigh'),
+                "52w_low": m.get('52WeekLow'),
+                "52w_return": m.get('52WeekPriceReturn'),
+                "market_cap": m.get('marketCapitalization')
+            }
+        except Exception as e:
+            logger.error(f"Error fetching financials for {ticker}: {e}")
+            return None
+
+    @classmethod
     def get_quote_yfinance(cls, ticker: str) -> Optional[Dict]:
         """
         Fallback: Get quote using yfinance for tickers not supported by Finnhub

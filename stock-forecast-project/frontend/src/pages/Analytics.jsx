@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Activity, BarChart2, TrendingUp, TrendingDown, RefreshCw, Search, Loader, PieChart, LayoutDashboard, Lightbulb, FileText, BarChart3 } from 'lucide-react';
-import { useForecast, useMarketSummary } from '../hooks/useApi';
+import { useForecast, useMarketSummary, useStockScore } from '../hooks/useApi';
 import { useProgressStream } from '../hooks/useProgressStream';
 import PriceChart from '../components/PriceChart';
 import ProgressOverlay from '../components/ProgressOverlay';
@@ -229,6 +229,7 @@ const AnalyticsOverview = () => {
 const AnalyticsDetail = ({ ticker }) => {
   const navigate = useNavigate();
   const { data, isLoading } = useForecast(ticker, 7, '1y');
+  const { data: scoreData } = useStockScore(ticker);
   const stream = useProgressStream('/forecast/stream', { ticker, days_ahead: 7, period: '1y' });
   const [liveQuote, setLiveQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
@@ -449,6 +450,56 @@ const AnalyticsDetail = ({ ticker }) => {
             </p>
           </div>
         </div>
+
+        {/* STOCK SCORE (ACO-INSPIRED) */}
+        {scoreData && !scoreData.error && (
+          <div className="bg-white border-2 border-[#E0E3E5] rounded-xl p-6 mb-12 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-bold text-black text-xl">Stock Score</h3>
+                <p className="text-[#45464D] text-sm">ACO-inspired composite analysis</p>
+              </div>
+              <div className="text-right">
+                <span className={`text-5xl font-bold ${
+                  scoreData.grade === 'A' ? 'text-emerald-600' :
+                  scoreData.grade === 'B' ? 'text-emerald-500' :
+                  scoreData.grade === 'C' ? 'text-amber-500' :
+                  scoreData.grade === 'D' ? 'text-orange-500' : 'text-rose-600'
+                }`}>
+                  {scoreData.grade}
+                </span>
+                <p className="text-[#45464D] text-sm">{(scoreData.score * 100).toFixed(0)}/100</p>
+              </div>
+            </div>
+            {scoreData.sub_scores && (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                {Object.entries(scoreData.sub_scores).map(([key, val]) => (
+                  <div key={key} className="bg-[#F7F9FB] rounded-lg p-3">
+                    <p className="text-xs text-[#45464D] capitalize">{key}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="flex-1 bg-slate-200 h-2 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${val > 0.65 ? 'bg-emerald-500' : val > 0.4 ? 'bg-amber-500' : 'bg-rose-500'}`}
+                          style={{ width: `${val * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-bold text-black">{(val * 100).toFixed(0)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {scoreData.signals && scoreData.signals.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {scoreData.signals.map((s, i) => (
+                  <span key={i} className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium">
+                    {s}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* CHART SECTION */}
         <div className="bg-white border-2 border-[#E0E3E5] rounded-xl overflow-hidden mb-12 shadow-sm">

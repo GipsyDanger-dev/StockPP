@@ -1123,6 +1123,38 @@ class SetRoleRequest(BaseModel):
     user_id: str
     role: str  # 'admin' or 'user'
 
+
+@router.get("/score/{ticker}")
+async def score_stock(ticker: str, user: dict = Depends(get_current_user)):
+    """ACO-inspired stock scoring based on fundamental + technical metrics."""
+    try:
+        from core.stock_scorer import StockScorer
+        scorer = StockScorer()
+        result = scorer.score_stock(ticker.upper())
+        return result
+    except Exception as e:
+        logger.error(f"Error scoring {ticker}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Scoring error: {str(e)}")
+
+
+class RankRequest(BaseModel):
+    tickers: List[str]
+    period: str = "1y"
+
+
+@router.post("/score/rank")
+async def rank_stocks(req: RankRequest, user: dict = Depends(get_current_user)):
+    """Rank multiple stocks using ACO-inspired composite scoring."""
+    try:
+        from core.stock_scorer import StockScorer
+        scorer = StockScorer()
+        results = scorer.rank_stocks([t.upper() for t in req.tickers], req.period)
+        return {"rankings": results, "count": len(results)}
+    except Exception as e:
+        logger.error(f"Error ranking stocks: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Ranking error: {str(e)}")
+
+
 @router.get("/users")
 async def get_users(user: dict = Depends(require_admin)):
     result = list_users()

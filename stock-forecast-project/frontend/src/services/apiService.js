@@ -282,4 +282,22 @@ export const getInsights = async () => {
   }
 };
 
+export const getStockScore = async (ticker) => {
+  try {
+    const response = await apiClient.get(`/score/${ticker}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: 'Failed to score stock' };
+  }
+};
+
+export const rankStocks = async (tickers, period = '1y') => {
+  try {
+    const response = await apiClient.post('/score/rank', { tickers, period });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: 'Failed to rank stocks' };
+  }
+};
+
 export default apiClient;

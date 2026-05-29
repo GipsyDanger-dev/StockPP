@@ -40,10 +40,10 @@ function PulseDot({ color = "bg-emerald-400" }) {
 
 function SkeletonCard() {
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-8 animate-pulse">
+    <div className="bg-[#0a0a0a] border border-[#1e1e1e] rounded-2xl p-8 animate-pulse">
       <div className="h-4 bg-slate-100 rounded w-1/3 mb-6" />
       <div className="h-10 bg-slate-100 rounded w-1/2 mb-4" />
-      <div className="h-[300px] bg-slate-50 rounded-xl" />
+      <div className="h-[300px] bg-[#111] rounded-xl" />
     </div>
   );
 }
@@ -66,22 +66,22 @@ const Dashboard = () => {
   if (error || data?.status === "error") {
     const msg = data?.message || (error?.message || "Failed to load forecast data");
     return (
-      <div className="flex min-h-[60vh] items-center justify-center bg-white">
+      <div className="flex min-h-[60vh] items-center justify-center bg-[#0a0a0a]">
         <div className="text-center max-w-md px-6">
-          <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-slate-200">
-            <Activity size={28} className="text-slate-400" />
+          <div className="w-16 h-16 bg-[#111] rounded-2xl flex items-center justify-center mx-auto mb-6 border border-[#1e1e1e]">
+            <Activity size={28} className="text-[#555]" />
           </div>
-          <p className="text-lg font-bold text-[#191C1E] mb-2">Unable to load forecast</p>
-          <p className="text-sm text-[#76777D] mb-6">{msg}</p>
+          <p className="text-lg font-bold text-white mb-2">Unable to load forecast</p>
+          <p className="text-sm text-[#888] mb-6">{msg}</p>
           <form onSubmit={handleSearch} className="flex gap-2">
             <input
               type="text"
               placeholder="Try another ticker..."
-              className="flex-1 bg-white border border-slate-200 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="flex-1 bg-[#1e1e1e] border border-[#1e1e1e] rounded-xl py-2.5 px-4 text-sm text-white placeholder-[#555] focus:outline-none focus:ring-2 focus:ring-[#FF6633] focus:border-transparent"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
-            <button type="submit" className="bg-[#131B2E] text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#1E2A42] transition-colors">
+            <button type="submit" className="bg-[#FF6633] text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#E55A22] transition-colors">
               Search
             </button>
           </form>
@@ -95,7 +95,7 @@ const Dashboard = () => {
       <div className="p-6 lg:p-10 max-w-7xl mx-auto space-y-8">
         <div className="flex items-center gap-3 mb-8">
           <PulseDot />
-          <span className="text-sm font-medium text-[#76777D]">AI Engine initializing...</span>
+          <span className="text-sm font-medium text-[#888]">AI Engine initializing...</span>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2"><SkeletonCard /></div>
@@ -115,20 +115,20 @@ const Dashboard = () => {
     : 0;
 
   return (
-    <div className="text-[#191C1E]">
+    <div className="text-white">
       {/* HEADER */}
-      <header className="bg-white/80 backdrop-blur-md sticky top-0 z-10 px-6 py-3 flex justify-between items-center border-b border-slate-200/80">
+      <header className="bg-[#111]/80 backdrop-blur-md sticky top-0 z-10 px-6 py-3 flex justify-between items-center border-b border-[#1e1e1e]">
         <form onSubmit={handleSearch} className="flex relative w-80">
           <input
             type="text"
             placeholder="Search ticker..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-10 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+            className="w-full bg-[#1e1e1e] border border-[#1e1e1e] rounded-xl py-2.5 px-10 text-sm text-white placeholder-[#555] focus:outline-none focus:ring-2 focus:ring-[#FF6633] focus:border-transparent transition-all"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
-          <Search size={16} className="absolute left-3.5 top-3 text-slate-400" />
+          <Search size={16} className="absolute left-3.5 top-3 text-[#555]" />
         </form>
-        <div className="flex items-center gap-2 text-sm text-[#76777D]">
+        <div className="flex items-center gap-2 text-sm text-[#888]">
           <PulseDot color="bg-emerald-400" />
           <span className="font-medium">Live</span>
         </div>
@@ -138,15 +138,15 @@ const Dashboard = () => {
         {/* HERO */}
         <div className={`transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center border border-indigo-100">
-              <Zap size={16} className="text-indigo-600" />
+            <div className="w-8 h-8 bg-[#FF6633]/10 rounded-lg flex items-center justify-center border border-[#FF6633]/20">
+              <Zap size={16} className="text-[#FF6633]" />
             </div>
-            <span className="text-xs font-bold text-indigo-600 tracking-wider uppercase">AI Forecast Engine</span>
+            <span className="text-xs font-bold text-[#FF6633] tracking-wider uppercase">AI Forecast Engine</span>
           </div>
-          <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-2">
+          <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-2 text-white">
             {ticker} Forecast
           </h1>
-          <p className="text-[#76777D] text-lg">
+          <p className="text-[#888] text-lg">
             7-day prediction powered by LSTM neural networks
           </p>
         </div>
@@ -154,10 +154,10 @@ const Dashboard = () => {
         {/* MAIN GRID */}
         <div className={`grid grid-cols-1 lg:grid-cols-3 gap-6 transition-all duration-700 delay-150 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           {/* CHART CARD */}
-          <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-6 lg:p-8 shadow-sm hover:shadow-md transition-shadow duration-300">
+          <div className="lg:col-span-2 bg-[#0a0a0a] border border-[#1e1e1e] rounded-2xl p-6 lg:p-8 hover:border-[#2a2a2a] transition-colors duration-300">
             <div className="flex justify-between items-start mb-6">
               <div>
-                <p className="text-[#76777D] font-semibold text-xs tracking-wider uppercase mb-1">
+                <p className="text-[#888] font-semibold text-xs tracking-wider uppercase mb-1">
                   Current Price
                 </p>
                 <h2 className="text-3xl lg:text-4xl font-bold tracking-tight">
@@ -194,7 +194,7 @@ const Dashboard = () => {
                 </div>
 
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="bg-white/10 backdrop-blur px-3 py-1.5 rounded-lg font-bold text-lg border border-white/10">
+                  <div className="bg-[#0a0a0a]/10 backdrop-blur px-3 py-1.5 rounded-lg font-bold text-lg border border-white/10">
                     {data.ticker}
                   </div>
                   <div className={`text-sm font-bold px-2 py-1 rounded ${forecastChange >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
@@ -210,7 +210,7 @@ const Dashboard = () => {
                     </div>
                     <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
                       <div
-                        className="bg-gradient-to-r from-indigo-500 to-blue-400 h-full rounded-full transition-all duration-1000 ease-out"
+                        className="bg-gradient-to-r from-[#FF6633] to-[#E55A22] h-full rounded-full transition-all duration-1000 ease-out"
                         style={{ width: `${accuracyPercent}%` }}
                       />
                     </div>
@@ -236,7 +236,7 @@ const Dashboard = () => {
 
               <button
                 onClick={() => navigate(`/analytics/${data.ticker}`)}
-                className="w-full bg-white text-[#0D1117] py-3 rounded-xl font-bold text-sm mt-6 hover:bg-slate-100 transition-colors active:scale-[0.98]"
+                className="w-full bg-[#FF6633] text-white py-3 rounded-xl font-bold text-sm mt-6 hover:bg-[#E55A22] transition-colors active:scale-[0.98]"
               >
                 View Full Analysis
               </button>
@@ -248,10 +248,10 @@ const Dashboard = () => {
                 { label: 'MAE', value: data.metrics?.mae?.toFixed(4) || 'N/A', sub: 'Error' },
                 { label: 'R-Squared', value: data.metrics?.r_squared?.toFixed(3) || 'N/A', sub: 'Fit' },
               ].map((stat, i) => (
-                <div key={i} className="bg-white border border-slate-200 rounded-xl p-4 hover:border-slate-300 transition-colors">
-                  <p className="text-[11px] text-[#76777D] font-semibold uppercase tracking-wider mb-1">{stat.label}</p>
-                  <p className="text-xl font-bold text-[#191C1E]">{stat.value}</p>
-                  <p className="text-[11px] text-[#76777D]">{stat.sub}</p>
+                <div key={i} className="bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl p-4 hover:border-slate-300 transition-colors">
+                  <p className="text-[11px] text-[#888] font-semibold uppercase tracking-wider mb-1">{stat.label}</p>
+                  <p className="text-xl font-bold text-white">{stat.value}</p>
+                  <p className="text-[11px] text-[#888]">{stat.sub}</p>
                 </div>
               ))}
             </div>
@@ -259,23 +259,23 @@ const Dashboard = () => {
         </div>
 
         {/* 7-DAY FORECAST TABLE */}
-        <div className={`bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm transition-all duration-700 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+        <div className={`bg-[#0a0a0a] border border-[#1e1e1e] rounded-2xl overflow-hidden transition-all duration-700 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <div className="px-6 py-4 border-b border-[#1e1e1e] flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <Activity size={16} className="text-slate-400" />
-              <h3 className="font-bold text-sm tracking-wider text-[#45464D] uppercase">7-Day Forecast</h3>
+              <Activity size={16} className="text-[#555]" />
+              <h3 className="font-bold text-sm tracking-wider text-[#888] uppercase">7-Day Forecast</h3>
             </div>
-            <span className="text-[11px] text-[#76777D] font-medium">{ticker}</span>
+            <span className="text-[11px] text-[#888] font-medium">{ticker}</span>
           </div>
           {data.forecast && data.forecast.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-slate-100">
-                    <th className="text-left px-6 py-3 text-[#76777D] font-semibold text-xs tracking-wider">DATE</th>
-                    <th className="text-right px-6 py-3 text-[#76777D] font-semibold text-xs tracking-wider">PREDICTED</th>
-                    <th className="text-right px-6 py-3 text-[#76777D] font-semibold text-xs tracking-wider">CHANGE</th>
-                    <th className="text-right px-6 py-3 text-[#76777D] font-semibold text-xs tracking-wider">TREND</th>
+                  <tr className="border-b border-[#1e1e1e]">
+                    <th className="text-left px-6 py-3 text-[#888] font-semibold text-xs tracking-wider">DATE</th>
+                    <th className="text-right px-6 py-3 text-[#888] font-semibold text-xs tracking-wider">PREDICTED</th>
+                    <th className="text-right px-6 py-3 text-[#888] font-semibold text-xs tracking-wider">CHANGE</th>
+                    <th className="text-right px-6 py-3 text-[#888] font-semibold text-xs tracking-wider">TREND</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -284,9 +284,9 @@ const Dashboard = () => {
                     const change = ((point.price - prevPrice) / prevPrice) * 100;
                     const isUp = change >= 0;
                     return (
-                      <tr key={i} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
-                        <td className="px-6 py-3.5 text-sm font-medium text-[#191C1E]">{point.date}</td>
-                        <td className="px-6 py-3.5 text-right text-sm font-bold text-[#191C1E]">{formatCurrency(point.price)}</td>
+                      <tr key={i} className="border-b border-[#1e1e1e] last:border-0 hover:bg-[#111]/50 transition-colors">
+                        <td className="px-6 py-3.5 text-sm font-medium text-white">{point.date}</td>
+                        <td className="px-6 py-3.5 text-right text-sm font-bold text-white">{formatCurrency(point.price)}</td>
                         <td className={`px-6 py-3.5 text-right text-sm font-bold ${isUp ? 'text-emerald-600' : 'text-rose-600'}`}>
                           {isUp ? '+' : ''}{change.toFixed(2)}%
                         </td>
@@ -304,12 +304,12 @@ const Dashboard = () => {
               </table>
             </div>
           ) : (
-            <div className="p-12 flex flex-col items-center justify-center text-[#76777D]">
-              <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center mb-4 border border-slate-200">
-                <Activity size={24} className="text-slate-300" />
+            <div className="p-12 flex flex-col items-center justify-center text-[#888]">
+              <div className="w-12 h-12 bg-[#111] rounded-xl flex items-center justify-center mb-4 border border-[#1e1e1e]">
+                <Activity size={24} className="text-[#555]" />
               </div>
               <p className="font-medium">No forecast data available</p>
-              <p className="text-sm text-slate-400 mt-1">Search for a ticker to generate predictions.</p>
+              <p className="text-sm text-[#555] mt-1">Search for a ticker to generate predictions.</p>
             </div>
           )}
         </div>

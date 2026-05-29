@@ -65,9 +65,9 @@ const PredictionHistory = () => {
   };
 
   const getAccuracyColor = (mpe) => {
-    if (mpe <= 2) return 'text-green-600 bg-green-50 border-green-200';
-    if (mpe <= 5) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    return 'text-red-600 bg-red-50 border-red-200';
+    if (mpe <= 2) return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+    if (mpe <= 5) return 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20';
+    return 'text-red-400 bg-red-500/10 border-red-500/20';
   };
 
   const getAccuracyLabel = (mpe) => {
@@ -79,12 +79,12 @@ const PredictionHistory = () => {
   const tickers = [...new Set(predictions.map(p => p.ticker))];
 
   return (
-    <div className="bg-white text-[#191C1E] min-h-screen">
-      <header className="bg-[#F7F9FB] px-6 lg:px-12 py-10 border-b border-[#E0E3E5]">
+    <div className="bg-[#0a0a0a] text-white min-h-screen">
+      <header className="bg-[#111] px-6 lg:px-12 py-10 border-b border-[#1e1e1e]">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-4xl lg:text-5xl font-bold text-black mb-3 tracking-tight">Prediction Tracker</h1>
-            <p className="text-[#45464D] text-lg">
+            <h1 className="text-4xl lg:text-5xl font-bold text-white mb-3 tracking-tight">Prediction Tracker</h1>
+            <p className="text-[#888] text-lg">
               Validate your predictions against actual market performance.
             </p>
           </div>
@@ -93,7 +93,7 @@ const PredictionHistory = () => {
               <button
                 onClick={handleValidateAll}
                 disabled={validating === 'all'}
-                className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-[#FF6633] text-white rounded-lg hover:bg-[#E55A22] transition-colors disabled:opacity-50"
               >
                 {validating === 'all' ? (
                   <Loader className="w-4 h-4 animate-spin" />
@@ -106,7 +106,7 @@ const PredictionHistory = () => {
             <button
               onClick={() => refetch()}
               disabled={isFetching}
-              className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-[#C6C6CD] rounded-lg hover:bg-[#F7F9FB] transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-[#1e1e1e] border border-[#1e1e1e] rounded-lg hover:bg-[#2a2a2a] transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
               <span className="text-sm font-medium">Refresh</span>
@@ -119,10 +119,10 @@ const PredictionHistory = () => {
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           <SummaryCard label="TOTAL" value={predictions.length.toString()} icon={BarChart3} />
-          <SummaryCard label="VALIDATED" value={validated.length.toString()} icon={CheckCircle} color="text-green-600" />
-          <SummaryCard label="PENDING" value={pending.length.toString()} icon={Clock} color="text-yellow-600" />
-          <SummaryCard label="DIRECTION" value={`${directionAccuracy}%`} icon={Target} color="text-indigo-600" />
-          <SummaryCard label="AVG ERROR" value={`${avgMPE}%`} icon={Zap} color={parseFloat(avgMPE) <= 2 ? 'text-green-600' : parseFloat(avgMPE) <= 5 ? 'text-yellow-600' : 'text-red-600'} />
+          <SummaryCard label="VALIDATED" value={validated.length.toString()} icon={CheckCircle} color="text-emerald-400" />
+          <SummaryCard label="PENDING" value={pending.length.toString()} icon={Clock} color="text-yellow-400" />
+          <SummaryCard label="DIRECTION" value={`${directionAccuracy}%`} icon={Target} color="text-[#FF6633]" />
+          <SummaryCard label="AVG ERROR" value={`${avgMPE}%`} icon={Zap} color={parseFloat(avgMPE) <= 2 ? 'text-emerald-400' : parseFloat(avgMPE) <= 5 ? 'text-yellow-400' : 'text-red-400'} />
         </div>
 
         {/* Filters */}
@@ -131,8 +131,8 @@ const PredictionHistory = () => {
             onClick={() => { setTickerFilter(null); setStatusFilter(null); }}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               !tickerFilter && !statusFilter
-                ? 'bg-[#131B2E] text-white'
-                : 'bg-[#F7F9FB] text-[#45464D] border border-[#C6C6CD] hover:bg-[#E8EAED]'
+                ? 'bg-[#FF6633] text-white'
+                : 'bg-[#111] text-[#888] border border-[#1e1e1e] hover:bg-[#1e1e1e]'
             }`}
           >
             All
@@ -141,8 +141,8 @@ const PredictionHistory = () => {
             onClick={() => setStatusFilter(statusFilter === 'validated' ? null : 'validated')}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               statusFilter === 'validated'
-                ? 'bg-[#131B2E] text-white'
-                : 'bg-[#F7F9FB] text-[#45464D] border border-[#C6C6CD] hover:bg-[#E8EAED]'
+                ? 'bg-[#FF6633] text-white'
+                : 'bg-[#111] text-[#888] border border-[#1e1e1e] hover:bg-[#1e1e1e]'
             }`}
           >
             Validated
@@ -151,23 +151,23 @@ const PredictionHistory = () => {
             onClick={() => setStatusFilter(statusFilter === 'pending' ? null : 'pending')}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               statusFilter === 'pending'
-                ? 'bg-[#131B2E] text-white'
-                : 'bg-[#F7F9FB] text-[#45464D] border border-[#C6C6CD] hover:bg-[#E8EAED]'
+                ? 'bg-[#FF6633] text-white'
+                : 'bg-[#111] text-[#888] border border-[#1e1e1e] hover:bg-[#1e1e1e]'
             }`}
           >
             Pending
           </button>
           {tickers.length > 1 && (
             <>
-              <div className="w-px bg-[#C6C6CD] mx-1" />
+              <div className="w-px bg-[#1e1e1e] mx-1" />
               {tickers.map(t => (
                 <button
                   key={t}
                   onClick={() => setTickerFilter(tickerFilter === t ? null : t)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     tickerFilter === t
-                      ? 'bg-[#131B2E] text-white'
-                      : 'bg-[#F7F9FB] text-[#45464D] border border-[#C6C6CD] hover:bg-[#E8EAED]'
+                      ? 'bg-[#FF6633] text-white'
+                      : 'bg-[#111] text-[#888] border border-[#1e1e1e] hover:bg-[#1e1e1e]'
                   }`}
                 >
                   {t}
@@ -178,27 +178,27 @@ const PredictionHistory = () => {
         </div>
 
         {/* Predictions Table */}
-        <div className="bg-white border-2 border-[#E0E3E5] rounded-xl overflow-hidden shadow-sm">
+        <div className="bg-[#111] border border-[#1e1e1e] rounded-xl overflow-hidden">
           {isLoading ? (
             <div className="p-12 flex flex-col items-center justify-center gap-4">
-              <Loader className="animate-spin text-indigo-600" size={40} />
-              <p className="text-[#45464D]">Loading prediction history...</p>
+              <Loader className="animate-spin text-[#FF6633]" size={40} />
+              <p className="text-[#888]">Loading prediction history...</p>
             </div>
           ) : predictions.length === 0 ? (
             <div className="p-12 flex flex-col items-center justify-center gap-4">
-              <Activity className="text-[#C6C6CD]" size={48} />
-              <p className="text-[#45464D] font-bold text-lg">No predictions yet</p>
-              <p className="text-[#45464D] text-sm">Make a prediction on the Dashboard to start tracking accuracy.</p>
+              <Activity className="text-[#555]" size={48} />
+              <p className="text-[#888] font-bold text-lg">No predictions yet</p>
+              <p className="text-[#888] text-sm">Make a prediction on the Dashboard to start tracking accuracy.</p>
               <button
                 onClick={() => navigate('/dashboard')}
-                className="mt-2 px-6 py-2 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                className="mt-2 px-6 py-2 bg-[#FF6633] text-white rounded-lg font-medium hover:bg-[#E55A22] transition-colors"
               >
                 Go to Dashboard
               </button>
             </div>
           ) : (
             <>
-              <div className="bg-[#F2F4F6] grid grid-cols-6 p-4 border-b border-[#E0E3E5] text-[#45464D] text-xs uppercase tracking-wider font-bold">
+              <div className="bg-[#111] grid grid-cols-6 p-4 border-b border-[#1e1e1e] text-[#888] text-xs uppercase tracking-wider font-bold">
                 <div className="col-span-1">Ticker</div>
                 <div className="col-span-1">Date</div>
                 <div className="col-span-1">Predicted</div>
@@ -207,18 +207,18 @@ const PredictionHistory = () => {
                 <div className="col-span-1 text-right">Action</div>
               </div>
 
-              <div className="divide-y divide-[#E0E3E5]">
+              <div className="divide-y divide-[#1e1e1e]">
                 {predictions.map((pred) => {
                   const lastPredicted = pred.predicted_prices?.[pred.predicted_prices.length - 1];
                   const lastActual = pred.actual_prices?.[pred.actual_prices.length - 1];
                   const isPending = pred.status === 'pending';
 
                   return (
-                    <div key={pred.id} className="grid grid-cols-6 p-4 items-center hover:bg-[#F7F9FB] transition-colors">
+                    <div key={pred.id} className="grid grid-cols-6 p-4 items-center hover:bg-[#111] transition-colors">
                       <div className="col-span-1 flex items-center gap-2">
                         <button
                           onClick={() => navigate(`/analytics/${pred.ticker}`)}
-                          className="font-bold text-sm text-black hover:text-indigo-600 transition-colors"
+                          className="font-bold text-sm text-white hover:text-[#FF6633] transition-colors"
                         >
                           {pred.ticker}
                         </button>
@@ -229,24 +229,24 @@ const PredictionHistory = () => {
                         )}
                       </div>
 
-                      <div className="col-span-1 text-sm text-[#45464D]">
+                      <div className="col-span-1 text-sm text-[#888]">
                         {formatDate(pred.created_at)}
                       </div>
 
                       <div className="col-span-1">
                         <p className="text-sm font-bold">${lastPredicted?.price?.toFixed(2) || '-'}</p>
-                        <p className="text-xs text-[#76777D]">
+                        <p className="text-xs text-[#555]">
                           {pred.predicted_change_percent > 0 ? '+' : ''}{pred.predicted_change_percent?.toFixed(2)}%
                         </p>
                       </div>
 
                       <div className="col-span-1">
                         {isPending ? (
-                          <span className="text-xs text-[#76777D]">Waiting...</span>
+                          <span className="text-xs text-[#555]">Waiting...</span>
                         ) : (
                           <>
                             <p className="text-sm font-bold">${lastActual?.price?.toFixed(2) || '-'}</p>
-                            <p className={`text-xs ${pred.actual_change_percent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            <p className={`text-xs ${pred.actual_change_percent >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                               {pred.actual_change_percent > 0 ? '+' : ''}{pred.actual_change_percent?.toFixed(2)}%
                             </p>
                           </>
@@ -255,7 +255,7 @@ const PredictionHistory = () => {
 
                       <div className="col-span-1">
                         {isPending ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-50 text-yellow-700 text-[11px] rounded-full border border-yellow-200">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-500/10 text-yellow-400 text-[11px] rounded-full border border-yellow-500/20">
                             <Clock size={10} />
                             Pending
                           </span>
@@ -265,11 +265,11 @@ const PredictionHistory = () => {
                               {getAccuracyLabel(pred.mean_percent_error || 0)} ({pred.mean_percent_error?.toFixed(1)}%)
                             </span>
                             {pred.direction_correct ? (
-                              <span className="inline-flex items-center gap-1 text-[11px] text-green-600">
+                              <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400">
                                 <CheckCircle size={10} /> Direction OK
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 text-[11px] text-red-600">
+                              <span className="inline-flex items-center gap-1 text-[11px] text-red-400">
                                 <XCircle size={10} /> Wrong dir.
                               </span>
                             )}
@@ -282,7 +282,7 @@ const PredictionHistory = () => {
                           <button
                             onClick={() => handleValidate(pred.id)}
                             disabled={validating === pred.id}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors disabled:opacity-50"
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 rounded-lg hover:bg-indigo-500/20 transition-colors disabled:opacity-50"
                           >
                             {validating === pred.id ? (
                               <Loader className="w-3 h-3 animate-spin" />
@@ -294,10 +294,10 @@ const PredictionHistory = () => {
                         ) : (
                           <button
                             onClick={() => navigate(`/analytics/${pred.ticker}`)}
-                            className="p-1.5 hover:bg-[#E6E8EA] rounded transition-colors"
+                            className="p-1.5 hover:bg-[#1e1e1e] rounded transition-colors"
                             aria-label={`View ${pred.ticker} analytics`}
                           >
-                            <ChevronRight className="w-4 h-4 text-[#45464D]" />
+                            <ChevronRight className="w-4 h-4 text-[#888]" />
                           </button>
                         )}
                       </div>
@@ -306,8 +306,8 @@ const PredictionHistory = () => {
                 })}
               </div>
 
-              <div className="p-4 border-t border-[#E0E3E5] bg-[#F7F9FB]">
-                <p className="text-[#45464D] text-xs">
+              <div className="p-4 border-t border-[#1e1e1e] bg-[#111]">
+                <p className="text-[#888] text-xs">
                   Showing {predictions.length} prediction{predictions.length !== 1 ? 's' : ''}
                 </p>
               </div>
@@ -319,11 +319,11 @@ const PredictionHistory = () => {
   );
 };
 
-const SummaryCard = ({ label, value, icon: Icon, color = 'text-[#191C1E]' }) => (
-  <div className="bg-white border-2 border-[#E0E3E5] p-4 rounded-xl">
+const SummaryCard = ({ label, value, icon: Icon, color = 'text-white' }) => (
+  <div className="bg-[#111] border border-[#1e1e1e] p-4 rounded-xl">
     <div className="flex items-center gap-2 mb-2">
       <Icon className={`w-4 h-4 ${color}`} />
-      <span className="text-[#76777D] text-[10px] font-bold tracking-wider">{label}</span>
+      <span className="text-[#555] text-[10px] font-bold tracking-wider">{label}</span>
     </div>
     <p className={`text-2xl font-bold ${color}`}>{value}</p>
   </div>

@@ -60,8 +60,14 @@ class LSTMModel:
 
     def train(self, X_train: np.ndarray, y_train: np.ndarray,
               epochs: int = 100, batch_size: int = 32,
-              validation_split: float = 0.2) -> Dict[str, Any]:
-        """Train the LSTM model with early stopping and LR scheduling"""
+              validation_split: float = 0.2,
+              progress_callback=None) -> Dict[str, Any]:
+        """Train the LSTM model with early stopping and LR scheduling.
+
+        Args:
+            progress_callback: Optional sync callable(epoch, total_epochs, loss, val_loss)
+                              Called from Keras on_epoch_end. Safe for thread pool usage.
+        """
         try:
             if self.model is None:
                 self.build_model()
@@ -84,6 +90,24 @@ class LSTMModel:
                     verbose=1
                 )
             ]
+
+            if progress_callback:
+                class _ProgressCallback(keras.callbacks.Callback):
+                    def __init__(self, total_epochs, fn):
+                        super().__init__()
+                        self.total_epochs = total_epochs
+                        self.fn = fn
+
+                    def on_epoch_end(self, epoch, logs=None):
+                        logs = logs or {}
+                        self.fn(
+                            epoch=epoch + 1,
+                            total_epochs=self.total_epochs,
+                            loss=float(logs.get('loss', 0)),
+                            val_loss=float(logs.get('val_loss', 0))
+                        )
+
+                callbacks.append(_ProgressCallback(epochs, progress_callback))
 
             history = self.model.fit(
                 X_train, y_train,

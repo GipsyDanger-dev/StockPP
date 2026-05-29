@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Activity, BarChart2, TrendingUp, TrendingDown, RefreshCw, Search, Loader, PieChart, LayoutDashboard, Lightbulb, FileText, BarChart3 } from 'lucide-react';
 import { useForecast, useMarketSummary } from '../hooks/useApi';
+import { useProgressStream } from '../hooks/useProgressStream';
 import PriceChart from '../components/PriceChart';
+import ProgressOverlay from '../components/ProgressOverlay';
 import { formatCurrency, formatPercent } from '../utils/formatting';
 import * as apiService from '../services/apiService';
 
@@ -227,6 +229,7 @@ const AnalyticsOverview = () => {
 const AnalyticsDetail = ({ ticker }) => {
   const navigate = useNavigate();
   const { data, isLoading } = useForecast(ticker, 7, '1y');
+  const stream = useProgressStream('/forecast/stream', { ticker, days_ahead: 7, period: '1y' });
   const [liveQuote, setLiveQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
 
@@ -248,12 +251,32 @@ const AnalyticsDetail = ({ ticker }) => {
     return () => clearInterval(interval);
   }, [ticker]);
 
+  useEffect(() => {
+    if (isLoading && !data) {
+      stream.start();
+    }
+    return () => stream.stop();
+  }, [ticker]);
+
   if (isLoading) return (
-    <div className="flex h-screen items-center justify-center bg-white">
-      <div className="text-center">
-        <Loader className="animate-spin text-indigo-600 mx-auto mb-4" size={40} />
-        <p className="text-lg font-bold text-[#191C1E]">ANALYZING MARKET DATA...</p>
-      </div>
+    <div className="flex min-h-[60vh] items-center justify-center bg-white">
+      {stream.steps.length > 0 ? (
+        <div className="w-full max-w-lg">
+          <ProgressOverlay
+            steps={stream.steps}
+            epochs={stream.epochs}
+            status={stream.status}
+            error={stream.error}
+            onRetry={() => stream.start()}
+            onCancel={() => stream.stop()}
+          />
+        </div>
+      ) : (
+        <div className="text-center">
+          <Loader className="animate-spin text-indigo-600 mx-auto mb-4" size={40} />
+          <p className="text-lg font-bold text-[#191C1E]">ANALYZING MARKET DATA...</p>
+        </div>
+      )}
     </div>
   );
 

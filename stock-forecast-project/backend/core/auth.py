@@ -2,7 +2,7 @@ import os
 import httpx
 import logging
 from dotenv import load_dotenv
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 load_dotenv()
@@ -18,10 +18,8 @@ if not SUPABASE_URL or not SUPABASE_KEY:
     logger.warning("SUPABASE_URL or SUPABASE_KEY not set — auth will fail at runtime")
 
 
-async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-) -> dict:
-    token = credentials.credentials
+async def _verify_supabase_token(token: str) -> dict:
+    """Verify a Supabase JWT token and return user info."""
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
@@ -43,6 +41,17 @@ async def get_current_user(
     except httpx.HTTPError as e:
         logger.error(f"Token verification failed: {e}")
         raise HTTPException(status_code=401, detail="Token verification failed")
+
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> dict:
+    return await _verify_supabase_token(credentials.credentials)
+
+
+async def get_current_user_from_query(token: str = Query(...)) -> dict:
+    """Auth via query parameter — needed for SSE (EventSource can't set headers)."""
+    return await _verify_supabase_token(token)
 
 
 async def require_admin(user: dict = Depends(get_current_user)) -> dict:

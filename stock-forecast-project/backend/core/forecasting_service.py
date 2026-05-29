@@ -55,23 +55,30 @@ class ForecastingService:
         for k in expired:
             del self.cache[k]
 
-    def predict(self, ticker: str, days_ahead: int = 5, period: str = "1y", user_id: str = None) -> Dict:
+    def predict(self, ticker: str, days_ahead: int = 5, period: str = "1y", user_id: str = None, progress=None) -> Dict:
         try:
             ticker_upper = ticker.upper()
 
             # Check cache (1 hour TTL)
             cache_key = f"{ticker_upper}_{period}_{days_ahead}"
             self._evict_expired_cache()
+            if progress:
+                progress.emit_sync("step", {"step": "cache_check", "label": "Checking prediction cache...", "status": "running"})
             if cache_key in self.cache:
                 cached_data = self.cache[cache_key]
                 cache_age = (datetime.now() - cached_data['timestamp']).total_seconds() / 3600
                 if cache_age < 1:
                     logger.info(f"Using cached forecast for {ticker_upper}")
+                    if progress:
+                        progress.emit_sync("step", {"step": "cache_check", "label": "Cache hit", "status": "done"})
+                        progress.emit_sync("complete", cached_data['data'])
                     return cached_data['data']
 
             model, saved_scaler = None, None
             feature_scalers = None
             if self.model_manager:
+                if progress:
+                    progress.emit_sync("step", {"step": "loading_model", "label": "Loading prediction model...", "status": "running"})
                 model, saved_scaler = self.model_manager.load_model_and_scaler(ticker_upper)
                 feature_scalers = self.model_manager.load_feature_scalers(ticker_upper)
 
@@ -79,6 +86,8 @@ class ForecastingService:
             if needs_retrain:
                 reason = "feature scalers missing" if (model and saved_scaler) else "model not found"
                 logger.info(f"Model for {ticker_upper} needs retrain ({reason}). Auto-training 70 epochs...")
+                if progress:
+                    progress.emit_sync("step", {"step": "auto_train", "label": f"No model found for {ticker_upper} - starting training...", "status": "running"})
                 try:
                     from .retraining_orchestrator import RetrainingOrchestrator
                     orchestrator = RetrainingOrchestrator(self.model_manager)
@@ -86,7 +95,8 @@ class ForecastingService:
                         ticker=ticker_upper,
                         period="2y",
                         epochs=100,
-                        force_retrain=True
+                        force_retrain=True,
+                        progress=progress
                     )
                     if result["status"] == "success":
                         logger.info(f"Auto-training success for {ticker_upper}! RMSE: ${result['new_metrics']['rmse']:.2f}")
@@ -95,9 +105,13 @@ class ForecastingService:
                     else:
                         msg = result.get('error', 'Auto-training failed')
                         logger.warning(f"Auto-training failed for {ticker_upper}: {msg}")
+                        if progress:
+                            progress.emit_sync("error_event", {"message": msg})
                         return _error_response(ticker_upper, msg)
                 except Exception as train_error:
                     logger.error(f"Error during auto-training {ticker_upper}: {str(train_error)}")
+                    if progress:
+                        progress.emit_sync("error_event", {"message": f"Training error: {str(train_error)}"})
                     return _error_response(ticker_upper, f"Training error: {str(train_error)}")
 
             if model is None or saved_scaler is None:
@@ -108,14 +122,23 @@ class ForecastingService:
 
             logger.info(f"Model ready for {ticker_upper}. Starting prediction...")
 
+            if progress:
+                progress.emit_sync("step", {"step": "fetching_data", "label": f"Fetching market data for {ticker_upper}...", "status": "running"})
+
             df = self.data_engine.fetch_data(ticker_upper, period=period)
             if df is None or len(df) < 70:
                 return _error_response(ticker_upper, f"Insufficient data for {ticker_upper}")
+
+            if progress:
+                progress.emit_sync("step", {"step": "indicators", "label": "Computing technical indicators (MA20, MA50, RSI, MACD)...", "status": "running"})
 
             df_with_indicators = self.data_engine._add_technical_indicators(df)
 
             if len(df_with_indicators) < 35:
                 return _error_response(ticker_upper, f"Insufficient data after computing indicators for {ticker_upper}")
+
+            if progress:
+                progress.emit_sync("step", {"step": "scaling", "label": "Normalizing features...", "status": "running"})
 
             # Scale features using per-feature scalers from training
             feature_data = df_with_indicators[self.data_engine.feature_columns].values
@@ -142,6 +165,9 @@ class ForecastingService:
             current_ma20 = float(df_with_indicators['MA20'].iloc[-1])
             current_ma50 = float(df_with_indicators['MA50'].iloc[-1])
             current_macd = float(df_with_indicators['MACD'].iloc[-1])
+
+            if progress:
+                progress.emit_sync("step", {"step": "predicting", "label": f"Generating {days_ahead}-day forecast...", "status": "running"})
 
             # Multi-step prediction with fresh indicator recalculation
             # Model predicts returns (percentage change), not raw prices
@@ -328,10 +354,17 @@ class ForecastingService:
                 oldest_key = min(self.cache, key=lambda k: self.cache[k]['timestamp'])
                 del self.cache[oldest_key]
             self.cache[cache_key] = {'data': response, 'timestamp': datetime.now()}
+
+            if progress:
+                progress.emit_sync("step", {"step": "complete", "label": "Forecast ready", "status": "done"})
+                progress.emit_sync("complete", response)
+
             return response
 
         except Exception as e:
             logger.error(f"Error generating forecast: {str(e)}")
+            if progress:
+                progress.emit_sync("error_event", {"message": str(e)})
             return _error_response(ticker, f"Prediction error: {str(e)}")
 
     def validate_ticker(self, ticker: str) -> Dict:

@@ -1,17 +1,21 @@
 from fastapi import APIRouter, HTTPException, Query, Path, UploadFile, File, Depends
+from fastapi.responses import StreamingResponse
 from typing import Optional, List
 from pydantic import BaseModel, EmailStr, ConfigDict
 import logging
 from datetime import datetime
 import secrets
 import time
+import json
+import asyncio
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from core.forecasting_service import ForecastingService
+from core.progress_emitter import ProgressEmitter
 from core.supabase_client import create_otp, verify_otp, cleanup_expired_otps, reset_user_password, set_user_role, list_users, get_user_predictions, get_pending_validations, update_prediction_validation, check_otp_rate_limit, record_otp_attempt
 from core.otp_service import send_otp
-from core.auth import get_current_user, require_admin
+from core.auth import get_current_user, require_admin, get_current_user_from_query
 
 logger = logging.getLogger(__name__)
 
@@ -230,6 +234,60 @@ async def forecast_stock(request: PredictionRequest, user: dict = Depends(get_cu
     except Exception as e:
         logger.error(f"Error in forecast endpoint: {type(e).__name__}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+@router.get("/forecast/stream")
+async def forecast_stream(
+    ticker: str = Query(..., description="Stock ticker symbol"),
+    days_ahead: int = Query(7, ge=1, le=30, description="Days to forecast"),
+    period: str = Query("1y", description="Historical data period"),
+    token: str = Query(..., description="Auth token"),
+):
+    """SSE endpoint that streams forecast progress in real-time."""
+    user = await get_current_user_from_query(token)
+    service = get_forecasting_service()
+
+    loop = asyncio.get_event_loop()
+    queue = asyncio.Queue()
+    emitter = ProgressEmitter(queue, loop)
+
+    async def run_forecast():
+        try:
+            await loop.run_in_executor(
+                None,
+                lambda: service.predict(
+                    ticker=ticker,
+                    days_ahead=days_ahead,
+                    period=period,
+                    user_id=user["id"],
+                    progress=emitter
+                )
+            )
+        except Exception as e:
+            logger.error(f"SSE forecast error: {e}")
+            await emitter.error(str(e))
+        finally:
+            await queue.put(None)
+
+    asyncio.create_task(run_forecast())
+
+    async def event_generator():
+        while True:
+            item = await queue.get()
+            if item is None:
+                break
+            yield f"event: {item['event']}\ndata: {json.dumps(item['data'])}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        }
+    )
+
 
 @router.get("/forecast/{ticker}")
 async def get_forecast_by_ticker(
@@ -467,6 +525,63 @@ async def trigger_retrain(ticker: str = Path(..., description="Stock ticker symb
     except Exception as e:
         logger.error(f"Error triggering retrain for {ticker}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+
+@router.get("/retrain/stream/{ticker}")
+async def retrain_stream(
+    ticker: str = Path(..., description="Stock ticker symbol"),
+    token: str = Query(..., description="Auth token"),
+    epochs: int = Query(50, ge=10, le=200, description="Training epochs"),
+):
+    """SSE endpoint that streams retraining progress in real-time. Admin only."""
+    user = await get_current_user_from_query(token)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    service = get_forecasting_service()
+    loop = asyncio.get_event_loop()
+    queue = asyncio.Queue()
+    emitter = ProgressEmitter(queue, loop)
+
+    async def run_retrain():
+        try:
+            from core.retraining_orchestrator import RetrainingOrchestrator
+            orchestrator = RetrainingOrchestrator(service.model_manager)
+            await loop.run_in_executor(
+                None,
+                lambda: orchestrator.retrain_model(
+                    ticker=ticker,
+                    force_retrain=True,
+                    epochs=epochs,
+                    period="5y",
+                    progress=emitter
+                )
+            )
+        except Exception as e:
+            logger.error(f"SSE retrain error: {e}")
+            await emitter.error(str(e))
+        finally:
+            await queue.put(None)
+
+    asyncio.create_task(run_retrain())
+
+    async def event_generator():
+        while True:
+            item = await queue.get()
+            if item is None:
+                break
+            yield f"event: {item['event']}\ndata: {json.dumps(item['data'])}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        }
+    )
+
 
 @router.get("/retrain/status/{ticker}")
 async def get_retrain_status(ticker: str = Path(..., description="Stock ticker symbol"), user: dict = Depends(get_current_user)):

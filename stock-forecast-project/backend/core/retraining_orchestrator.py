@@ -18,7 +18,7 @@ class RetrainingOrchestrator:
         self.model_manager = model_manager or ModelManager()
         self.data_engine = DataEngine(window_size=30)
 
-    def _walk_forward_validate(self, df, n_splits: int = 5) -> Dict:
+    def _walk_forward_validate(self, df, n_splits: int = 5, progress=None) -> Dict:
         """
         Walk-forward validation: more realistic than static train/test split.
         Each fold fits its own scalers on training data only (no data leakage).
@@ -30,6 +30,14 @@ class RetrainingOrchestrator:
         original_prices = df_with_indicators['Close'].values
 
         for i in range(n_splits):
+            if progress:
+                progress.emit_sync("train_step", {
+                    "step": "walk_forward",
+                    "label": f"Running validation (fold {i + 1}/{n_splits})...",
+                    "status": "running",
+                    "progress": {"current": i + 1, "total": n_splits}
+                })
+
             train_end = fold_size * (i + 1)
             test_end = min(train_end + fold_size, total_len)
 
@@ -96,7 +104,8 @@ class RetrainingOrchestrator:
         period: str = "2y",
         epochs: int = 100,
         batch_size: int = 32,
-        force_retrain: bool = False
+        force_retrain: bool = False,
+        progress=None
     ) -> Dict:
         """Retrain a model with walk-forward validation"""
         ticker_upper = ticker.upper()
@@ -119,6 +128,9 @@ class RetrainingOrchestrator:
 
             logger.info(f"Starting retraining for {ticker_upper}")
 
+            if progress:
+                progress.emit_sync("train_step", {"step": "fetching_data", "label": f"Fetching {period} historical data for {ticker_upper}...", "status": "running"})
+
             logger.info(f"Fetching data for {ticker_upper}...")
             df = self.data_engine.fetch_data(ticker_upper, period=period)
 
@@ -127,12 +139,15 @@ class RetrainingOrchestrator:
                 logger.error(result["error"])
                 return result
 
+            if progress:
+                progress.emit_sync("train_step", {"step": "indicators", "label": "Computing technical indicators (MA, RSI, MACD)...", "status": "running"})
+
             logger.info("Preparing data with technical indicators...")
             df_with_indicators = self.data_engine._add_technical_indicators(df)
 
             # Walk-forward validation (uses raw df, fits scalers per fold)
             logger.info("Running walk-forward validation...")
-            wf_metrics = self._walk_forward_validate(df, n_splits=5)
+            wf_metrics = self._walk_forward_validate(df, n_splits=5, progress=progress)
             logger.info(f"Walk-forward validation - RMSE: ${wf_metrics['rmse']:.2f}, "
                        f"MAE: ${wf_metrics['mae']:.2f}, Folds: {wf_metrics.get('folds_used', 0)}")
 
@@ -141,6 +156,9 @@ class RetrainingOrchestrator:
             split_row = int(total_rows * 0.8)
             # Sequence offset: sequences start at window_size, so:
             seq_split = split_row - self.data_engine.window_size
+
+            if progress:
+                progress.emit_sync("train_step", {"step": "scaling", "label": "Normalizing features (train-only fit)...", "status": "running"})
 
             # Fit scalers on training data only (prevents data leakage)
             scaled_data, feature_scalers = self.data_engine.prepare_data(df, split_index=split_row)
@@ -158,12 +176,22 @@ class RetrainingOrchestrator:
 
             logger.info(f"Data split - Train: {len(X_train)}, Test: {len(X_test)}")
 
+            if progress:
+                progress.emit_sync("train_step", {"step": "building", "label": "Building prediction model...", "status": "running"})
+
             logger.info("Building new model...")
             model = LSTMModel(window_size=30, num_features=NUM_FEATURES)
             model.build_model()
 
+            if progress:
+                progress.emit_sync("train_step", {"step": "training", "label": f"Training model ({epochs} epochs)...", "status": "running"})
+
             logger.info(f"Training model ({epochs} epochs, early stopping enabled)...")
-            model.train(X_train, y_train, epochs=epochs, batch_size=batch_size)
+            epoch_callback = (lambda ep, total, loss, vloss: progress.emit_epoch_sync(ep, total, loss, vloss)) if progress else None
+            model.train(X_train, y_train, epochs=epochs, batch_size=batch_size, progress_callback=epoch_callback)
+
+            if progress:
+                progress.emit_sync("train_step", {"step": "evaluating", "label": "Evaluating model accuracy...", "status": "running"})
 
             logger.info("Evaluating model on original dollar scale...")
             original_prices = self.data_engine.original_close_prices
@@ -186,6 +214,9 @@ class RetrainingOrchestrator:
             )
 
             if is_better:
+                if progress:
+                    progress.emit_sync("train_step", {"step": "saving", "label": "Saving improved model...", "status": "running"})
+
                 logger.info(f"Saving improved model for {ticker_upper}...")
                 saved = self.model_manager.save_model(
                     model.model,
@@ -202,6 +233,12 @@ class RetrainingOrchestrator:
             else:
                 result["status"] = "validation_failed"
                 logger.warning(f"New model did not meet improvement criteria for {ticker_upper}")
+
+            if progress:
+                progress.emit_sync("train_complete", {
+                    "rmse": round(float(gating_metrics.get("rmse", 0)), 2),
+                    "mae": round(float(gating_metrics.get("mae", 0)), 2)
+                })
 
             return result
 

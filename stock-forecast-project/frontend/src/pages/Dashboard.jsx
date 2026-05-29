@@ -3,7 +3,9 @@ import {
   TrendingUp, TrendingDown, Search, Activity, Zap, ArrowUpRight, ArrowDownRight,
 } from "lucide-react";
 import { useForecastTracked } from "../hooks/useApi";
+import { useProgressStream } from "../hooks/useProgressStream";
 import PriceChart from "../components/PriceChart";
+import ProgressOverlay from "../components/ProgressOverlay";
 import { formatCurrency, formatPercent } from "../utils/formatting";
 import { useNavigate } from "react-router-dom";
 
@@ -55,8 +57,16 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const { data, isLoading, error } = useForecastTracked(ticker, 7, "1y");
+  const stream = useProgressStream('/forecast/stream', { ticker, days_ahead: 7, period: '1y' });
 
   useEffect(() => { setMounted(true); }, []);
+
+  useEffect(() => {
+    if (isLoading && !data) {
+      stream.start();
+    }
+    return () => stream.stop();
+  }, [ticker]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -92,15 +102,26 @@ const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="p-6 lg:p-10 max-w-7xl mx-auto space-y-8">
+      <div className="p-6 lg:p-10 max-w-7xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <PulseDot />
           <span className="text-sm font-medium text-[#888]">AI Engine initializing...</span>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2"><SkeletonCard /></div>
-          <div><SkeletonCard /></div>
-        </div>
+        {stream.steps.length > 0 ? (
+          <ProgressOverlay
+            steps={stream.steps}
+            epochs={stream.epochs}
+            status={stream.status}
+            error={stream.error}
+            onRetry={() => stream.start()}
+            onCancel={() => stream.stop()}
+          />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2"><SkeletonCard /></div>
+            <div><SkeletonCard /></div>
+          </div>
+        )}
       </div>
     );
   }

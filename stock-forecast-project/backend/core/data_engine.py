@@ -6,7 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-NUM_FEATURES = 6  # Close, Volume, MA20, MA50, RSI, MACD
+NUM_FEATURES = 7  # Close, Volume, MA20, MA50, RSI, MACD, EWMA20
 
 
 class DataEngine:
@@ -22,7 +22,7 @@ class DataEngine:
         self.close_scaler: Optional[StandardScaler] = None
         self.original_close_prices = None
         self.scaled_data = None
-        self.feature_columns = ['Close', 'Volume', 'MA20', 'MA50', 'RSI', 'MACD']
+        self.feature_columns = ['Close', 'Volume', 'MA20', 'MA50', 'RSI', 'MACD', 'EWMA20']
 
     def fetch_data(self, ticker: str, period: str = "5y") -> pd.DataFrame:
         """Fetch historical stock data using yfinance. Finnhub free tier doesn't support historical candles."""
@@ -71,6 +71,9 @@ class DataEngine:
         ema12 = df['Close'].ewm(span=12, adjust=False).mean()
         ema26 = df['Close'].ewm(span=26, adjust=False).mean()
         df['MACD'] = ema12 - ema26
+
+        # EWMA (20-day Exponentially Weighted Moving Average)
+        df['EWMA20'] = df['Close'].ewm(span=20, adjust=False).mean()
 
         df['Volume'] = df['Volume'].replace(0, 1)  # Avoid division by zero
 

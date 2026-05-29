@@ -312,9 +312,16 @@ const AnalyticsDetail = ({ ticker }) => {
     return { label: 'Bearish Momentum', color: 'text-rose-600', bg: 'bg-rose-50 border-rose-200' };
   };
 
+  const getEwmaSignal = (ewma20, price) => {
+    if (!ewma20 || !price) return { label: 'N/A', color: 'text-slate-600', bg: 'bg-slate-50 border-slate-200' };
+    if (price > ewma20) return { label: 'Above EWMA', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' };
+    return { label: 'Below EWMA', color: 'text-rose-600', bg: 'bg-rose-50 border-rose-200' };
+  };
+
   const rsiSignal = getRsiSignal(indicators.rsi);
   const maSignal = getMaSignal(indicators.ma20, indicators.ma50);
   const macdSignal = getMacdSignal(indicators.macd);
+  const ewmaSignal = getEwmaSignal(indicators.ewma20, currentPrice);
 
   return (
     <div className="min-h-screen bg-white text-[#191C1E]">
@@ -365,7 +372,7 @@ const AnalyticsDetail = ({ ticker }) => {
         )}
 
         {/* TECHNICAL INDICATORS */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-12">
           {/* RSI Card */}
           <div className={`border-2 rounded-xl p-6 shadow-sm ${rsiSignal.bg}`}>
             <p className="text-[#45464D] font-bold tracking-widest text-sm mb-3">RSI (14)</p>
@@ -426,6 +433,21 @@ const AnalyticsDetail = ({ ticker }) => {
                 : ' Negative values indicate bearish momentum.'}
             </p>
           </div>
+
+          {/* EWMA20 Card */}
+          <div className={`border-2 rounded-xl p-6 shadow-sm ${ewmaSignal.bg}`}>
+            <p className="text-[#45464D] font-bold tracking-widest text-sm mb-3">EWMA (20)</p>
+            <p className="text-4xl font-bold text-black mb-2">{formatCurrency(indicators.ewma20)}</p>
+            <span className={`inline-block px-3 py-1 rounded-lg font-bold text-sm ${ewmaSignal.color} ${ewmaSignal.bg}`}>
+              {ewmaSignal.label}
+            </span>
+            <p className="text-xs text-[#45464D] mt-4">
+              Exponentially Weighted MA (span=20).
+              {indicators.ewma20 && currentPrice > indicators.ewma20
+                ? ' Price above EWMA suggests bullish trend.'
+                : ' Price below EWMA suggests bearish trend.'}
+            </p>
+          </div>
         </div>
 
         {/* CHART SECTION */}
@@ -433,7 +455,7 @@ const AnalyticsDetail = ({ ticker }) => {
           <div className="bg-[#F2F4F6] p-6 flex justify-between items-center border-b border-[#E0E3E5]">
             <div className="flex gap-8">
               <span className="font-bold text-black text-lg border-b-4 border-indigo-600 pb-1">Actual vs Forecast</span>
-              <span className="text-[#45464D] text-lg">Indigo = Actual &bull; Green dashed = Forecast &bull; Orange = MA20 &bull; Cyan = MA50</span>
+              <span className="text-[#45464D] text-lg">Indigo = Actual &bull; Green dashed = Forecast &bull; Orange = MA20 &bull; Cyan = MA50 &bull; Purple = EWMA20</span>
             </div>
             <BarChart2 size={24} className="text-[#45464D]" />
           </div>

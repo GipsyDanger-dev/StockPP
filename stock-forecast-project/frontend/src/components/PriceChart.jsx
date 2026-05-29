@@ -7,7 +7,8 @@ const PriceChart = ({ historical, forecast, indicators }) => {
     indicators.forEach(ind => {
       indicatorMap[ind.date] = {
         ma20: ind.ma20,
-        ma50: ind.ma50
+        ma50: ind.ma50,
+        ewma20: ind.ewma20
       };
     });
   }
@@ -23,6 +24,7 @@ const PriceChart = ({ historical, forecast, indicators }) => {
       forecast: isLast && forecast && forecast.length > 0 ? d.price : null,
       ma20: indicatorMap[d.date]?.ma20 || null,
       ma50: indicatorMap[d.date]?.ma50 || null,
+      ewma20: indicatorMap[d.date]?.ewma20 || null,
       type: 'actual'
     });
   });
@@ -34,6 +36,7 @@ const PriceChart = ({ historical, forecast, indicators }) => {
       forecast: d.price,
       ma20: null,
       ma50: null,
+      ewma20: null,
       type: 'forecast'
     });
   });
@@ -110,6 +113,16 @@ const PriceChart = ({ historical, forecast, indicators }) => {
             strokeWidth={1.5}
             dot={false}
             name="MA50"
+            connectNulls
+          />
+
+          <Line
+            type="monotone"
+            dataKey="ewma20"
+            stroke="#a855f7"
+            strokeWidth={1.5}
+            dot={false}
+            name="EWMA20"
             connectNulls
           />
         </ComposedChart>

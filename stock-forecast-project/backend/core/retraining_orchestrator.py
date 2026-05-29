@@ -140,7 +140,7 @@ class RetrainingOrchestrator:
                 return result
 
             if progress:
-                progress.emit_sync("train_step", {"step": "indicators", "label": "Computing technical indicators (MA, RSI, MACD)...", "status": "running"})
+                progress.emit_sync("train_step", {"step": "indicators", "label": "Computing technical indicators (MA, RSI, MACD, EWMA)...", "status": "running"})
 
             logger.info("Preparing data with technical indicators...")
             df_with_indicators = self.data_engine._add_technical_indicators(df)

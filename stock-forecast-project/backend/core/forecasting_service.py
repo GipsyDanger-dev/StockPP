@@ -23,7 +23,7 @@ def _error_response(ticker: str, message: str) -> Dict:
         "current_price": None,
         "historical": [],
         "forecast": [],
-        "indicators": {"rsi": None, "ma20": None, "ma50": None, "macd": None},
+        "indicators": {"rsi": None, "ma20": None, "ma50": None, "macd": None, "ewma20": None},
         "historical_indicators": [],
         "metrics": {"rmse": None, "mae": None},
         "trend": None,
@@ -130,7 +130,7 @@ class ForecastingService:
                 return _error_response(ticker_upper, f"Insufficient data for {ticker_upper}")
 
             if progress:
-                progress.emit_sync("step", {"step": "indicators", "label": "Computing technical indicators (MA20, MA50, RSI, MACD)...", "status": "running"})
+                progress.emit_sync("step", {"step": "indicators", "label": "Computing technical indicators (MA20, MA50, RSI, MACD, EWMA20)...", "status": "running"})
 
             df_with_indicators = self.data_engine._add_technical_indicators(df)
 
@@ -160,11 +160,13 @@ class ForecastingService:
             historical_ma20 = df_with_indicators['MA20'].iloc[-30:].tolist()
             historical_ma50 = df_with_indicators['MA50'].iloc[-30:].tolist()
             historical_macd = df_with_indicators['MACD'].iloc[-30:].tolist()
+            historical_ewma20 = df_with_indicators['EWMA20'].iloc[-30:].tolist()
 
             current_rsi = float(df_with_indicators['RSI'].iloc[-1])
             current_ma20 = float(df_with_indicators['MA20'].iloc[-1])
             current_ma50 = float(df_with_indicators['MA50'].iloc[-1])
             current_macd = float(df_with_indicators['MACD'].iloc[-1])
+            current_ewma20 = float(df_with_indicators['EWMA20'].iloc[-1])
 
             if progress:
                 progress.emit_sync("step", {"step": "predicting", "label": f"Generating {days_ahead}-day forecast...", "status": "running"})
@@ -248,6 +250,9 @@ class ForecastingService:
                 else:
                     new_macd = 0.0
 
+                # EWMA20
+                new_ewma20 = float(pd.Series(prices_arr).ewm(span=20, adjust=False).mean().iloc[-1])
+
                 # Scale the new indicators using training scalers
                 new_close_scaled = close_scaler.transform([[pred_price]])[0, 0]
                 new_vol_scaled = feature_scalers[1].transform(
@@ -257,10 +262,12 @@ class ForecastingService:
                 new_ma50_scaled = feature_scalers[3].transform([[new_ma50]])[0, 0]
                 new_rsi_scaled = feature_scalers[4].transform([[new_rsi]])[0, 0]
                 new_macd_scaled = feature_scalers[5].transform([[new_macd]])[0, 0]
+                new_ewma20_scaled = feature_scalers[6].transform([[new_ewma20]])[0, 0]
 
                 # Build new row with all fresh features
                 new_row = np.array([new_close_scaled, new_vol_scaled, new_ma20_scaled,
-                                    new_ma50_scaled, new_rsi_scaled, new_macd_scaled])
+                                    new_ma50_scaled, new_rsi_scaled, new_macd_scaled,
+                                    new_ewma20_scaled])
 
                 new_val = new_row.reshape(1, 1, NUM_FEATURES)
                 current_sequence = np.append(current_sequence[:, 1:, :], new_val, axis=1)
@@ -298,7 +305,8 @@ class ForecastingService:
                     "rsi": round(current_rsi, 2),
                     "ma20": round(current_ma20, 2),
                     "ma50": round(current_ma50, 2),
-                    "macd": round(current_macd, 4)
+                    "macd": round(current_macd, 4),
+                    "ewma20": round(current_ewma20, 2)
                 },
                 "historical_indicators": [
                     {
@@ -306,10 +314,11 @@ class ForecastingService:
                         "rsi": round(float(r), 2),
                         "ma20": round(float(m20), 2),
                         "ma50": round(float(m50), 2),
-                        "macd": round(float(mc), 4)
+                        "macd": round(float(mc), 4),
+                        "ewma20": round(float(e), 2)
                     }
-                    for d, r, m20, m50, mc in zip(
-                        historical_dates, historical_rsi, historical_ma20, historical_ma50, historical_macd
+                    for d, r, m20, m50, mc, e in zip(
+                        historical_dates, historical_rsi, historical_ma20, historical_ma50, historical_macd, historical_ewma20
                     )
                 ],
                 "metrics": {

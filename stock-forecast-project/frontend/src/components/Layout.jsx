@@ -59,10 +59,10 @@ const Layout = ({ children }) => {
   };
 
   return (
-    <div className="flex min-h-screen bg-white text-[#191C1E]">
+    <div className="flex min-h-screen bg-[#0a0a0a] text-white">
       {/* Sidebar */}
       <aside
-        className="fixed inset-y-0 left-0 z-40 bg-[#F7F9FB] border-r border-[#E0E3E5] flex flex-col transition-transform duration-300 ease-in-out"
+        className="fixed inset-y-0 left-0 z-40 bg-[#111] border-r border-[#1e1e1e] flex flex-col transition-transform duration-300 ease-in-out"
         style={{
           width: `${SIDEBAR_WIDTH}px`,
           transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
@@ -70,7 +70,7 @@ const Layout = ({ children }) => {
       >
         {/* Logo */}
         <div
-          className="p-5 flex items-center gap-3 border-b border-[#E0E3E5] cursor-pointer hover:bg-[#E8EAED] transition-colors"
+          className="p-5 flex items-center gap-3 border-b border-[#1e1e1e] cursor-pointer hover:bg-[#1e1e1e] transition-colors"
           onClick={() => handleNav('/dashboard')}
           role="button"
           aria-label="Go to Dashboard"
@@ -80,14 +80,14 @@ const Layout = ({ children }) => {
             <Activity className="text-white" size={18} />
           </div>
           <div>
-            <span className="font-bold text-sm tracking-wide text-[#191C1E]">PRECISION</span>
-            <span className="block text-[10px] text-[#76777D] tracking-wider">ANALYTICS</span>
+            <span className="font-bold text-sm tracking-wide text-white">PRECISION</span>
+            <span className="block text-[10px] text-[#888] tracking-wider">ANALYTICS</span>
           </div>
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          <p className="px-3 mb-2 text-[10px] font-semibold text-[#76777D] uppercase tracking-wider">
+          <p className="px-3 mb-2 text-[10px] font-semibold text-[#888] uppercase tracking-wider">
             Navigation
           </p>
           {navItems.map((item) => {
@@ -100,7 +100,7 @@ const Layout = ({ children }) => {
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 ${
                   active
                     ? 'bg-[#131B2E] text-white shadow-sm'
-                    : 'text-[#45464D] hover:bg-[#E8EAED] hover:text-[#191C1E]'
+                    : 'text-[#888] hover:bg-[#1e1e1e] hover:text-white'
                 }`}
                 role="button"
                 aria-label={item.label}
@@ -118,7 +118,7 @@ const Layout = ({ children }) => {
           {isAdmin && (
             <>
               <div className="pt-4 pb-2">
-                <p className="px-3 text-[10px] font-semibold text-[#76777D] uppercase tracking-wider">
+                <p className="px-3 text-[10px] font-semibold text-[#888] uppercase tracking-wider">
                   Administration
                 </p>
               </div>
@@ -132,7 +132,7 @@ const Layout = ({ children }) => {
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 ${
                       active
                         ? 'bg-[#131B2E] text-white shadow-sm'
-                        : 'text-[#45464D] hover:bg-[#E8EAED] hover:text-[#191C1E]'
+                        : 'text-[#888] hover:bg-[#1e1e1e] hover:text-white'
                     }`}
                     role="button"
                     aria-label={item.label}
@@ -150,19 +150,19 @@ const Layout = ({ children }) => {
         </nav>
 
         {/* User Section */}
-        <div className="p-3 border-t border-[#E0E3E5]">
+        <div className="p-3 border-t border-[#1e1e1e]">
           <div className="flex items-center gap-3 px-3 py-2.5 mb-1">
             <div className="w-8 h-8 bg-[#131B2E] rounded-full flex items-center justify-center flex-shrink-0">
               <User className="w-4 h-4 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-[#191C1E] truncate">
+              <p className="text-sm font-medium text-white truncate">
                 {user?.user_metadata?.full_name || 'User'}
               </p>
-              <p className="text-[11px] text-[#76777D] truncate">{user?.email || ''}</p>
+              <p className="text-[11px] text-[#888] truncate">{user?.email || ''}</p>
             </div>
             {isAdmin && (
-              <span className="flex items-center gap-1 px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded text-[10px] font-semibold flex-shrink-0">
+              <span className="flex items-center gap-1 px-2 py-0.5 bg-indigo-500/10 text-indigo-400 rounded text-[10px] font-semibold flex-shrink-0">
                 <Shield size={10} />
                 Admin
               </span>
@@ -170,7 +170,7 @@ const Layout = ({ children }) => {
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 text-[#76777D] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2 text-[#888] hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
           >
             <LogOut size={16} />
             <span className="text-sm font-medium">Sign Out</span>
@@ -193,25 +193,25 @@ const Layout = ({ children }) => {
         style={{ marginLeft: sidebarOpen && window.innerWidth >= 1024 ? `${SIDEBAR_WIDTH}px` : '0' }}
       >
         {/* Top bar */}
-        <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-[#E0E3E5] px-4 py-3 flex items-center gap-3">
+        <header className="sticky top-0 z-20 bg-[#111]/80 backdrop-blur-md border-b border-[#1e1e1e] px-4 py-3 flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-[#F2F4F6] rounded-lg transition-colors relative"
+            className="p-2 hover:bg-[#1e1e1e] rounded-lg transition-colors relative"
             aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
           >
             <div className="w-5 h-5 relative">
               <span
-                className={`absolute left-0 top-1/2 w-5 h-[1.5px] bg-[#191C1E] transition-all duration-300 ${
+                className={`absolute left-0 top-1/2 w-5 h-[1.5px] bg-white transition-all duration-300 ${
                   sidebarOpen ? 'rotate-45 top-[9px]' : '-translate-y-[5px]'
                 }`}
               />
               <span
-                className={`absolute left-0 top-1/2 w-5 h-[1.5px] bg-[#191C1E] transition-all duration-300 ${
+                className={`absolute left-0 top-1/2 w-5 h-[1.5px] bg-white transition-all duration-300 ${
                   sidebarOpen ? 'opacity-0' : 'opacity-100'
                 }`}
               />
               <span
-                className={`absolute left-0 top-1/2 w-5 h-[1.5px] bg-[#191C1E] transition-all duration-300 ${
+                className={`absolute left-0 top-1/2 w-5 h-[1.5px] bg-white transition-all duration-300 ${
                   sidebarOpen ? '-rotate-45 top-[9px]' : 'translate-y-[5px]'
                 }`}
               />
@@ -224,8 +224,8 @@ const Layout = ({ children }) => {
             aria-label="Go to Dashboard"
             tabIndex={0}
           >
-            <span className="text-sm font-bold text-[#191C1E] tracking-wide">PRECISION</span>
-            <span className="text-[10px] text-[#76777D] font-medium">ANALYTICS</span>
+            <span className="text-sm font-bold text-white tracking-wide">PRECISION</span>
+            <span className="text-[10px] text-[#888] font-medium">ANALYTICS</span>
           </div>
         </header>
 

@@ -3,8 +3,9 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
-from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, LearningRateScheduler
 from tensorflow.keras.optimizers import Adam
+import math
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 import logging
 import os
@@ -27,26 +28,32 @@ class LSTMModel:
         self.is_trained = False
 
     def build_model(self) -> keras.Model:
-        """Build LSTM neural network architecture"""
+        """Build LSTM neural network architecture with BatchNorm for better convergence."""
         try:
+            from tensorflow.keras.layers import BatchNormalization
+
             model = Sequential([
-                LSTM(units=64, return_sequences=True,
+                LSTM(units=128, return_sequences=True,
                      input_shape=(self.window_size, self.num_features)),
+                BatchNormalization(),
                 Dropout(0.2),
 
                 LSTM(units=64, return_sequences=True),
+                BatchNormalization(),
                 Dropout(0.2),
 
                 LSTM(units=32),
-                Dropout(0.2),
+                Dropout(0.3),
 
+                Dense(units=32, activation='relu'),
+                Dropout(0.1),
                 Dense(units=16, activation='relu'),
                 Dense(units=1)
             ])
 
             model.compile(
-                optimizer=Adam(learning_rate=0.001),
-                loss='mean_squared_error',
+                optimizer=Adam(learning_rate=0.0008),
+                loss='huber',
                 metrics=['mae']
             )
 
@@ -75,20 +82,25 @@ class LSTMModel:
             logger.info(f"Starting training with {len(X_train)} samples, "
                        f"shape: {X_train.shape}")
 
+            def cosine_annealing(epoch, lr):
+                min_lr = 1e-6
+                return min_lr + 0.5 * (0.0008 - min_lr) * (1 + math.cos(math.pi * epoch / epochs))
+
             callbacks = [
                 EarlyStopping(
                     monitor='val_loss',
-                    patience=15,
+                    patience=20,
                     restore_best_weights=True,
                     min_delta=1e-5
                 ),
                 ReduceLROnPlateau(
                     monitor='val_loss',
                     factor=0.5,
-                    patience=7,
+                    patience=10,
                     min_lr=1e-6,
                     verbose=1
-                )
+                ),
+                LearningRateScheduler(cosine_annealing, verbose=0)
             ]
 
             if progress_callback:

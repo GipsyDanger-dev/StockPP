@@ -6,7 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-NUM_FEATURES = 7  # Close, Volume, MA20, MA50, RSI, MACD, EWMA20
+NUM_FEATURES = 10  # Close, Volume, MA20, MA50, RSI, MACD, EWMA20, BB_upper, ATR, OBV
 
 
 class DataEngine:
@@ -22,7 +22,7 @@ class DataEngine:
         self.close_scaler: Optional[StandardScaler] = None
         self.original_close_prices = None
         self.scaled_data = None
-        self.feature_columns = ['Close', 'Volume', 'MA20', 'MA50', 'RSI', 'MACD', 'EWMA20']
+        self.feature_columns = ['Close', 'Volume', 'MA20', 'MA50', 'RSI', 'MACD', 'EWMA20', 'BB_Width', 'ATR', 'OBV_norm']
 
     def fetch_data(self, ticker: str, period: str = "5y") -> pd.DataFrame:
         """Fetch historical stock data using yfinance. Finnhub free tier doesn't support historical candles."""
@@ -74,6 +74,24 @@ class DataEngine:
 
         # EWMA (20-day Exponentially Weighted Moving Average)
         df['EWMA20'] = df['Close'].ewm(span=20, adjust=False).mean()
+
+        # Bollinger Bands Width (20-day, 2 std)
+        bb_mid = df['Close'].rolling(window=20).mean()
+        bb_std = df['Close'].rolling(window=20).std()
+        bb_upper = bb_mid + 2 * bb_std
+        bb_lower = bb_mid - 2 * bb_std
+        df['BB_Width'] = (bb_upper - bb_lower) / bb_mid  # Normalized width
+
+        # ATR (14-day Average True Range)
+        high_low = df['High'] - df['Low']
+        high_close = (df['High'] - df['Close'].shift()).abs()
+        low_close = (df['Low'] - df['Close'].shift()).abs()
+        true_range = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
+        df['ATR'] = true_range.rolling(window=14).mean()
+
+        # OBV (On-Balance Volume) - normalized
+        obv = (np.sign(df['Close'].diff()) * df['Volume']).fillna(0).cumsum()
+        df['OBV_norm'] = (obv - obv.rolling(20).mean()) / obv.rolling(20).std()
 
         df['Volume'] = df['Volume'].replace(0, 1)  # Avoid division by zero
 

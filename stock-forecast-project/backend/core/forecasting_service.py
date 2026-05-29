@@ -130,7 +130,7 @@ class ForecastingService:
                 return _error_response(ticker_upper, f"Insufficient data for {ticker_upper}")
 
             if progress:
-                progress.emit_sync("step", {"step": "indicators", "label": "Computing technical indicators (MA20, MA50, RSI, MACD, EWMA20)...", "status": "running"})
+                progress.emit_sync("step", {"step": "indicators", "label": "Computing 10 technical indicators...", "status": "running"})
 
             df_with_indicators = self.data_engine._add_technical_indicators(df)
 
@@ -253,6 +253,29 @@ class ForecastingService:
                 # EWMA20
                 new_ewma20 = float(pd.Series(prices_arr).ewm(span=20, adjust=False).mean().iloc[-1])
 
+                # Bollinger Bands Width
+                if len(prices_arr) >= 20:
+                    bb_mid = np.mean(prices_arr[-20:])
+                    bb_std = np.std(prices_arr[-20:])
+                    new_bb_width = (4 * bb_std) / bb_mid if bb_mid > 0 else 0.0
+                else:
+                    new_bb_width = 0.0
+
+                # ATR (14-period) - approximate from price changes
+                if len(prices_arr) >= 15:
+                    price_changes = np.abs(np.diff(prices_arr[-15:]))
+                    new_atr = float(np.mean(price_changes))
+                else:
+                    new_atr = float(np.abs(prices_arr[-1] - prices_arr[-2])) if len(prices_arr) > 1 else 0.0
+
+                # OBV normalized - approximate
+                if len(prices_arr) >= 21:
+                    obv_changes = np.sign(np.diff(prices_arr[-21:]))
+                    obv_sum = np.sum(obv_changes)
+                    new_obv_norm = obv_sum / 20.0  # Normalize
+                else:
+                    new_obv_norm = 0.0
+
                 # Scale the new indicators using training scalers
                 new_close_scaled = close_scaler.transform([[pred_price]])[0, 0]
                 new_vol_scaled = feature_scalers[1].transform(
@@ -263,11 +286,15 @@ class ForecastingService:
                 new_rsi_scaled = feature_scalers[4].transform([[new_rsi]])[0, 0]
                 new_macd_scaled = feature_scalers[5].transform([[new_macd]])[0, 0]
                 new_ewma20_scaled = feature_scalers[6].transform([[new_ewma20]])[0, 0]
+                new_bb_width_scaled = feature_scalers[7].transform([[new_bb_width]])[0, 0]
+                new_atr_scaled = feature_scalers[8].transform([[new_atr]])[0, 0]
+                new_obv_norm_scaled = feature_scalers[9].transform([[new_obv_norm]])[0, 0]
 
                 # Build new row with all fresh features
                 new_row = np.array([new_close_scaled, new_vol_scaled, new_ma20_scaled,
                                     new_ma50_scaled, new_rsi_scaled, new_macd_scaled,
-                                    new_ewma20_scaled])
+                                    new_ewma20_scaled, new_bb_width_scaled, new_atr_scaled,
+                                    new_obv_norm_scaled])
 
                 new_val = new_row.reshape(1, 1, NUM_FEATURES)
                 current_sequence = np.append(current_sequence[:, 1:, :], new_val, axis=1)

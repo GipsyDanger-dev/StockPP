@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
-from typing import Tuple, Dict, Any, Optional
+from sklearn.preprocessing import StandardScaler
+from typing import Tuple, Dict, Any, Optional, List
 import logging
 
 logger = logging.getLogger(__name__)
@@ -12,13 +12,14 @@ NUM_FEATURES = 6  # Close, Volume, MA20, MA50, RSI, MACD
 class DataEngine:
     """
     Handles stock data fetching, cleaning, normalization and sequence creation
-    with technical indicators for improved LSTM prediction
+    with technical indicators for improved LSTM prediction.
+    Uses per-feature StandardScaler for better signal preservation.
     """
 
-    def __init__(self, window_size: int = 20):
+    def __init__(self, window_size: int = 30):
         self.window_size = window_size
-        self.feature_scaler = MinMaxScaler(feature_range=(0, 1))
-        self.price_scaler = MinMaxScaler(feature_range=(0, 1))
+        self.feature_scalers: List[StandardScaler] = [StandardScaler() for _ in range(NUM_FEATURES)]
+        self.close_scaler: Optional[StandardScaler] = None
         self.original_close_prices = None
         self.scaled_data = None
         self.feature_columns = ['Close', 'Volume', 'MA20', 'MA50', 'RSI', 'MACD']
@@ -77,8 +78,8 @@ class DataEngine:
 
         return df
 
-    def prepare_data(self, df: pd.DataFrame) -> Tuple[np.ndarray, Any]:
-        """Preprocess data: add technical indicators, normalize, return data + scaler"""
+    def prepare_data(self, df: pd.DataFrame) -> Tuple[np.ndarray, List[StandardScaler]]:
+        """Preprocess data: add technical indicators, normalize per-feature, return data + scalers"""
         try:
             df = self._add_technical_indicators(df)
 
@@ -86,13 +87,19 @@ class DataEngine:
 
             feature_data = df[self.feature_columns].values
 
-            self.scaled_data = self.feature_scaler.fit_transform(feature_data)
+            scaled_columns = []
+            for i in range(NUM_FEATURES):
+                col_scaled = self.feature_scalers[i].fit_transform(
+                    feature_data[:, i].reshape(-1, 1)
+                )
+                scaled_columns.append(col_scaled.flatten())
 
-            self.price_scaler.fit(df['Close'].values.reshape(-1, 1))
+            self.scaled_data = np.column_stack(scaled_columns)
+            self.close_scaler = self.feature_scalers[0]
 
-            logger.info(f"Data normalized with {NUM_FEATURES} features. Shape: {self.scaled_data.shape}")
+            logger.info(f"Data normalized with {NUM_FEATURES} per-feature scalers. Shape: {self.scaled_data.shape}")
 
-            return self.scaled_data, self.price_scaler
+            return self.scaled_data, self.feature_scalers
 
         except Exception as e:
             logger.error(f"Error preparing data: {str(e)}")
@@ -117,7 +124,9 @@ class DataEngine:
 
     def inverse_transform_price(self, scaled_prices: np.ndarray) -> np.ndarray:
         """Convert scaled price predictions back to original scale"""
-        return self.price_scaler.inverse_transform(scaled_prices.reshape(-1, 1)).flatten()
+        if self.close_scaler is None:
+            raise ValueError("Close scaler not fitted. Call prepare_data() first.")
+        return self.close_scaler.inverse_transform(scaled_prices.reshape(-1, 1)).flatten()
 
     def get_last_sequence(self, data: np.ndarray) -> np.ndarray:
         """Get the last 'window_size' days for making next prediction"""

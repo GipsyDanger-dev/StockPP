@@ -34,7 +34,7 @@ class PredictionRequest(BaseModel):
     """Request model for stock prediction"""
     ticker: str
     days_ahead: int = 1
-    period: str = "1y"
+    period: str = "5y"
     user_id: Optional[str] = None
 
     model_config = ConfigDict(json_schema_extra={
@@ -452,7 +452,8 @@ async def trigger_retrain(ticker: str = Path(..., description="Stock ticker symb
         result = orchestrator.retrain_model(
             ticker=ticker,
             force_retrain=True,
-            epochs=10
+            epochs=50,
+            period="5y"
         )
 
         return {
@@ -558,7 +559,7 @@ async def trigger_batch_retrain(
         result = orchestrator.batch_retrain(
             tickers=tickers,
             force_retrain=force,
-            epochs=10
+            epochs=50
         )
 
         return result

@@ -1,7 +1,8 @@
 import logging
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from datetime import datetime, timedelta
 import numpy as np
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ class ForecastingService:
     def __init__(self, model_manager: Optional[ModelManager] = None):
         try:
             if HAS_ML_DEPENDENCIES:
-                self.data_engine = DataEngine(window_size=20)
+                self.data_engine = DataEngine(window_size=30)
                 self.model_manager = model_manager or ModelManager()
             else:
                 self.data_engine = None
@@ -69,14 +70,14 @@ class ForecastingService:
                     return cached_data['data']
 
             model, saved_scaler = None, None
-            feature_scaler = None
+            feature_scalers = None
             if self.model_manager:
                 model, saved_scaler = self.model_manager.load_model_and_scaler(ticker_upper)
-                feature_scaler = self.model_manager.load_feature_scaler(ticker_upper)
+                feature_scalers = self.model_manager.load_feature_scalers(ticker_upper)
 
-            needs_retrain = model is None or saved_scaler is None or feature_scaler is None
+            needs_retrain = model is None or saved_scaler is None or feature_scalers is None
             if needs_retrain:
-                reason = "feature scaler missing" if (model and saved_scaler) else "model not found"
+                reason = "feature scalers missing" if (model and saved_scaler) else "model not found"
                 logger.info(f"Model for {ticker_upper} needs retrain ({reason}). Auto-training 70 epochs...")
                 try:
                     from .retraining_orchestrator import RetrainingOrchestrator
@@ -88,9 +89,9 @@ class ForecastingService:
                         force_retrain=True
                     )
                     if result["status"] == "success":
-                        logger.info(f"Auto-training success for {ticker_upper}! RMSE: {result['new_metrics']['rmse']:.4f}")
+                        logger.info(f"Auto-training success for {ticker_upper}! RMSE: ${result['new_metrics']['rmse']:.2f}")
                         model, saved_scaler = self.model_manager.load_model_and_scaler(ticker_upper)
-                        feature_scaler = self.model_manager.load_feature_scaler(ticker_upper)
+                        feature_scalers = self.model_manager.load_feature_scalers(ticker_upper)
                     else:
                         msg = result.get('error', 'Auto-training failed')
                         logger.warning(f"Auto-training failed for {ticker_upper}: {msg}")
@@ -102,8 +103,8 @@ class ForecastingService:
             if model is None or saved_scaler is None:
                 return _error_response(ticker_upper, "Model not available after training")
 
-            if feature_scaler is None:
-                return _error_response(ticker_upper, "Feature scaler not available. Retrain the model.")
+            if feature_scalers is None:
+                return _error_response(ticker_upper, "Feature scalers not available. Retrain the model.")
 
             logger.info(f"Model ready for {ticker_upper}. Starting prediction...")
 
@@ -113,37 +114,55 @@ class ForecastingService:
 
             df_with_indicators = self.data_engine._add_technical_indicators(df)
 
-            if len(df_with_indicators) < 25:
+            if len(df_with_indicators) < 35:
                 return _error_response(ticker_upper, f"Insufficient data after computing indicators for {ticker_upper}")
 
-            # Extract features and scale using the SAVED feature scaler from training
+            # Scale features using per-feature scalers from training
             feature_data = df_with_indicators[self.data_engine.feature_columns].values
-            scaled_features = feature_scaler.transform(feature_data)
+            scaled_columns = []
+            for i in range(NUM_FEATURES):
+                col_scaled = feature_scalers[i].transform(
+                    feature_data[:, i].reshape(-1, 1)
+                )
+                scaled_columns.append(col_scaled.flatten())
+            scaled_features = np.column_stack(scaled_columns)
 
             current_price = float(df_with_indicators['Close'].iloc[-1])
             last_date = df_with_indicators.index[-1]
 
-            historical_dates = [d.strftime("%Y-%m-%d") for d in df_with_indicators.index[-20:]]
-            historical_prices = df_with_indicators['Close'].iloc[-20:].tolist()
+            historical_dates = [d.strftime("%Y-%m-%d") for d in df_with_indicators.index[-30:]]
+            historical_prices = df_with_indicators['Close'].iloc[-30:].tolist()
 
-            historical_rsi = df_with_indicators['RSI'].iloc[-20:].tolist()
-            historical_ma20 = df_with_indicators['MA20'].iloc[-20:].tolist()
-            historical_ma50 = df_with_indicators['MA50'].iloc[-20:].tolist()
-            historical_macd = df_with_indicators['MACD'].iloc[-20:].tolist()
+            historical_rsi = df_with_indicators['RSI'].iloc[-30:].tolist()
+            historical_ma20 = df_with_indicators['MA20'].iloc[-30:].tolist()
+            historical_ma50 = df_with_indicators['MA50'].iloc[-30:].tolist()
+            historical_macd = df_with_indicators['MACD'].iloc[-30:].tolist()
 
             current_rsi = float(df_with_indicators['RSI'].iloc[-1])
             current_ma20 = float(df_with_indicators['MA20'].iloc[-1])
             current_ma50 = float(df_with_indicators['MA50'].iloc[-1])
             current_macd = float(df_with_indicators['MACD'].iloc[-1])
 
-            # Multi-step prediction (sliding window with multi-features)
-            last_sequence = scaled_features[-20:].reshape(1, 20, NUM_FEATURES)
+            # Multi-step prediction with error dampening
+            window = self.data_engine.window_size
+            last_sequence = scaled_features[-window:].reshape(1, window, NUM_FEATURES)
             future_predictions = []
             current_sequence = last_sequence.copy()
 
-            for _ in range(days_ahead):
+            # Price clamp: prevent runaway predictions (±25% of current price)
+            close_scaler = feature_scalers[0]
+            price_min = current_price * 0.75
+            price_max = current_price * 1.25
+
+            for step in range(days_ahead):
                 next_pred = model.predict(current_sequence, verbose=0)
                 pred_price_scaled = next_pred[0, 0]
+
+                # For longer horizons, dampen the prediction toward the mean
+                if step >= 3 and len(future_predictions) > 0:
+                    recent_mean = np.mean(future_predictions[-3:])
+                    pred_price_scaled = 0.7 * pred_price_scaled + 0.3 * recent_mean
+
                 future_predictions.append(pred_price_scaled)
 
                 new_row = current_sequence[0, -1, :].copy()
@@ -152,16 +171,20 @@ class ForecastingService:
                 new_val = new_row.reshape(1, 1, NUM_FEATURES)
                 current_sequence = np.append(current_sequence[:, 1:, :], new_val, axis=1)
 
-            # Inverse transform: model outputs are in feature_scaler space (6 features),
-            # not price_scaler space. Reconstruct 6-feature array, inverse transform, extract Close (column 0).
+            # Inverse transform using Close scaler only
             pred_array = np.array(future_predictions)
-            last_known_features = scaled_features[-1].copy()  # shape: (6,)
-            dummy_features = np.tile(last_known_features, (len(pred_array), 1))
-            dummy_features[:, 0] = pred_array  # Replace Close column with predictions
-            original_features = feature_scaler.inverse_transform(dummy_features)
-            future_prices = original_features[:, 0]  # Extract Close price column
+            future_prices = close_scaler.inverse_transform(
+                pred_array.reshape(-1, 1)
+            ).flatten()
 
-            forecast_dates = [(last_date + timedelta(days=i+1)).strftime("%Y-%m-%d") for i in range(days_ahead)]
+            # Clamp predictions to reasonable range
+            future_prices = np.clip(future_prices, price_min, price_max)
+
+            # Generate trading days only (skip weekends)
+            forecast_dates = pd.bdate_range(
+                start=last_date + timedelta(days=1),
+                periods=days_ahead
+            ).strftime("%Y-%m-%d").tolist()
             metrics = self.model_manager.get_model_metrics(ticker_upper) or {"rmse": 0, "mae": 0}
 
             first_forecast = future_prices[0]

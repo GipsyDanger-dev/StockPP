@@ -3,10 +3,12 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from tensorflow.keras.optimizers import Adam
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 import logging
 import os
-from typing import Tuple, Dict, Any
+from typing import Tuple, Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +19,7 @@ class LSTMModel:
     Architecture optimized for stock price prediction
     """
 
-    def __init__(self, window_size: int = 20, num_features: int = 6, model_path: str = None):
+    def __init__(self, window_size: int = 30, num_features: int = 6, model_path: str = None):
         self.window_size = window_size
         self.num_features = num_features
         self.model_path = model_path or "saved_models/lstm_model.keras"
@@ -28,21 +30,22 @@ class LSTMModel:
         """Build LSTM neural network architecture"""
         try:
             model = Sequential([
-                LSTM(units=50, return_sequences=True,
+                LSTM(units=64, return_sequences=True,
                      input_shape=(self.window_size, self.num_features)),
                 Dropout(0.2),
 
-                LSTM(units=50, return_sequences=True),
+                LSTM(units=64, return_sequences=True),
                 Dropout(0.2),
 
-                LSTM(units=50),
+                LSTM(units=32),
                 Dropout(0.2),
 
+                Dense(units=16, activation='relu'),
                 Dense(units=1)
             ])
 
             model.compile(
-                optimizer='adam',
+                optimizer=Adam(learning_rate=0.001),
                 loss='mean_squared_error',
                 metrics=['mae']
             )
@@ -56,9 +59,9 @@ class LSTMModel:
             raise
 
     def train(self, X_train: np.ndarray, y_train: np.ndarray,
-              epochs: int = 50, batch_size: int = 32,
+              epochs: int = 100, batch_size: int = 32,
               validation_split: float = 0.2) -> Dict[str, Any]:
-        """Train the LSTM model"""
+        """Train the LSTM model with early stopping and LR scheduling"""
         try:
             if self.model is None:
                 self.build_model()
@@ -66,16 +69,34 @@ class LSTMModel:
             logger.info(f"Starting training with {len(X_train)} samples, "
                        f"shape: {X_train.shape}")
 
+            callbacks = [
+                EarlyStopping(
+                    monitor='val_loss',
+                    patience=15,
+                    restore_best_weights=True,
+                    min_delta=1e-5
+                ),
+                ReduceLROnPlateau(
+                    monitor='val_loss',
+                    factor=0.5,
+                    patience=7,
+                    min_lr=1e-6,
+                    verbose=1
+                )
+            ]
+
             history = self.model.fit(
                 X_train, y_train,
                 epochs=epochs,
                 batch_size=batch_size,
                 validation_split=validation_split,
+                callbacks=callbacks,
                 verbose=1
             )
 
             self.is_trained = True
-            logger.info("Training completed successfully")
+            actual_epochs = len(history.history['loss'])
+            logger.info(f"Training completed after {actual_epochs} epochs (early stopping)")
 
             return history.history
 
@@ -96,7 +117,7 @@ class LSTMModel:
             raise
 
     def evaluate(self, X_test: np.ndarray, y_test: np.ndarray) -> Dict[str, float]:
-        """Evaluate model performance on test data. Returns dict with RMSE and MAE."""
+        """Evaluate model performance on test data (scaled values)."""
         try:
             predictions = self.predict(X_test)
 
@@ -109,12 +130,44 @@ class LSTMModel:
                 "test_samples": len(X_test)
             }
 
-            logger.info(f"Model evaluation - RMSE: {rmse:.4f}, MAE: {mae:.4f}")
+            logger.info(f"Model evaluation (scaled) - RMSE: {rmse:.4f}, MAE: {mae:.4f}")
 
             return metrics
 
         except Exception as e:
             logger.error(f"Error during evaluation: {str(e)}")
+            raise
+
+    def evaluate_on_original_scale(self, X_test: np.ndarray, y_test: np.ndarray,
+                                    close_scaler) -> Dict[str, float]:
+        """Evaluate model on original dollar scale for meaningful metrics."""
+        try:
+            predictions_scaled = self.predict(X_test)
+
+            predictions_orig = close_scaler.inverse_transform(
+                predictions_scaled.reshape(-1, 1)
+            ).flatten()
+            y_test_orig = close_scaler.inverse_transform(
+                y_test.reshape(-1, 1)
+            ).flatten()
+
+            rmse = np.sqrt(mean_squared_error(y_test_orig, predictions_orig))
+            mae = mean_absolute_error(y_test_orig, predictions_orig)
+            mape = np.mean(np.abs((y_test_orig - predictions_orig) / y_test_orig)) * 100
+
+            metrics = {
+                "rmse": round(float(rmse), 2),
+                "mae": round(float(mae), 2),
+                "mape": round(float(mape), 2),
+                "test_samples": len(X_test)
+            }
+
+            logger.info(f"Model evaluation (original scale) - RMSE: ${rmse:.2f}, MAE: ${mae:.2f}, MAPE: {mape:.2f}%")
+
+            return metrics
+
+        except Exception as e:
+            logger.error(f"Error during original-scale evaluation: {str(e)}")
             raise
 
     def save_model(self, filepath: str = None) -> str:

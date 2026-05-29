@@ -15,50 +15,59 @@ class RetrainingOrchestrator:
 
     def __init__(self, model_manager: Optional[ModelManager] = None):
         self.model_manager = model_manager or ModelManager()
-        self.data_engine = DataEngine(window_size=20)
+        self.data_engine = DataEngine(window_size=30)
 
     def _walk_forward_validate(self, X: np.ndarray, y: np.ndarray,
-                                n_splits: int = 5) -> Dict:
+                                n_splits: int = 5, close_scaler=None) -> Dict:
         """
         Walk-forward validation: more realistic than static train/test split.
         Splits data into n_splits folds, trains on expanding window,
-        tests on next fold. Returns average metrics.
+        tests on next fold. Returns average metrics on original dollar scale.
         """
         fold_size = len(X) // (n_splits + 1)
-        rmses, maes = [], []
+        rmses, maes, mapes = [], [], []
 
         for i in range(n_splits):
             train_end = fold_size * (i + 1)
             test_end = min(train_end + fold_size, len(X))
 
-            if train_end < 20 or test_end <= train_end:
+            if train_end < 30 or test_end <= train_end:
                 continue
 
             X_train, y_train = X[:train_end], y[:train_end]
             X_test, y_test = X[train_end:test_end], y[train_end:test_end]
 
-            fold_model = LSTMModel(window_size=20, num_features=NUM_FEATURES)
+            fold_model = LSTMModel(window_size=30, num_features=NUM_FEATURES)
             fold_model.build_model()
-            fold_model.train(X_train, y_train, epochs=10, batch_size=32, validation_split=0.1)
+            fold_model.train(X_train, y_train, epochs=50, batch_size=32, validation_split=0.1)
 
-            metrics = fold_model.evaluate(X_test, y_test)
-            rmses.append(metrics["rmse"])
-            maes.append(metrics["mae"])
+            if close_scaler is not None:
+                metrics = fold_model.evaluate_on_original_scale(X_test, y_test, close_scaler)
+                rmses.append(metrics["rmse"])
+                maes.append(metrics["mae"])
+                mapes.append(metrics.get("mape", 0))
+            else:
+                metrics = fold_model.evaluate(X_test, y_test)
+                rmses.append(metrics["rmse"])
+                maes.append(metrics["mae"])
 
         if not rmses:
-            return {"rmse": float('inf'), "mae": float('inf')}
+            return {"rmse": float('inf'), "mae": float('inf'), "mape": float('inf')}
 
-        return {
+        result = {
             "rmse": float(np.mean(rmses)),
             "mae": float(np.mean(maes)),
             "folds_used": len(rmses)
         }
+        if mapes:
+            result["mape"] = float(np.mean(mapes))
+        return result
 
     def retrain_model(
         self,
         ticker: str,
-        period: str = "1y",
-        epochs: int = 10,
+        period: str = "5y",
+        epochs: int = 50,
         batch_size: int = 32,
         force_retrain: bool = False
     ) -> Dict:
@@ -92,7 +101,8 @@ class RetrainingOrchestrator:
                 return result
 
             logger.info("Preparing data with technical indicators...")
-            scaled_data, scaler = self.data_engine.prepare_data(df)
+            scaled_data, feature_scalers = self.data_engine.prepare_data(df)
+            close_scaler = self.data_engine.close_scaler
 
             X, y = self.data_engine.create_sequences(scaled_data)
 
@@ -101,11 +111,11 @@ class RetrainingOrchestrator:
                 logger.error(result["error"])
                 return result
 
-            # Walk-forward validation (more realistic than static split)
+            # Walk-forward validation on original dollar scale
             logger.info("Running walk-forward validation...")
-            wf_metrics = self._walk_forward_validate(X, y, n_splits=5)
-            logger.info(f"Walk-forward validation - RMSE: {wf_metrics['rmse']:.4f}, "
-                       f"MAE: {wf_metrics['mae']:.4f}, Folds: {wf_metrics.get('folds_used', 0)}")
+            wf_metrics = self._walk_forward_validate(X, y, n_splits=5, close_scaler=close_scaler)
+            logger.info(f"Walk-forward validation - RMSE: ${wf_metrics['rmse']:.2f}, "
+                       f"MAE: ${wf_metrics['mae']:.2f}, Folds: {wf_metrics.get('folds_used', 0)}")
 
             split_idx = int(len(X) * 0.8)
             X_train, X_test = X[:split_idx], X[split_idx:]
@@ -114,23 +124,25 @@ class RetrainingOrchestrator:
             logger.info(f"Data split - Train: {len(X_train)}, Test: {len(X_test)}")
 
             logger.info("Building new model...")
-            model = LSTMModel(window_size=20, num_features=NUM_FEATURES)
+            model = LSTMModel(window_size=30, num_features=NUM_FEATURES)
             model.build_model()
 
-            logger.info(f"Training model ({epochs} epochs)...")
+            logger.info(f"Training model ({epochs} epochs, early stopping enabled)...")
             model.train(X_train, y_train, epochs=epochs, batch_size=batch_size)
 
-            logger.info("Evaluating model...")
-            new_metrics = model.evaluate(X_test, y_test)
+            logger.info("Evaluating model on original dollar scale...")
+            new_metrics = model.evaluate_on_original_scale(X_test, y_test, close_scaler)
             result["new_metrics"] = new_metrics
 
             old_metrics = self.model_manager.get_model_metrics(ticker_upper)
             result["old_metrics"] = old_metrics
 
-            logger.info("Validating model improvement...")
+            # Use walk-forward RMSE as the primary gating metric
+            gating_metrics = {"rmse": wf_metrics["rmse"], "mae": wf_metrics["mae"]}
+            logger.info("Validating model improvement using walk-forward metrics...")
             is_better = self.model_manager.validate_model_improvement(
                 old_metrics or {},
-                new_metrics
+                gating_metrics
             )
 
             if is_better:
@@ -139,8 +151,8 @@ class RetrainingOrchestrator:
                     model.model,
                     ticker_upper,
                     new_metrics,
-                    scaler,
-                    feature_scaler=self.data_engine.feature_scaler
+                    close_scaler,
+                    feature_scalers=feature_scalers
                 )
 
                 result["model_saved"] = saved
@@ -162,8 +174,8 @@ class RetrainingOrchestrator:
     def batch_retrain(
         self,
         tickers: Optional[List[str]] = None,
-        period: str = "1y",
-        epochs: int = 10,
+        period: str = "5y",
+        epochs: int = 50,
         force_retrain: bool = False
     ) -> Dict:
         """Retrain multiple models in batch"""

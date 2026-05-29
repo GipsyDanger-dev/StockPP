@@ -1,11 +1,11 @@
 import logging
-import os
 import json
 import pickle
 from datetime import datetime
 from pathlib import Path
-import numpy as np
 from typing import Dict, Optional, Tuple, Any
+
+from .data_engine import NUM_FEATURES
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,8 @@ class ModelManager:
         """Get path for a model"""
         return self.model_dir / f"{ticker.upper()}_{version}.keras"
 
-    def save_model(self, model, ticker: str, metrics: Dict, scaler: Any = None, feature_scaler: Any = None) -> bool:
+    def save_model(self, model, ticker: str, metrics: Dict, scaler: Any = None,
+                   feature_scaler: Any = None, feature_scalers: list = None) -> bool:
         """Save a model with metadata and optional scalers"""
         try:
             ticker = ticker.upper()
@@ -68,10 +69,13 @@ class ModelManager:
             scaler_path = None
             if scaler is not None:
                 scaler_path = self._save_scaler(scaler, ticker)
-                logger.info(f"Saved price scaler for {ticker} to {scaler_path}")
+                logger.info(f"Saved close scaler for {ticker} to {scaler_path}")
 
             feature_scaler_path = None
-            if feature_scaler is not None:
+            if feature_scalers is not None:
+                feature_scaler_path = self._save_feature_scalers(feature_scalers, ticker)
+                logger.info(f"Saved {len(feature_scalers)} feature scalers for {ticker}")
+            elif feature_scaler is not None:
                 feature_scaler_path = self._save_scaler(feature_scaler, ticker, suffix="_feature_scaler")
                 logger.info(f"Saved feature scaler for {ticker} to {feature_scaler_path}")
 
@@ -239,6 +243,69 @@ class ModelManager:
             logger.error(f"Error loading feature scaler for {ticker}: {str(e)}")
             return None
 
+    def load_feature_scalers(self, ticker: str) -> Optional[list]:
+        """Load the per-feature scaler list (6 StandardScalers) used during training."""
+        try:
+            ticker = ticker.upper()
+
+            # Check metadata first
+            if ticker in self.metadata and "current" in self.metadata[ticker]:
+                path_str = self.metadata[ticker]["current"].get("feature_scaler_path")
+                if path_str and Path(path_str).exists():
+                    with open(path_str, 'rb') as f:
+                        data = pickle.load(f)
+                        if isinstance(data, list):
+                            return data
+                        # Backward compat: single scaler wrapped in list
+                        return [data] * NUM_FEATURES
+
+            # Try new per-feature scalers file
+            scaler_path = self.scaler_dir / f"{ticker}_feature_scalers.pkl"
+            if scaler_path.exists():
+                with open(scaler_path, 'rb') as f:
+                    data = pickle.load(f)
+                    if isinstance(data, list):
+                        return data
+                    return [data] * NUM_FEATURES
+
+            # Fall back to legacy single scaler file
+            legacy_path = self.scaler_dir / f"{ticker}_feature_scaler.pkl"
+            if legacy_path.exists():
+                with open(legacy_path, 'rb') as f:
+                    scaler = pickle.load(f)
+                    logger.info(f"Loaded legacy single feature scaler for {ticker}, wrapping as list")
+                    return [scaler] * NUM_FEATURES
+
+            # Try Supabase cloud
+            if self.use_cloud_storage and self.supabase_client:
+                try:
+                    storage = self.supabase_client.get_storage()
+                    for cloud_name in [f"{ticker}/{ticker}_feature_scalers.pkl",
+                                       f"{ticker}/{ticker}_feature_scaler.pkl"]:
+                        try:
+                            data = storage.from_("models").download(cloud_name)
+                            if data:
+                                loaded = pickle.loads(data)
+                                if isinstance(loaded, list):
+                                    result = loaded
+                                else:
+                                    result = [loaded] * NUM_FEATURES
+                                with open(scaler_path, 'wb') as f:
+                                    pickle.dump(result, f)
+                                logger.info(f"Downloaded feature scalers from Supabase for {ticker}")
+                                return result
+                        except Exception:
+                            continue
+                except Exception as cloud_err:
+                    logger.debug(f"Feature scalers not found in Supabase for {ticker}: {cloud_err}")
+
+            logger.warning(f"Feature scalers not found for {ticker}")
+            return None
+
+        except Exception as e:
+            logger.error(f"Error loading feature scalers for {ticker}: {str(e)}")
+            return None
+
     def get_model_metrics(self, ticker: str) -> Optional[Dict]:
         """Get metrics for current model"""
         ticker = ticker.upper()
@@ -326,6 +393,16 @@ class ModelManager:
 
         with open(scaler_path, 'wb') as f:
             pickle.dump(scaler, f)
+
+        return scaler_path
+
+    def _save_feature_scalers(self, scalers: list, ticker: str) -> Path:
+        """Save list of per-feature scalers to disk"""
+        ticker = ticker.upper()
+        scaler_path = self.scaler_dir / f"{ticker}_feature_scalers.pkl"
+
+        with open(scaler_path, 'wb') as f:
+            pickle.dump(scalers, f)
 
         return scaler_path
 

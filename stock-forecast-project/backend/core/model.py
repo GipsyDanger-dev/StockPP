@@ -139,21 +139,46 @@ class LSTMModel:
             raise
 
     def evaluate_on_original_scale(self, X_test: np.ndarray, y_test: np.ndarray,
-                                    close_scaler) -> Dict[str, float]:
-        """Evaluate model on original dollar scale for meaningful metrics."""
+                                    close_scaler, original_prices: np.ndarray = None,
+                                    test_start_idx: int = None) -> Dict[str, float]:
+        """Evaluate model on original dollar scale for meaningful metrics.
+
+        Since the model predicts returns, we convert returns back to prices
+        using the actual price at each time step for accurate dollar metrics.
+        """
         try:
-            predictions_scaled = self.predict(X_test)
+            predicted_returns = self.predict(X_test).flatten()
+            actual_returns = y_test.flatten()
 
-            predictions_orig = close_scaler.inverse_transform(
-                predictions_scaled.reshape(-1, 1)
-            ).flatten()
-            y_test_orig = close_scaler.inverse_transform(
-                y_test.reshape(-1, 1)
-            ).flatten()
+            if original_prices is not None and test_start_idx is not None:
+                # Convert returns to prices: price[t+1] = price[t] * (1 + return)
+                # original_prices contains the Close prices for the full dataset
+                # test_start_idx is the index in original_prices where test sequences start
+                window = self.window_size
+                pred_prices = []
+                actual_prices = []
 
-            rmse = np.sqrt(mean_squared_error(y_test_orig, predictions_orig))
-            mae = mean_absolute_error(y_test_orig, predictions_orig)
-            mape = np.mean(np.abs((y_test_orig - predictions_orig) / y_test_orig)) * 100
+                for i in range(len(predicted_returns)):
+                    # The price at the end of the input window for this sequence
+                    price_idx = test_start_idx + i + window - 1
+                    if price_idx < len(original_prices):
+                        base_price = original_prices[price_idx]
+                        pred_prices.append(base_price * (1 + predicted_returns[i]))
+                        actual_prices.append(base_price * (1 + actual_returns[i]))
+
+                if pred_prices:
+                    pred_prices = np.array(pred_prices)
+                    actual_prices = np.array(actual_prices)
+                    rmse = np.sqrt(mean_squared_error(actual_prices, pred_prices))
+                    mae = mean_absolute_error(actual_prices, pred_prices)
+                    mape = np.mean(np.abs((actual_prices - pred_prices) / actual_prices)) * 100
+                else:
+                    rmse, mae, mape = float('inf'), float('inf'), float('inf')
+            else:
+                # Fallback: evaluate returns directly (not in dollar terms)
+                rmse = np.sqrt(mean_squared_error(actual_returns, predicted_returns))
+                mae = mean_absolute_error(actual_returns, predicted_returns)
+                mape = 0
 
             metrics = {
                 "rmse": round(float(rmse), 2),

@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Optional, List
+from typing import Dict, Optional
 from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
@@ -84,8 +84,8 @@ class ForecastingService:
                     orchestrator = RetrainingOrchestrator(self.model_manager)
                     result = orchestrator.retrain_model(
                         ticker=ticker_upper,
-                        period="5y",
-                        epochs=70,
+                        period="2y",
+                        epochs=100,
                         force_retrain=True
                     )
                     if result["status"] == "success":
@@ -143,41 +143,111 @@ class ForecastingService:
             current_ma50 = float(df_with_indicators['MA50'].iloc[-1])
             current_macd = float(df_with_indicators['MACD'].iloc[-1])
 
-            # Multi-step prediction with error dampening
+            # Multi-step prediction with fresh indicator recalculation
+            # Model predicts returns (percentage change), not raw prices
             window = self.data_engine.window_size
             last_sequence = scaled_features[-window:].reshape(1, window, NUM_FEATURES)
-            future_predictions = []
             current_sequence = last_sequence.copy()
 
-            # Price clamp: prevent runaway predictions (±25% of current price)
             close_scaler = feature_scalers[0]
-            price_min = current_price * 0.75
-            price_max = current_price * 1.25
+
+            # Volatility-based bounds: allow 3x recent daily volatility per step
+            recent_returns = df_with_indicators['Close'].pct_change().dropna().iloc[-30:]
+            daily_vol = float(recent_returns.std()) if len(recent_returns) > 1 else 0.02
+            max_daily_move = daily_vol * 3  # 3 sigma
+            total_max_move = max_daily_move * days_ahead
+            price_min = current_price * (1 - total_max_move)
+            price_max = current_price * (1 + total_max_move)
+            # Hard safety bounds: never more than ±60%
+            price_min = max(price_min, current_price * 0.40)
+            price_max = min(price_max, current_price * 1.60)
+
+            # Rolling buffer of recent original-scale prices for indicator recalculation
+            recent_prices = df_with_indicators['Close'].iloc[-50:].tolist()
+            future_predictions = []
+            last_price = current_price
 
             for step in range(days_ahead):
                 next_pred = model.predict(current_sequence, verbose=0)
-                pred_price_scaled = next_pred[0, 0]
+                pred_return = float(next_pred[0, 0])
 
-                # For longer horizons, dampen the prediction toward the mean
-                if step >= 3 and len(future_predictions) > 0:
-                    recent_mean = np.mean(future_predictions[-3:])
-                    pred_price_scaled = 0.7 * pred_price_scaled + 0.3 * recent_mean
+                # Convert return to price: price[t+1] = price[t] * (1 + return)
+                pred_price = last_price * (1 + pred_return)
 
-                future_predictions.append(pred_price_scaled)
+                # Clamp to reasonable range
+                pred_price = np.clip(pred_price, price_min, price_max)
+                future_predictions.append(pred_price)
+                last_price = pred_price
 
-                new_row = current_sequence[0, -1, :].copy()
-                new_row[0] = pred_price_scaled
+                # Update rolling price buffer
+                recent_prices.append(pred_price)
+                if len(recent_prices) > 100:
+                    recent_prices = recent_prices[-100:]
+
+                # Recalculate technical indicators from the updated price buffer
+                prices_arr = np.array(recent_prices)
+
+                # MA20
+                if len(prices_arr) >= 20:
+                    new_ma20 = float(np.mean(prices_arr[-20:]))
+                else:
+                    new_ma20 = float(np.mean(prices_arr))
+
+                # MA50
+                if len(prices_arr) >= 50:
+                    new_ma50 = float(np.mean(prices_arr[-50:]))
+                else:
+                    new_ma50 = float(np.mean(prices_arr))
+
+                # RSI (14-period)
+                if len(prices_arr) >= 15:
+                    deltas = np.diff(prices_arr[-15:])
+                    gains = np.where(deltas > 0, deltas, 0)
+                    losses = np.where(deltas < 0, -deltas, 0)
+                    avg_gain = np.mean(gains)
+                    avg_loss = np.mean(losses)
+                    if avg_loss == 0:
+                        new_rsi = 100.0
+                    else:
+                        rs = avg_gain / avg_loss
+                        new_rsi = float(100 - (100 / (1 + rs)))
+                else:
+                    new_rsi = 50.0
+
+                # MACD (EMA12 - EMA26)
+                if len(prices_arr) >= 26:
+                    ema12 = float(pd.Series(prices_arr).ewm(span=12, adjust=False).mean().iloc[-1])
+                    ema26 = float(pd.Series(prices_arr).ewm(span=26, adjust=False).mean().iloc[-1])
+                    new_macd = ema12 - ema26
+                else:
+                    new_macd = 0.0
+
+                # Scale the new indicators using training scalers
+                new_close_scaled = close_scaler.transform([[pred_price]])[0, 0]
+                new_vol_scaled = feature_scalers[1].transform(
+                    [[recent_prices[-2] if len(recent_prices) > 1 else pred_price]]
+                )[0, 0]  # Volume: use last known (approximation)
+                new_ma20_scaled = feature_scalers[2].transform([[new_ma20]])[0, 0]
+                new_ma50_scaled = feature_scalers[3].transform([[new_ma50]])[0, 0]
+                new_rsi_scaled = feature_scalers[4].transform([[new_rsi]])[0, 0]
+                new_macd_scaled = feature_scalers[5].transform([[new_macd]])[0, 0]
+
+                # Build new row with all fresh features
+                new_row = np.array([new_close_scaled, new_vol_scaled, new_ma20_scaled,
+                                    new_ma50_scaled, new_rsi_scaled, new_macd_scaled])
 
                 new_val = new_row.reshape(1, 1, NUM_FEATURES)
                 current_sequence = np.append(current_sequence[:, 1:, :], new_val, axis=1)
 
-            # Inverse transform using Close scaler only
-            pred_array = np.array(future_predictions)
-            future_prices = close_scaler.inverse_transform(
-                pred_array.reshape(-1, 1)
-            ).flatten()
+            future_prices = np.array(future_predictions)
 
-            # Clamp predictions to reasonable range
+            # Damping for longer horizons: pull toward recent mean in original price space
+            if days_ahead > 3:
+                for step in range(3, days_ahead):
+                    recent_mean = np.mean(future_predictions[max(0, step-3):step])
+                    future_prices[step] = 0.7 * future_prices[step] + 0.3 * recent_mean
+
+            # Clamp again after damping
             future_prices = np.clip(future_prices, price_min, price_max)
 
             # Generate trading days only (skip weekends)
@@ -187,9 +257,10 @@ class ForecastingService:
             ).strftime("%Y-%m-%d").tolist()
             metrics = self.model_manager.get_model_metrics(ticker_upper) or {"rmse": 0, "mae": 0}
 
-            first_forecast = future_prices[0]
-            trend = "Bullish" if first_forecast > current_price else "Bearish"
-            change_percent = ((first_forecast - current_price) / current_price * 100)
+            # Trend based on last forecast point (not first)
+            last_forecast = future_prices[-1]
+            trend = "Bullish" if last_forecast > current_price else "Bearish"
+            change_percent = ((last_forecast - current_price) / current_price * 100)
 
             response = {
                 "ticker": ticker_upper,

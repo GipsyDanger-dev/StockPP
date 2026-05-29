@@ -78,8 +78,15 @@ class DataEngine:
 
         return df
 
-    def prepare_data(self, df: pd.DataFrame) -> Tuple[np.ndarray, List[StandardScaler]]:
-        """Preprocess data: add technical indicators, normalize per-feature, return data + scalers"""
+    def prepare_data(self, df: pd.DataFrame, split_index: int = None) -> Tuple[np.ndarray, List[StandardScaler]]:
+        """Preprocess data: add technical indicators, normalize per-feature, return data + scalers.
+
+        Args:
+            df: Raw OHLCV DataFrame
+            split_index: If provided, fit scalers only on data[:split_index] to prevent
+                         data leakage. All data is transformed, but scaler parameters
+                         come from training data only.
+        """
         try:
             df = self._add_technical_indicators(df)
 
@@ -89,15 +96,20 @@ class DataEngine:
 
             scaled_columns = []
             for i in range(NUM_FEATURES):
-                col_scaled = self.feature_scalers[i].fit_transform(
-                    feature_data[:, i].reshape(-1, 1)
-                )
+                col = feature_data[:, i].reshape(-1, 1)
+                if split_index is not None and split_index < len(col):
+                    # Fit on training data only, transform all data
+                    self.feature_scalers[i].fit(col[:split_index])
+                    col_scaled = self.feature_scalers[i].transform(col)
+                else:
+                    col_scaled = self.feature_scalers[i].fit_transform(col)
                 scaled_columns.append(col_scaled.flatten())
 
             self.scaled_data = np.column_stack(scaled_columns)
             self.close_scaler = self.feature_scalers[0]
 
-            logger.info(f"Data normalized with {NUM_FEATURES} per-feature scalers. Shape: {self.scaled_data.shape}")
+            logger.info(f"Data normalized with {NUM_FEATURES} per-feature scalers. Shape: {self.scaled_data.shape}"
+                        + (f" (scalers fitted on first {split_index} rows)" if split_index else ""))
 
             return self.scaled_data, self.feature_scalers
 
@@ -105,21 +117,36 @@ class DataEngine:
             logger.error(f"Error preparing data: {str(e)}")
             raise
 
-    def create_sequences(self, data: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        """Create sequences for LSTM training. Input: [samples, time_steps, features]. Target: Close price (index 0)."""
+    def create_sequences(self, data: np.ndarray, original_close: np.ndarray = None) -> Tuple[np.ndarray, np.ndarray]:
+        """Create sequences for LSTM training. Input: [samples, time_steps, features].
+        Target: next-day return computed from ORIGINAL (unscaled) Close prices.
+        original_close: the raw Close prices aligned with data rows. If None, falls back
+        to self.original_close_prices set during prepare_data().
+        """
         X, y = [], []
 
         if len(data) <= self.window_size:
             raise ValueError(f"Data too short ({len(data)}) for window_size ({self.window_size})")
 
+        prices = original_close if original_close is not None else self.original_close_prices
+        if prices is None or len(prices) != len(data):
+            raise ValueError("original_close prices required for return computation")
+
         for i in range(len(data) - self.window_size):
             X.append(data[i:i + self.window_size])
-            y.append(data[i + self.window_size, 0])
+            # Target: return = (close[t+1] - close[t]) / close[t] on ORIGINAL prices
+            close_current = prices[i + self.window_size - 1]
+            close_next = prices[i + self.window_size]
+            if close_current != 0:
+                ret = (close_next - close_current) / close_current
+            else:
+                ret = 0.0
+            y.append(ret)
 
         X = np.array(X)
         y = np.array(y)
 
-        logger.info(f"Created sequences. X shape: {X.shape}, y shape: {y.shape}")
+        logger.info(f"Created sequences. X shape: {X.shape}, y shape: {y.shape} (target=returns)")
         return X, y
 
     def inverse_transform_price(self, scaled_prices: np.ndarray) -> np.ndarray:

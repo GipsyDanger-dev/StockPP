@@ -2,6 +2,7 @@ import logging
 from typing import Optional, List, Dict
 from datetime import datetime
 import numpy as np
+from sklearn.preprocessing import StandardScaler
 
 from .model_manager import ModelManager
 from .model import LSTMModel
@@ -17,39 +18,65 @@ class RetrainingOrchestrator:
         self.model_manager = model_manager or ModelManager()
         self.data_engine = DataEngine(window_size=30)
 
-    def _walk_forward_validate(self, X: np.ndarray, y: np.ndarray,
-                                n_splits: int = 5, close_scaler=None) -> Dict:
+    def _walk_forward_validate(self, df, n_splits: int = 5) -> Dict:
         """
         Walk-forward validation: more realistic than static train/test split.
-        Splits data into n_splits folds, trains on expanding window,
-        tests on next fold. Returns average metrics on original dollar scale.
+        Each fold fits its own scalers on training data only (no data leakage).
         """
-        fold_size = len(X) // (n_splits + 1)
+        df_with_indicators = self.data_engine._add_technical_indicators(df)
+        total_len = len(df_with_indicators)
+        fold_size = total_len // (n_splits + 1)
         rmses, maes, mapes = [], [], []
+        original_prices = df_with_indicators['Close'].values
 
         for i in range(n_splits):
             train_end = fold_size * (i + 1)
-            test_end = min(train_end + fold_size, len(X))
+            test_end = min(train_end + fold_size, total_len)
 
-            if train_end < 30 or test_end <= train_end:
+            if train_end < 60 or test_end <= train_end:
                 continue
 
-            X_train, y_train = X[:train_end], y[:train_end]
-            X_test, y_test = X[train_end:test_end], y[train_end:test_end]
+            # Fit scalers on training portion only
+            fold_scalers = [StandardScaler() for _ in range(NUM_FEATURES)]
+            feature_data = df_with_indicators[self.data_engine.feature_columns].values
+            train_features = feature_data[:train_end]
+
+            scaled_columns = []
+            for j in range(NUM_FEATURES):
+                fold_scalers[j].fit(train_features[:, j].reshape(-1, 1))
+                col_scaled = fold_scalers[j].transform(feature_data[:, j].reshape(-1, 1))
+                scaled_columns.append(col_scaled.flatten())
+
+            scaled_data = np.column_stack(scaled_columns)
+            close_scaler = fold_scalers[0]
+
+            X, y = self.data_engine.create_sequences(scaled_data, original_close=original_prices)
+
+            # Adjust indices for sequence offset (window_size rows lost)
+            seq_train_end = train_end - self.data_engine.window_size
+            seq_test_end = test_end - self.data_engine.window_size
+
+            if seq_train_end <= 0 or seq_test_end <= seq_train_end:
+                continue
+
+            X_train, y_train = X[:seq_train_end], y[:seq_train_end]
+            X_test, y_test = X[seq_train_end:seq_test_end], y[seq_train_end:seq_test_end]
+
+            if len(X_train) < 30 or len(X_test) < 1:
+                continue
 
             fold_model = LSTMModel(window_size=30, num_features=NUM_FEATURES)
             fold_model.build_model()
             fold_model.train(X_train, y_train, epochs=50, batch_size=32, validation_split=0.1)
 
-            if close_scaler is not None:
-                metrics = fold_model.evaluate_on_original_scale(X_test, y_test, close_scaler)
-                rmses.append(metrics["rmse"])
-                maes.append(metrics["mae"])
-                mapes.append(metrics.get("mape", 0))
-            else:
-                metrics = fold_model.evaluate(X_test, y_test)
-                rmses.append(metrics["rmse"])
-                maes.append(metrics["mae"])
+            metrics = fold_model.evaluate_on_original_scale(
+                X_test, y_test, close_scaler,
+                original_prices=original_prices,
+                test_start_idx=train_end
+            )
+            rmses.append(metrics["rmse"])
+            maes.append(metrics["mae"])
+            mapes.append(metrics.get("mape", 0))
 
         if not rmses:
             return {"rmse": float('inf'), "mae": float('inf'), "mape": float('inf')}
@@ -66,8 +93,8 @@ class RetrainingOrchestrator:
     def retrain_model(
         self,
         ticker: str,
-        period: str = "5y",
-        epochs: int = 50,
+        period: str = "2y",
+        epochs: int = 100,
         batch_size: int = 32,
         force_retrain: bool = False
     ) -> Dict:
@@ -101,25 +128,33 @@ class RetrainingOrchestrator:
                 return result
 
             logger.info("Preparing data with technical indicators...")
-            scaled_data, feature_scalers = self.data_engine.prepare_data(df)
+            df_with_indicators = self.data_engine._add_technical_indicators(df)
+
+            # Walk-forward validation (uses raw df, fits scalers per fold)
+            logger.info("Running walk-forward validation...")
+            wf_metrics = self._walk_forward_validate(df, n_splits=5)
+            logger.info(f"Walk-forward validation - RMSE: ${wf_metrics['rmse']:.2f}, "
+                       f"MAE: ${wf_metrics['mae']:.2f}, Folds: {wf_metrics.get('folds_used', 0)}")
+
+            # Compute split index BEFORE creating sequences
+            total_rows = len(df_with_indicators)
+            split_row = int(total_rows * 0.8)
+            # Sequence offset: sequences start at window_size, so:
+            seq_split = split_row - self.data_engine.window_size
+
+            # Fit scalers on training data only (prevents data leakage)
+            scaled_data, feature_scalers = self.data_engine.prepare_data(df, split_index=split_row)
             close_scaler = self.data_engine.close_scaler
 
-            X, y = self.data_engine.create_sequences(scaled_data)
+            X, y = self.data_engine.create_sequences(scaled_data, original_close=self.data_engine.original_close_prices)
 
             if len(X) < 50:
                 result["error"] = f"Insufficient sequences. Got {len(X)}"
                 logger.error(result["error"])
                 return result
 
-            # Walk-forward validation on original dollar scale
-            logger.info("Running walk-forward validation...")
-            wf_metrics = self._walk_forward_validate(X, y, n_splits=5, close_scaler=close_scaler)
-            logger.info(f"Walk-forward validation - RMSE: ${wf_metrics['rmse']:.2f}, "
-                       f"MAE: ${wf_metrics['mae']:.2f}, Folds: {wf_metrics.get('folds_used', 0)}")
-
-            split_idx = int(len(X) * 0.8)
-            X_train, X_test = X[:split_idx], X[split_idx:]
-            y_train, y_test = y[:split_idx], y[split_idx:]
+            X_train, X_test = X[:seq_split], X[seq_split:]
+            y_train, y_test = y[:seq_split], y[seq_split:]
 
             logger.info(f"Data split - Train: {len(X_train)}, Test: {len(X_test)}")
 
@@ -131,7 +166,12 @@ class RetrainingOrchestrator:
             model.train(X_train, y_train, epochs=epochs, batch_size=batch_size)
 
             logger.info("Evaluating model on original dollar scale...")
-            new_metrics = model.evaluate_on_original_scale(X_test, y_test, close_scaler)
+            original_prices = self.data_engine.original_close_prices
+            new_metrics = model.evaluate_on_original_scale(
+                X_test, y_test, close_scaler,
+                original_prices=original_prices,
+                test_start_idx=split_row
+            )
             result["new_metrics"] = new_metrics
 
             old_metrics = self.model_manager.get_model_metrics(ticker_upper)

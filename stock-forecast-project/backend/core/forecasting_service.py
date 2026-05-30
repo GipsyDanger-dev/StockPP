@@ -90,7 +90,7 @@ class ForecastingService:
             needs_retrain = model is None or saved_scaler is None or feature_scalers is None
             if needs_retrain:
                 reason = "feature scalers missing" if (model and saved_scaler) else "model not found"
-                logger.info(f"Model for {ticker_upper} needs retrain ({reason}). Auto-training 70 epochs...")
+                logger.info(f"Model for {ticker_upper} needs retrain ({reason}). Auto-training 100 epochs...")
                 if progress:
                     progress.emit_sync("step", {"step": "auto_train", "label": f"No model found for {ticker_upper} - starting training...", "status": "running"})
                 try:
@@ -98,7 +98,7 @@ class ForecastingService:
                     orchestrator = RetrainingOrchestrator(self.model_manager)
                     result = orchestrator.retrain_model(
                         ticker=ticker_upper,
-                        period="2y",
+                        period="5y",
                         epochs=100,
                         force_retrain=True,
                         progress=progress

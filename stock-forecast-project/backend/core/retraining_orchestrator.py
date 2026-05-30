@@ -145,10 +145,15 @@ class RetrainingOrchestrator:
             logger.info("Preparing data with technical indicators...")
             df_with_indicators = self.data_engine._add_technical_indicators(df)
 
-            logger.info("Running walk-forward validation...")
-            wf_metrics = self._walk_forward_validate(df, n_splits=5, progress=progress)
-            logger.info(f"Walk-forward validation - RMSE: ${wf_metrics['rmse']:.2f}, "
-                       f"MAE: ${wf_metrics['mae']:.2f}, Folds: {wf_metrics.get('folds_used', 0)}")
+            old_metrics = self.model_manager.get_model_metrics(ticker_upper)
+
+            if old_metrics:
+                logger.info("Running walk-forward validation...")
+                wf_metrics = self._walk_forward_validate(df, n_splits=5, progress=progress)
+                logger.info(f"Walk-forward validation - RMSE: ${wf_metrics['rmse']:.2f}, "
+                           f"MAE: ${wf_metrics['mae']:.2f}, Folds: {wf_metrics.get('folds_used', 0)}")
+            else:
+                logger.info("First model for this ticker — skipping walk-forward validation")
 
             total_rows = len(df_with_indicators)
             split_row = int(total_rows * 0.8)
@@ -216,7 +221,6 @@ class RetrainingOrchestrator:
             svm_model.save_model(svm_path)
             self.model_manager.save_svm_model(ticker_upper, svm_path)
 
-            old_metrics = self.model_manager.get_model_metrics(ticker_upper)
             result["old_metrics"] = old_metrics
 
             # Gate on test-set metrics (same eval method as stored old metrics)

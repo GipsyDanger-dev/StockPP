@@ -3,3 +3,21 @@
 .claude/skills/
 .claude/settings.local.json
 skills-lock.json
+Stock-market-prediction-using-artificial-intelligence_2024_Social-Sciences--.pdf
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+
+# ML model cache
+saved_models/
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db

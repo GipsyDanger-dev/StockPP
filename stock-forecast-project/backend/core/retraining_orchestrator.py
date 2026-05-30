@@ -75,7 +75,7 @@ class RetrainingOrchestrator:
 
             fold_model = LSTMModel(window_size=30, num_features=NUM_FEATURES)
             fold_model.build_model()
-            fold_model.train(X_train, y_train, epochs=80, batch_size=32, validation_split=0.1)
+            fold_model.train(X_train, y_train, epochs=40, batch_size=32, validation_split=0.1)
 
             metrics = fold_model.evaluate_on_original_scale(
                 X_test, y_test, close_scaler,

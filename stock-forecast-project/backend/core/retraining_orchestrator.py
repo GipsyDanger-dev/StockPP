@@ -7,7 +7,6 @@ from sklearn.preprocessing import StandardScaler
 from .model_manager import ModelManager
 from .model import LSTMModel
 from .svm_model import SVMModel
-from .hyperparameter_tuner import HyperparameterTuner
 from .data_engine import DataEngine, NUM_FEATURES
 
 logger = logging.getLogger(__name__)
@@ -177,29 +176,10 @@ class RetrainingOrchestrator:
                 progress.emit_sync("train_step", {"step": "building", "label": "Building prediction model...", "status": "running"})
 
             tuned_params = None
-            if force_retrain:
-                if progress:
-                    progress.emit_sync("train_step", {"step": "tuning", "label": "Running hyperparameter search (20 trials)...", "status": "running"})
-                logger.info("Running hyperparameter tuning with Optuna...")
-                tuner = HyperparameterTuner(n_trials=20, quick_epochs=30)
-                val_size = max(30, int(len(X_train) * 0.1))
-                X_tune_train, X_tune_val = X_train[:-val_size], X_train[-val_size:]
-                y_tune_train, y_tune_val = y_train[:-val_size], y_train[-val_size:]
-                tuned_params = tuner.tune(X_tune_train, y_tune_train, X_tune_val, y_tune_val)
-                logger.info(f"Tuned params: {tuned_params}")
 
             logger.info("Building new model...")
             model = LSTMModel(window_size=30, num_features=NUM_FEATURES)
-            if tuned_params and tuned_params.get("best_rmse") is not None:
-                model.build_model_custom(
-                    lstm_units=tuned_params["lstm_units"],
-                    dropout_rates=tuned_params["dropout_rates"],
-                    learning_rate=tuned_params["learning_rate"]
-                )
-                batch_size = tuned_params.get("batch_size", batch_size)
-                logger.info(f"Using tuned architecture: units={tuned_params['lstm_units']}, lr={tuned_params['learning_rate']:.6f}")
-            else:
-                model.build_model()
+            model.build_model()
 
             if progress:
                 progress.emit_sync("train_step", {"step": "training", "label": f"Training model ({epochs} epochs)...", "status": "running"})

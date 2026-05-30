@@ -383,7 +383,10 @@ class ModelManager:
             svm_dest = self.model_dir / f"{ticker}_svm.pkl"
 
             import shutil
-            shutil.copy2(svm_model_path, svm_dest)
+            src = Path(svm_model_path).resolve()
+            dst = svm_dest.resolve()
+            if src != dst:
+                shutil.copy2(svm_model_path, svm_dest)
 
             if ticker in self.metadata:
                 self.metadata[ticker]["svm_path"] = str(svm_dest)

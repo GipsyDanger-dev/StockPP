@@ -22,7 +22,6 @@ class FinnhubClient:
 
     @classmethod
     def get_client(cls):
-        """Get or create Finnhub client instance"""
         if cls._client is None:
             api_key = os.getenv("FINNHUB_API_KEY")
             if not api_key:
@@ -106,7 +105,6 @@ class FinnhubClient:
 
     @classmethod
     def get_company_info(cls, ticker: str) -> Optional[Dict]:
-        """Get company profile information"""
         try:
             client = cls.get_client()
             profile = client.company_profile2(symbol=ticker)

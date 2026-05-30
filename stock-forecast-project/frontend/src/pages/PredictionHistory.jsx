@@ -38,9 +38,7 @@ const PredictionHistory = () => {
     try {
       await apiService.validatePrediction(predId);
       refetch();
-    } catch {
-      // validation failed
-    } finally {
+    } catch {} finally {
       setValidating(null);
     }
   };
@@ -50,9 +48,7 @@ const PredictionHistory = () => {
     try {
       await apiService.validateAllPredictions();
       refetch();
-    } catch {
-      // batch validation failed
-    } finally {
+    } catch {} finally {
       setValidating(null);
     }
   };
@@ -116,7 +112,6 @@ const PredictionHistory = () => {
       </header>
 
       <div className="p-6 lg:p-12 max-w-7xl mx-auto">
-        {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           <SummaryCard label="TOTAL" value={predictions.length.toString()} icon={BarChart3} />
           <SummaryCard label="VALIDATED" value={validated.length.toString()} icon={CheckCircle} color="text-emerald-400" />
@@ -125,7 +120,6 @@ const PredictionHistory = () => {
           <SummaryCard label="AVG ERROR" value={`${avgMPE}%`} icon={Zap} color={parseFloat(avgMPE) <= 2 ? 'text-emerald-400' : parseFloat(avgMPE) <= 5 ? 'text-yellow-400' : 'text-red-400'} />
         </div>
 
-        {/* Filters */}
         <div className="flex flex-wrap gap-2 mb-6">
           <button
             onClick={() => { setTickerFilter(null); setStatusFilter(null); }}
@@ -177,7 +171,6 @@ const PredictionHistory = () => {
           )}
         </div>
 
-        {/* Predictions Table */}
         <div className="bg-[#111] border border-[#1e1e1e] rounded-xl overflow-hidden">
           {isLoading ? (
             <div className="p-12 flex flex-col items-center justify-center gap-4">

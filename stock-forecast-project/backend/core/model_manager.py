@@ -34,7 +34,6 @@ class ModelManager:
                 self.use_cloud_storage = False
 
     def _load_metadata(self) -> Dict:
-        """Load metadata about saved models"""
         if self.metadata_file.exists():
             try:
                 with open(self.metadata_file, 'r') as f:
@@ -45,7 +44,6 @@ class ModelManager:
         return {}
 
     def _save_metadata(self) -> None:
-        """Save metadata about models"""
         try:
             with open(self.metadata_file, 'w') as f:
                 json.dump(self.metadata, f, indent=2, default=str)
@@ -53,7 +51,6 @@ class ModelManager:
             logger.error(f"Error saving metadata: {str(e)}")
 
     def get_model_path(self, ticker: str, version: str = "current") -> Path:
-        """Get path for a model"""
         return self.model_dir / f"{ticker.upper()}_{version}.keras"
 
     def save_model(self, model, ticker: str, metrics: Dict, scaler: Any = None,
@@ -97,7 +94,6 @@ class ModelManager:
             self.metadata[ticker]["current"] = version_info
             self.metadata[ticker]["versions"].append(version_info)
 
-            # Keep only last 5 versions
             if len(self.metadata[ticker]["versions"]) > 5:
                 self.metadata[ticker]["versions"] = self.metadata[ticker]["versions"][-5:]
 
@@ -123,7 +119,6 @@ class ModelManager:
             storage = self.supabase_client.get_storage()
             bucket = storage.from_("models")
 
-            # Delete existing files before re-uploading
             for file_name in ["model.keras", "close_scaler.pkl", "feature_scalers.pkl"]:
                 try:
                     bucket.remove([f"{ticker}/{file_name}"])
@@ -164,7 +159,6 @@ class ModelManager:
             return False
 
     def load_model(self, ticker: str) -> Optional[object]:
-        """Load a model if it exists"""
         try:
             from tensorflow import keras
 
@@ -216,7 +210,6 @@ class ModelManager:
         try:
             ticker = ticker.upper()
 
-            # Check metadata first
             if ticker in self.metadata and "current" in self.metadata[ticker]:
                 path_str = self.metadata[ticker]["current"].get("feature_scaler_path")
                 if path_str and Path(path_str).exists():
@@ -228,7 +221,6 @@ class ModelManager:
                 with open(scaler_path, 'rb') as f:
                     return pickle.load(f)
 
-            # Try downloading from Supabase cloud storage
             if self.use_cloud_storage and self.supabase_client:
                 try:
                     storage = self.supabase_client.get_storage()
@@ -256,7 +248,6 @@ class ModelManager:
         try:
             ticker = ticker.upper()
 
-            # Check metadata first
             if ticker in self.metadata and "current" in self.metadata[ticker]:
                 path_str = self.metadata[ticker]["current"].get("feature_scaler_path")
                 if path_str and Path(path_str).exists():
@@ -267,7 +258,6 @@ class ModelManager:
                         # Backward compat: single scaler wrapped in list
                         return [data] * NUM_FEATURES
 
-            # Try new per-feature scalers file
             scaler_path = self.scaler_dir / f"{ticker}_feature_scalers.pkl"
             if scaler_path.exists():
                 with open(scaler_path, 'rb') as f:
@@ -276,7 +266,6 @@ class ModelManager:
                         return data
                     return [data] * NUM_FEATURES
 
-            # Fall back to legacy single scaler file
             legacy_path = self.scaler_dir / f"{ticker}_feature_scaler.pkl"
             if legacy_path.exists():
                 with open(legacy_path, 'rb') as f:
@@ -284,7 +273,6 @@ class ModelManager:
                     logger.info(f"Loaded legacy single feature scaler for {ticker}, wrapping as list")
                     return [scaler] * NUM_FEATURES
 
-            # Try Supabase cloud
             if self.use_cloud_storage and self.supabase_client:
                 try:
                     storage = self.supabase_client.get_storage()
@@ -315,7 +303,6 @@ class ModelManager:
             return None
 
     def get_model_metrics(self, ticker: str) -> Optional[Dict]:
-        """Get metrics for current model"""
         ticker = ticker.upper()
 
         if ticker in self.metadata and "current" in self.metadata[ticker]:
@@ -324,7 +311,6 @@ class ModelManager:
         return None
 
     def get_model_age(self, ticker: str) -> Optional[float]:
-        """Get age of model in hours"""
         try:
             ticker = ticker.upper()
             if ticker in self.metadata and "current" in self.metadata[ticker]:
@@ -338,7 +324,6 @@ class ModelManager:
             return None
 
     def should_retrain(self, ticker: str, max_age_hours: float = 24) -> bool:
-        """Check if model should be retrained"""
         ticker = ticker.upper()
 
         if ticker not in self.metadata or "current" not in self.metadata[ticker]:
@@ -375,13 +360,11 @@ class ModelManager:
         return False
 
     def model_exists(self, ticker: str) -> bool:
-        """Check if model exists for ticker"""
         ticker = ticker.upper()
         model_path = self.get_model_path(ticker, "current")
         return model_path.exists()
 
     def get_all_model_info(self) -> Dict:
-        """Get information about all saved models"""
         info = {}
         for ticker, data in self.metadata.items():
             if "current" in data:
@@ -395,7 +378,6 @@ class ModelManager:
         return info
 
     def _save_scaler(self, scaler: Any, ticker: str, suffix: str = "_scaler") -> Path:
-        """Save scaler to disk as pickle file"""
         ticker = ticker.upper()
         scaler_path = self.scaler_dir / f"{ticker}{suffix}.pkl"
 
@@ -405,7 +387,6 @@ class ModelManager:
         return scaler_path
 
     def _save_feature_scalers(self, scalers: list, ticker: str) -> Path:
-        """Save list of per-feature scalers to disk"""
         ticker = ticker.upper()
         scaler_path = self.scaler_dir / f"{ticker}_feature_scalers.pkl"
 
@@ -415,11 +396,9 @@ class ModelManager:
         return scaler_path
 
     def _load_scaler(self, ticker: str) -> Optional[Any]:
-        """Load scaler from disk"""
         try:
             ticker = ticker.upper()
 
-            # Check metadata first for scaler path
             if ticker in self.metadata and "current" in self.metadata[ticker]:
                 scaler_path_str = self.metadata[ticker]["current"].get("scaler_path")
                 if scaler_path_str and Path(scaler_path_str).exists():
@@ -431,7 +410,6 @@ class ModelManager:
                 with open(scaler_path, 'rb') as f:
                     return pickle.load(f)
 
-            # Try downloading from Supabase cloud storage
             if self.use_cloud_storage and self.supabase_client:
                 try:
                     storage = self.supabase_client.get_storage()

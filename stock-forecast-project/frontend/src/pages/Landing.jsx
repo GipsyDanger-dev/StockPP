@@ -41,7 +41,6 @@ export default function Landing() {
     return () => window.removeEventListener('scroll', fn)
   }, [])
 
-  /* Three.js CTA scene */
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -65,42 +64,36 @@ export default function Landing() {
     resize()
     window.addEventListener('resize', resize)
 
-    // Outer dodecahedron (large, slow)
     const mesh1 = new THREE.Mesh(
       new THREE.DodecahedronGeometry(2.2, 0),
       new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.18 })
     )
     group.add(mesh1)
 
-    // Inner icosahedron (orange, breathing + pulsing opacity)
     const mesh2 = new THREE.Mesh(
       new THREE.IcosahedronGeometry(1.3, 1),
       new THREE.MeshBasicMaterial({ color: 0xFF6633, wireframe: true, transparent: true, opacity: 0.25 })
     )
     group.add(mesh2)
 
-    // Core glow sphere (very faint, sits inside icosahedron)
     const coreGlow = new THREE.Mesh(
       new THREE.SphereGeometry(0.8, 16, 16),
       new THREE.MeshBasicMaterial({ color: 0xFF6633, transparent: true, opacity: 0.04 })
     )
     group.add(coreGlow)
 
-    // Satellite octahedron #1 (orbiting)
     const sat1 = new THREE.Mesh(
       new THREE.OctahedronGeometry(0.5, 0),
       new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.3 })
     )
     group.add(sat1)
 
-    // Satellite tetrahedron #2 (counter-orbiting)
     const sat2 = new THREE.Mesh(
       new THREE.TetrahedronGeometry(0.35, 0),
       new THREE.MeshBasicMaterial({ color: 0xFF6633, wireframe: true, transparent: true, opacity: 0.22 })
     )
     group.add(sat2)
 
-    // 3 orbit rings at different tilts
     const rings = []
     const ringData = [
       { r: 3, tube: 0.008, tilt: 0.35, zTilt: 0, speed: 0.12, opacity: 0.14 },
@@ -119,7 +112,6 @@ export default function Landing() {
       rings.push(ring)
     })
 
-    // Particles (200) with orbital data
     const pCount = 200
     const pData = []
     const pPos = new Float32Array(pCount * 3)
@@ -141,7 +133,6 @@ export default function Landing() {
     const particles = new THREE.Points(pGeo, pMat)
     group.add(particles)
 
-    // Inner floating fragments (small wireframe shards close to center)
     const frags = []
     for (let i = 0; i < 12; i++) {
       const size = 0.08 + Math.random() * 0.12
@@ -163,7 +154,6 @@ export default function Landing() {
       frags.push(frag)
     }
 
-    // Constellation lines
     const lineMax = 300
     const linePositions = new Float32Array(lineMax * 6)
     const lineGeo = new THREE.BufferGeometry()
@@ -182,23 +172,18 @@ export default function Landing() {
       raf = requestAnimationFrame(animate)
       const t = performance.now() * 0.001
 
-      // Group float (whole scene gently bobs)
       group.position.y = Math.sin(t * 0.6) * 0.15
 
-      // Mesh rotations (faster)
       mesh1.rotation.y = t * 0.18; mesh1.rotation.x = t * 0.1
       mesh2.rotation.y = -t * 0.25; mesh2.rotation.z = t * 0.13
 
-      // Icosahedron breathing + opacity pulse
       const breathe = 1 + Math.sin(t * 1.5) * 0.1
       mesh2.scale.setScalar(breathe)
       mesh2.material.opacity = 0.2 + Math.sin(t * 2) * 0.1
 
-      // Core glow pulse
       coreGlow.scale.setScalar(1 + Math.sin(t * 2.5) * 0.2)
       coreGlow.material.opacity = 0.03 + Math.sin(t * 3) * 0.02
 
-      // Satellite #1 orbit
       sat1.position.set(
         2.8 * Math.cos(t * 0.7),
         1.0 + Math.sin(t * 1.1) * 0.5,
@@ -206,7 +191,6 @@ export default function Landing() {
       )
       sat1.rotation.x = t * 0.4; sat1.rotation.y = t * 0.3
 
-      // Satellite #2 counter-orbit
       sat2.position.set(
         3.2 * Math.cos(-t * 0.4 + 2),
         -0.8 + Math.sin(t * 0.9) * 0.6,
@@ -214,10 +198,8 @@ export default function Landing() {
       )
       sat2.rotation.x = t * 0.5; sat2.rotation.z = t * 0.35
 
-      // Ring rotation
       rings.forEach(ring => { ring.rotation.y = t * ring.userData.speed })
 
-      // Particle orbits + constellation lines
       const pos = pGeo.attributes.position.array
       let lineIdx = 0
       for (let i = 0; i < pCount; i++) {
@@ -230,10 +212,8 @@ export default function Landing() {
       }
       pGeo.attributes.position.needsUpdate = true
 
-      // Particle opacity pulse
       pMat.opacity = 0.6 + Math.sin(t * 2) * 0.2
 
-      // Constellation lines
       const lPos = lineGeo.attributes.position.array
       for (let i = 0; i < pCount && lineIdx < lineMax; i++) {
         for (let j = i + 1; j < pCount && lineIdx < lineMax; j++) {
@@ -254,10 +234,8 @@ export default function Landing() {
       lineGeo.attributes.position.needsUpdate = true
       lineGeo.setDrawRange(0, lineIdx * 2)
 
-      // Constellation line opacity pulse
       lineMat.opacity = 0.1 + Math.sin(t * 1.5) * 0.06
 
-      // Inner fragments orbit + spin
       frags.forEach(f => {
         const d = f.userData
         const theta = d.theta + t * d.speed
@@ -270,7 +248,6 @@ export default function Landing() {
         f.rotation.y = t * d.rotSpeed * 0.7
       })
 
-      // Camera parallax (more responsive)
       camera.position.x += (mx * 0.4 - camera.position.x) * 0.04
       camera.position.y += (-my * 0.3 - camera.position.y) * 0.04
       camera.lookAt(0, 0, 0)
@@ -287,15 +264,12 @@ export default function Landing() {
     }
   }, [])
 
-  /* GSAP animations */
   useGSAP(() => {
-    // Scroll-linked canvas fade
     gsap.to('#cta canvas', {
       opacity: 0, ease: 'none',
       scrollTrigger: { trigger: '#cta', start: 'top top', end: 'bottom top', scrub: true },
     })
 
-    // CTA headline reveal
     const ctaLines = document.querySelectorAll('#ctaHeadline .line span')
     ScrollTrigger.create({
       trigger: '#cta', start: 'top 70%',
@@ -305,7 +279,6 @@ export default function Landing() {
       },
     })
 
-    // CTA counters
     document.querySelectorAll('[data-cta-count]').forEach(el => {
       const target = parseFloat(el.dataset.ctaCount)
       const decimals = parseInt(el.dataset.ctaDecimals) || 0
@@ -318,27 +291,22 @@ export default function Landing() {
       })
     })
 
-    // Marquee
     gsap.to('#marqueeRow', { x: '-50%', duration: 30, repeat: -1, ease: 'none' })
 
-    // Scroll enter
     gsap.utils.toArray('[data-enter]').forEach(el => {
       gsap.from(el, { y: 60, opacity: 0, duration: 0.6, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 85%' } })
     })
 
-    // Tech rows stagger entrance
     gsap.to('[data-tech]', {
       opacity: 1, y: 0, duration: 0.55, ease: 'power3.out', stagger: 0.08,
       scrollTrigger: { trigger: '#tech-stack', start: 'top 80%', once: true },
     })
 
-    // Tech header entrance
     gsap.from('.tech-header', {
       opacity: 0, y: 20, duration: 0.6, ease: 'power3.out',
       scrollTrigger: { trigger: '#tech-stack', start: 'top 85%', once: true },
     })
 
-    // Features bento entrance
     gsap.from('#featHead', {
       opacity: 0, y: 20, duration: 0.6, ease: 'power3.out',
       scrollTrigger: { trigger: '#features', start: 'top 85%', once: true },
@@ -348,7 +316,6 @@ export default function Landing() {
       scrollTrigger: { trigger: '#features', start: 'top 78%', once: true },
     })
 
-    // Validation counter
     ScrollTrigger.create({
       trigger: '#c4', start: 'top 80%', once: true,
       onEnter: () => {
@@ -362,7 +329,6 @@ export default function Landing() {
       },
     })
 
-    // Stat counters
     gsap.utils.toArray('[data-count]').forEach(el => {
       const target = parseFloat(el.dataset.count)
       const decimals = parseInt(el.dataset.decimals) || 0
@@ -380,7 +346,6 @@ export default function Landing() {
   return (
     <div ref={ref}>
 
-      {/* Announcement Bar */}
       {showAnnounce && (
         <div className="announcement" id="announcement">
           <span className="ui-label">New: 30-day forecasting now available — Try it free →</span>
@@ -388,7 +353,6 @@ export default function Landing() {
         </div>
       )}
 
-      {/* Navbar */}
       <nav className={`navbar ${scrolled ? 'scrolled' : ''}`} style={{ top: showAnnounce ? 36 : 0 }}>
         <div className="container">
           <span onClick={() => navigate('/')} className="nav-logo" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -410,7 +374,6 @@ export default function Landing() {
         </div>
       </nav>
 
-      {/* Mobile Drawer */}
       <div className={`mobile-drawer ${drawer ? 'open' : ''}`}>
         <div className="mobile-drawer-header">
           <span className="nav-logo" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -425,7 +388,6 @@ export default function Landing() {
         <button onClick={() => { setDrawer(false); navigate('/signup') }} className="btn btn-primary" style={{ marginTop: 24, width: '100%', textAlign: 'center' }}>Get Started</button>
       </div>
 
-      {/* Dark CTA Hero */}
       <section className="dark-cta" id="cta">
         <canvas ref={canvasRef} id="cta-canvas"></canvas>
         <div className="container">
@@ -474,7 +436,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Marquee */}
       <section className="marquee">
         <div className="marquee-row" id="marqueeRow">
           {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((t, i) => (
@@ -487,7 +448,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Tech Stack */}
       <section className="tech-section" id="tech-stack">
         <div className="container">
           <div className="tech-header">
@@ -519,7 +479,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Features Bento */}
       <section className="features-section" id="features">
         <div className="container">
           <div className="features-header" id="featHead">
@@ -528,7 +487,6 @@ export default function Landing() {
           </div>
 
           <div className="features-bento">
-            {/* Card 1 — LSTM Neural Network 3D */}
             <div className="bento-card bento-main" id="c1">
               <div className="card-canvas"><NeuralPulseCanvas /></div>
               <div className="card-content">
@@ -547,7 +505,6 @@ export default function Landing() {
               </div>
             </div>
 
-            {/* Card 2 — Live Market: Waveform 3D */}
             <div className="bento-card bento-market" id="c2">
               <div className="card-canvas"><WaveformCanvas /></div>
               <div className="card-content">
@@ -562,7 +519,6 @@ export default function Landing() {
               </div>
             </div>
 
-            {/* Card 3 — Accuracy: Orbital System */}
             <div className="bento-card bento-accuracy" id="c3">
               <div className="card-canvas"><OrbitalCanvas /></div>
               <div className="card-content">
@@ -580,7 +536,6 @@ export default function Landing() {
               </div>
             </div>
 
-            {/* Card 4 — Auto Validation: Particle Stream */}
             <div className="bento-card bento-validation" id="c4">
               <div className="card-canvas"><ValidationCanvas /></div>
               <div className="card-content" style={{ flexDirection: 'row', gap: 32, alignItems: 'center' }}>
@@ -606,7 +561,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Stats Band */}
       <section className="section section-dark">
         <div className="container">
           <div className="stats-grid">
@@ -625,10 +579,8 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Dashboard Preview */}
       <DashboardPreview />
 
-      {/* How It Works */}
       <section className="section section-orange" id="how-it-works">
         <div className="container">
           <h3 style={{ textAlign: 'center', color: 'var(--white)', marginBottom: 52 }} data-enter="">How It Works</h3>
@@ -649,7 +601,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Pricing */}
       <section className="section" id="pricing">
         <div className="container">
           <h3 style={{ textAlign: 'center', marginBottom: 16, color: 'var(--white)' }} data-enter="">Simple, transparent pricing</h3>
@@ -676,7 +627,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="footer">
         <div className="container">
           <div className="footer-grid">

@@ -35,7 +35,7 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type"],
 )
 
-MAX_REQUEST_SIZE = 10 * 1024 * 1024  # 10 MB
+MAX_REQUEST_SIZE = 10 * 1024 * 1024
 
 
 @app.middleware("http")

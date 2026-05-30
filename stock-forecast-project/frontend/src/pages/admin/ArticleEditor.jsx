@@ -57,9 +57,7 @@ const ArticleEditor = () => {
             header: data.header_image || null,
             thumbnail: data.thumbnail || null
           });
-        } catch {
-          // article fetch failed
-        } finally {
+        } catch {} finally {
           setLoading(false);
         }
       };

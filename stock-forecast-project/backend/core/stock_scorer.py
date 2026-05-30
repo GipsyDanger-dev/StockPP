@@ -31,7 +31,6 @@ class StockScorer:
         self.data_engine = DataEngine(window_size=30)
 
     def score_stock(self, ticker: str, period: str = "1y") -> Dict:
-        """Compute composite score for a single stock."""
         try:
             # Fetch fundamental data
             financials = FinnhubClient.get_company_financials(ticker)
@@ -91,7 +90,6 @@ class StockScorer:
             return {"ticker": ticker, "score": 0, "error": str(e)}
 
     def rank_stocks(self, tickers: List[str], period: str = "1y") -> List[Dict]:
-        """Score and rank multiple stocks."""
         results = []
         for ticker in tickers:
             result = self.score_stock(ticker, period)
@@ -191,7 +189,6 @@ class StockScorer:
 
         score = 0.5
 
-        # RSI: prefer moderate range (40-60), penalize extremes
         if 40 <= rsi <= 60:
             score += 0.2
         elif 30 <= rsi <= 70:
@@ -201,7 +198,6 @@ class StockScorer:
         elif rsi < 20:
             score -= 0.1
 
-        # MACD: positive is bullish
         if macd > 0:
             score += 0.2
         else:
@@ -218,7 +214,6 @@ class StockScorer:
 
         score = 0.5
 
-        # Price above MAs is bullish
         if close > ma20:
             score += 0.15
         if close > ma50:
@@ -226,7 +221,6 @@ class StockScorer:
         if close > ewma20:
             score += 0.1
 
-        # Golden cross (MA20 > MA50)
         if ma20 > ma50:
             score += 0.1
 
@@ -237,7 +231,6 @@ class StockScorer:
         returns = df['Close'].pct_change().dropna().iloc[-30:]
         vol = float(returns.std()) if len(returns) > 1 else 0.02
 
-        # Annualize
         ann_vol = vol * np.sqrt(252)
 
         if ann_vol < 0.15:
@@ -288,7 +281,6 @@ class StockScorer:
         std_vol = float(vol.std())
         cv = std_vol / avg_vol if avg_vol > 0 else 1.0
 
-        # Lower coefficient of variation = more consistent volume
         if cv < 0.3:
             return 0.9
         elif cv < 0.5:
@@ -311,7 +303,6 @@ class StockScorer:
             return "F"
 
     def _generate_signals(self, scores: Dict, df, financials: Optional[Dict], price: float) -> List[str]:
-        """Generate human-readable signals from sub-scores."""
         signals = []
 
         if scores.get('value', 0) > 0.7:

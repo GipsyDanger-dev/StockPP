@@ -124,7 +124,6 @@ const Dashboard = () => {
     );
   }
 
-  // Accuracy: normalize RMSE as percentage of current price (cap at 100%)
   const rmseValue = data.metrics?.rmse || 0;
   const currentPrice = data.current_price || 1;
   const accuracyPercent = Math.max(0, Math.min(100, 100 - (rmseValue / currentPrice) * 100));
@@ -135,7 +134,6 @@ const Dashboard = () => {
 
   return (
     <div className="text-white">
-      {/* HEADER */}
       <header className="bg-[#111]/80 backdrop-blur-md sticky top-0 z-10 px-6 py-3 flex justify-between items-center border-b border-[#1e1e1e]">
         <form onSubmit={handleSearch} className="flex relative w-80">
           <input
@@ -154,7 +152,6 @@ const Dashboard = () => {
       </header>
 
       <div className="p-6 lg:p-10 max-w-7xl mx-auto space-y-8">
-        {/* HERO */}
         <div className={`transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <div className="flex items-center gap-3 mb-3">
             <div className="w-8 h-8 bg-[#FF6633]/10 rounded-lg flex items-center justify-center border border-[#FF6633]/20">
@@ -170,9 +167,7 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* MAIN GRID */}
         <div className={`grid grid-cols-1 lg:grid-cols-3 gap-6 transition-all duration-700 delay-150 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          {/* CHART CARD */}
           <div className="lg:col-span-2 bg-[#0a0a0a] border border-[#1e1e1e] rounded-2xl p-6 lg:p-8 hover:border-[#2a2a2a] transition-colors duration-300">
             <div className="flex justify-between items-start mb-6">
               <div>
@@ -201,9 +196,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* RIGHT COLUMN */}
           <div className="space-y-6">
-            {/* AI PREDICTION CARD */}
             <div className="bg-[#0D1117] text-white rounded-2xl p-6 shadow-xl relative overflow-hidden">
               <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl" />
               <div className="relative z-10">
@@ -261,7 +254,6 @@ const Dashboard = () => {
               </button>
             </div>
 
-            {/* QUICK STATS */}
             <div className="grid grid-cols-2 gap-3">
               {[
                 { label: 'MAE', value: data.metrics?.mae?.toFixed(4) || 'N/A', sub: 'Error' },
@@ -277,7 +269,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* 7-DAY FORECAST TABLE */}
         <div className={`bg-[#0a0a0a] border border-[#1e1e1e] rounded-2xl overflow-hidden transition-all duration-700 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <div className="px-6 py-4 border-b border-[#1e1e1e] flex justify-between items-center">
             <div className="flex items-center gap-2">

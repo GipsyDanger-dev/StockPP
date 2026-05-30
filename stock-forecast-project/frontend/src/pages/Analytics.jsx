@@ -43,7 +43,6 @@ const AnalyticsOverview = () => {
 
   return (
     <div className="min-h-screen bg-white text-[#191C1E]">
-      {/* HEADER */}
       <header className="bg-[#F7F9FB] px-6 lg:px-12 py-8 border-b border-[#E0E3E5]">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
@@ -57,7 +56,6 @@ const AnalyticsOverview = () => {
       </header>
 
       <main className="p-6 lg:p-12 max-w-7xl mx-auto">
-        {/* SEARCH BAR */}
         <div className="mb-10">
           <div className="relative max-w-2xl">
             <input
@@ -71,7 +69,6 @@ const AnalyticsOverview = () => {
             {isSearching && <Loader className="absolute right-4 top-4 animate-spin text-indigo-600" size={24} />}
           </div>
 
-          {/* Search Results */}
           {showSearchResults && (
             <div className="mt-4 bg-white border-2 border-[#C6C6CD] rounded-xl overflow-hidden shadow-sm max-w-2xl">
               {searchResults.length > 0 ? (
@@ -111,9 +108,7 @@ const AnalyticsOverview = () => {
           </div>
         ) : (
           <>
-            {/* TOP MOVERS */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-              {/* Top Gainers */}
               <div className="bg-white border-2 border-[#E0E3E5] rounded-xl overflow-hidden shadow-sm">
                 <div className="bg-[#F0FDF4] p-6 border-b border-[#E0E3E5]">
                   <div className="flex items-center gap-3">
@@ -144,7 +139,6 @@ const AnalyticsOverview = () => {
                 </div>
               </div>
 
-              {/* Top Losers */}
               <div className="bg-white border-2 border-[#E0E3E5] rounded-xl overflow-hidden shadow-sm">
                 <div className="bg-rose-50 p-6 border-b border-[#E0E3E5]">
                   <div className="flex items-center gap-3">
@@ -176,7 +170,6 @@ const AnalyticsOverview = () => {
               </div>
             </div>
 
-            {/* ALL STOCKS TABLE */}
             <div className="bg-white border-2 border-[#E0E3E5] rounded-xl overflow-hidden shadow-sm">
               <div className="bg-[#F2F4F6] p-6 border-b border-[#E0E3E5]">
                 <h3 className="font-bold tracking-widest text-[#45464D]">ALL WATCHLIST STOCKS</h3>
@@ -240,9 +233,7 @@ const AnalyticsDetail = ({ ticker }) => {
     try {
       const res = await apiService.getQuote(ticker);
       setLiveQuote(res);
-    } catch {
-      // quote fetch failed silently
-    }
+    } catch {}
     setQuoteLoading(false);
   };
 
@@ -325,7 +316,6 @@ const AnalyticsDetail = ({ ticker }) => {
 
   return (
     <div className="min-h-screen bg-white text-[#191C1E]">
-      {/* HEADER */}
       <header className="bg-[#F7F9FB] px-6 lg:px-12 py-8 flex items-center border-b border-[#E0E3E5]">
         <button onClick={() => navigate('/analytics')} className="mr-6 p-2 hover:bg-slate-200 rounded-full transition-colors" aria-label="Back to Analytics Overview">
           <ChevronLeft size={32} />
@@ -342,7 +332,6 @@ const AnalyticsDetail = ({ ticker }) => {
       </header>
 
       <main className="p-6 lg:p-12 max-w-7xl mx-auto">
-        {/* TICKER INFO */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-12 gap-6">
           <div>
             <h2 className="text-6xl lg:text-8xl font-bold text-black mb-2">{data.ticker}</h2>
@@ -360,7 +349,6 @@ const AnalyticsDetail = ({ ticker }) => {
           </div>
         </div>
 
-        {/* LIVE MARKET DATA */}
         {liveQuote && (
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
             <LiveCard label="Open" value={formatCurrency(liveQuote.open)} />
@@ -371,9 +359,7 @@ const AnalyticsDetail = ({ ticker }) => {
           </div>
         )}
 
-        {/* TECHNICAL INDICATORS */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-12">
-          {/* RSI Card */}
           <div className={`border-2 rounded-xl p-6 shadow-sm ${rsiSignal.bg}`}>
             <p className="text-[#45464D] font-bold tracking-widest text-sm mb-3">RSI (14)</p>
             <p className="text-4xl font-bold text-black mb-2">{indicators.rsi?.toFixed(2) || 'N/A'}</p>
@@ -394,7 +380,6 @@ const AnalyticsDetail = ({ ticker }) => {
             </div>
           </div>
 
-          {/* Moving Averages Card */}
           <div className={`border-2 rounded-xl p-6 shadow-sm ${maSignal.bg}`}>
             <p className="text-[#45464D] font-bold tracking-widest text-sm mb-3">MOVING AVERAGES</p>
             <div className="space-y-3">
@@ -419,7 +404,6 @@ const AnalyticsDetail = ({ ticker }) => {
             </div>
           </div>
 
-          {/* MACD Card */}
           <div className={`border-2 rounded-xl p-6 shadow-sm ${macdSignal.bg}`}>
             <p className="text-[#45464D] font-bold tracking-widest text-sm mb-3">MACD</p>
             <p className="text-4xl font-bold text-black mb-2">{indicators.macd?.toFixed(4) || 'N/A'}</p>
@@ -434,7 +418,6 @@ const AnalyticsDetail = ({ ticker }) => {
             </p>
           </div>
 
-          {/* EWMA20 Card */}
           <div className={`border-2 rounded-xl p-6 shadow-sm ${ewmaSignal.bg}`}>
             <p className="text-[#45464D] font-bold tracking-widest text-sm mb-3">EWMA (20)</p>
             <p className="text-4xl font-bold text-black mb-2">{formatCurrency(indicators.ewma20)}</p>
@@ -450,7 +433,6 @@ const AnalyticsDetail = ({ ticker }) => {
           </div>
         </div>
 
-        {/* STOCK SCORE (ACO-INSPIRED) */}
         {scoreData && !scoreData.error && (
           <div className="bg-white border-2 border-[#E0E3E5] rounded-xl p-6 mb-12 shadow-sm">
             <div className="flex items-center justify-between mb-6">
@@ -500,7 +482,6 @@ const AnalyticsDetail = ({ ticker }) => {
           </div>
         )}
 
-        {/* CHART SECTION */}
         <div className="bg-white border-2 border-[#E0E3E5] rounded-xl overflow-hidden mb-12 shadow-sm">
           <div className="bg-[#F2F4F6] p-6 flex justify-between items-center border-b border-[#E0E3E5]">
             <div className="flex gap-8">
@@ -518,9 +499,7 @@ const AnalyticsDetail = ({ ticker }) => {
           </div>
         </div>
 
-        {/* MODEL METRICS & INFO */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12">
-          {/* MODEL METRICS */}
           <div className="bg-white border-2 border-[#E0E3E5] p-10 rounded-xl shadow-sm">
             <p className="text-[#45464D] font-bold tracking-widest text-sm mb-6">MODEL METRICS</p>
             <div className="space-y-6">
@@ -545,7 +524,6 @@ const AnalyticsDetail = ({ ticker }) => {
             </div>
           </div>
 
-          {/* FORECAST SUMMARY */}
           <div className="bg-white border-2 border-[#E0E3E5] rounded-xl overflow-hidden shadow-sm">
             <div className="bg-[#F2F4F6] p-6 border-b border-[#E0E3E5]">
               <p className="font-bold text-black tracking-widest text-sm">FORECAST SUMMARY</p>

@@ -86,7 +86,6 @@ const Reports = () => {
       </header>
 
       <div className="p-6 lg:p-12 max-w-7xl mx-auto">
-        {/* SEARCH & FILTER BAR */}
         <div className="flex flex-col md:flex-row gap-4 mb-10">
           <div className="flex-1 relative">
             <input
@@ -110,16 +109,13 @@ const Reports = () => {
           </select>
         </div>
 
-        {/* STATS CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <StatCard title="TOTAL REPORTS" value={totalReports.toString()} color="text-black" />
           <StatCard title="COMPLETED" value={completedReports.toString()} color="text-emerald-600" />
           <StatCard title="PROCESSING" value={processingReports.toString()} color="text-blue-600" />
         </div>
 
-        {/* REPORTS TABLE */}
         <div className="bg-white border-2 border-[#E0E3E5] rounded-xl overflow-hidden shadow-sm">
-          {/* Refetch indicator */}
           {isFetching && !isLoading && (
             <div className="bg-blue-50 border-b border-blue-100 px-4 py-2 flex items-center gap-2">
               <Loader className="w-3 h-3 animate-spin text-blue-500" />

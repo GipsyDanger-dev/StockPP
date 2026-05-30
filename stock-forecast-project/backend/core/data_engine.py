@@ -6,7 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-NUM_FEATURES = 10  # Close, Volume, MA20, MA50, RSI, MACD, EWMA20, BB_upper, ATR, OBV
+NUM_FEATURES = 10
 
 
 class DataEngine:
@@ -60,29 +60,24 @@ class DataEngine:
         df['MA20'] = df['Close'].rolling(window=20).mean()
         df['MA50'] = df['Close'].rolling(window=50).mean()
 
-        # RSI (14-day)
         delta = df['Close'].diff()
         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
         rs = gain / loss
         df['RSI'] = 100 - (100 / (1 + rs))
 
-        # MACD (12-day EMA - 26-day EMA)
         ema12 = df['Close'].ewm(span=12, adjust=False).mean()
         ema26 = df['Close'].ewm(span=26, adjust=False).mean()
         df['MACD'] = ema12 - ema26
 
-        # EWMA (20-day Exponentially Weighted Moving Average)
         df['EWMA20'] = df['Close'].ewm(span=20, adjust=False).mean()
 
-        # Bollinger Bands Width (20-day, 2 std)
         bb_mid = df['Close'].rolling(window=20).mean()
         bb_std = df['Close'].rolling(window=20).std()
         bb_upper = bb_mid + 2 * bb_std
         bb_lower = bb_mid - 2 * bb_std
         df['BB_Width'] = (bb_upper - bb_lower) / bb_mid  # Normalized width
 
-        # ATR (14-day Average True Range)
         high_low = df['High'] - df['Low']
         high_close = (df['High'] - df['Close'].shift()).abs()
         low_close = (df['Low'] - df['Close'].shift()).abs()
@@ -92,7 +87,6 @@ class DataEngine:
         # Forward-fill zero-volume days (holidays/stale data on IDX) before OBV
         df['Volume'] = df['Volume'].replace(0, np.nan).ffill().fillna(1)
 
-        # OBV (On-Balance Volume) - normalized
         obv = (np.sign(df['Close'].diff()) * df['Volume']).fillna(0).cumsum()
         df['OBV_norm'] = (obv - obv.rolling(20).mean()) / obv.rolling(20).std()
 
@@ -156,7 +150,6 @@ class DataEngine:
 
         for i in range(len(data) - self.window_size):
             X.append(data[i:i + self.window_size])
-            # Target: return = (close[t+1] - close[t]) / close[t] on ORIGINAL prices
             close_current = prices[i + self.window_size - 1]
             close_next = prices[i + self.window_size]
             if close_current != 0:
@@ -172,20 +165,17 @@ class DataEngine:
         return X, y
 
     def inverse_transform_price(self, scaled_prices: np.ndarray) -> np.ndarray:
-        """Convert scaled price predictions back to original scale"""
         if self.close_scaler is None:
             raise ValueError("Close scaler not fitted. Call prepare_data() first.")
         return self.close_scaler.inverse_transform(scaled_prices.reshape(-1, 1)).flatten()
 
     def get_last_sequence(self, data: np.ndarray) -> np.ndarray:
-        """Get the last 'window_size' days for making next prediction"""
         if len(data) < self.window_size:
             raise ValueError("Data provided is shorter than window size")
 
         return data[-self.window_size:].reshape(1, self.window_size, NUM_FEATURES)
 
     def get_summary(self) -> Dict[str, Any]:
-        """Get data engine summary information"""
         return {
             "window_size": self.window_size,
             "num_features": NUM_FEATURES,

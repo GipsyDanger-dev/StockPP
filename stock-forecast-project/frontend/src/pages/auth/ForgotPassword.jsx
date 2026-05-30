@@ -46,7 +46,6 @@ export default function ForgotPassword() {
       <AuthCanvas />
 
       <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 460, padding: '0 24px', animation: 'fadeInUp 0.6s ease-out' }}>
-        {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <span style={{ font: `500 20px/1 ${S.fontD}`, color: S.white, letterSpacing: '-0.5px' }}>PRECISION ANALYTICS</span>
           <p style={{ font: `400 13px/20px ${S.fontD}`, color: S.mid, marginTop: 12 }}>
@@ -54,7 +53,6 @@ export default function ForgotPassword() {
           </p>
         </div>
 
-        {/* Card */}
         <div style={{ background: 'rgba(17,17,17,0.35)', border: `1px solid ${S.border}`, padding: '44px 36px', backdropFilter: 'blur(12px)' }}>
           {error && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', marginBottom: 24, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
@@ -64,7 +62,6 @@ export default function ForgotPassword() {
           )}
 
           <form onSubmit={handleSubmit}>
-            {/* Email */}
             <div style={{ marginBottom: 28 }}>
               <label htmlFor="forgot-email" style={labelStyle}>Corporate Email</label>
               <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(10,10,10,0.6)', border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
@@ -73,7 +70,6 @@ export default function ForgotPassword() {
               </div>
             </div>
 
-            {/* Submit */}
             <div style={{ marginBottom: 20 }}>
               <button type="submit" disabled={loading} style={{
                 width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -84,7 +80,6 @@ export default function ForgotPassword() {
               </button>
             </div>
 
-            {/* Back to Login */}
             <div style={{ textAlign: 'center' }}>
               <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, font: `400 12px/1 ${S.fontU}`, color: S.mid, textDecoration: 'none', transition: 'color .2s' }} onMouseEnter={(e) => e.currentTarget.style.color = S.white} onMouseLeave={(e) => e.currentTarget.style.color = S.mid}>
                 <ArrowLeft size={12} /> Back to Login
@@ -93,7 +88,6 @@ export default function ForgotPassword() {
           </form>
         </div>
 
-        {/* Footer */}
         <div style={{ marginTop: 48, textAlign: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 12 }}>
             <span style={{ font: `400 10px/1 ${S.fontU}`, color: S.dark2 }}>System Health</span>

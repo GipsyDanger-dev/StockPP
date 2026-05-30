@@ -44,7 +44,6 @@ class RetrainingOrchestrator:
             if train_end < 60 or test_end <= train_end:
                 continue
 
-            # Fit scalers on training portion only
             fold_scalers = [StandardScaler() for _ in range(NUM_FEATURES)]
             feature_data = df_with_indicators[self.data_engine.feature_columns].values
             train_features = feature_data[:train_end]
@@ -60,7 +59,6 @@ class RetrainingOrchestrator:
 
             X, y = self.data_engine.create_sequences(scaled_data, original_close=original_prices)
 
-            # Adjust indices for sequence offset (window_size rows lost)
             seq_train_end = train_end - self.data_engine.window_size
             seq_test_end = test_end - self.data_engine.window_size
 
@@ -107,7 +105,6 @@ class RetrainingOrchestrator:
         force_retrain: bool = False,
         progress=None
     ) -> Dict:
-        """Retrain a model with walk-forward validation"""
         ticker_upper = ticker.upper()
         result = {
             "ticker": ticker_upper,
@@ -145,22 +142,18 @@ class RetrainingOrchestrator:
             logger.info("Preparing data with technical indicators...")
             df_with_indicators = self.data_engine._add_technical_indicators(df)
 
-            # Walk-forward validation (uses raw df, fits scalers per fold)
             logger.info("Running walk-forward validation...")
             wf_metrics = self._walk_forward_validate(df, n_splits=5, progress=progress)
             logger.info(f"Walk-forward validation - RMSE: ${wf_metrics['rmse']:.2f}, "
                        f"MAE: ${wf_metrics['mae']:.2f}, Folds: {wf_metrics.get('folds_used', 0)}")
 
-            # Compute split index BEFORE creating sequences
             total_rows = len(df_with_indicators)
             split_row = int(total_rows * 0.8)
-            # Sequence offset: sequences start at window_size, so:
             seq_split = split_row - self.data_engine.window_size
 
             if progress:
                 progress.emit_sync("train_step", {"step": "scaling", "label": "Normalizing features (train-only fit)...", "status": "running"})
 
-            # Fit scalers on training data only (prevents data leakage)
             scaled_data, feature_scalers = self.data_engine.prepare_data(df, split_index=split_row)
             close_scaler = self.data_engine.close_scaler
 
@@ -255,7 +248,6 @@ class RetrainingOrchestrator:
         epochs: int = 50,
         force_retrain: bool = False
     ) -> Dict:
-        """Retrain multiple models in batch"""
         logger.info(f"Starting batch retraining. Tickers: {tickers}")
 
         results = {
@@ -307,7 +299,6 @@ class RetrainingOrchestrator:
         return results
 
     def _get_default_tickers(self) -> List[str]:
-        """Get default list of tickers to retrain from database"""
         try:
             from .supabase_client import get_all_tickers
             tickers_data = get_all_tickers()
@@ -317,7 +308,6 @@ class RetrainingOrchestrator:
             return []
 
     def get_retraining_status(self) -> Dict:
-        """Get status of all models and retraining info"""
         model_info = self.model_manager.get_all_model_info()
 
         return {

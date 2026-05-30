@@ -1,9 +1,5 @@
 import React from 'react';
 
-/**
- * Parse inline markdown (bold, italic, code, links, images)
- * Returns array of React elements
- */
 const parseInlineMarkdown = (text) => {
   if (!text) return [text];
 
@@ -11,19 +7,12 @@ const parseInlineMarkdown = (text) => {
   let remaining = text;
   let key = 0;
 
-  // Regex patterns for inline markdown
   const patterns = [
-    // Images: ![alt](url)
     { regex: /!\[(.*?)\]\((.*?)\)/, type: 'image' },
-    // Links: [text](url)
     { regex: /\[(.*?)\]\((.*?)\)/, type: 'link' },
-    // Bold+Italic: ***text*** or ___text___
     { regex: /\*{3}(.+?)\*{3}/, type: 'bolditalic' },
-    // Bold: **text** or __text__
     { regex: /\*{2}(.+?)\*{2}/, type: 'bold' },
-    // Italic: *text* or _text_
     { regex: /\*(.+?)\*/, type: 'italic' },
-    // Inline code: `code`
     { regex: /`(.+?)`/, type: 'code' },
   ];
 
@@ -32,7 +21,6 @@ const parseInlineMarkdown = (text) => {
     let earliestIndex = Infinity;
     let matchedPattern = null;
 
-    // Find the earliest match among all patterns
     for (const pattern of patterns) {
       const match = remaining.match(pattern.regex);
       if (match && match.index < earliestIndex) {
@@ -43,17 +31,14 @@ const parseInlineMarkdown = (text) => {
     }
 
     if (!earliestMatch) {
-      // No more matches, push remaining text
       if (remaining) elements.push(remaining);
       break;
     }
 
-    // Push text before the match
     if (earliestIndex > 0) {
       elements.push(remaining.substring(0, earliestIndex));
     }
 
-    // Push the formatted element
     const content = earliestMatch[1];
     const url = earliestMatch[2];
 
@@ -94,18 +79,13 @@ const parseInlineMarkdown = (text) => {
         break;
     }
 
-    // Move past the match
     remaining = remaining.substring(earliestIndex + earliestMatch[0].length);
   }
 
   return elements;
 };
 
-/**
- * Render a single line of markdown content
- */
 const renderLine = (line, index) => {
-  // Image: ![alt](url)
   const imageMatch = line.match(/^!\[(.*?)\]\((.*?)\)$/);
   if (imageMatch) {
     return (
@@ -119,7 +99,6 @@ const renderLine = (line, index) => {
     );
   }
 
-  // Header: ## or ###
   if (line.startsWith('### ')) {
     return (
       <h3 key={index} className="text-xl font-bold text-black mt-8 mb-3">
@@ -135,7 +114,6 @@ const renderLine = (line, index) => {
     );
   }
 
-  // Blockquote: > text
   if (line.startsWith('> ')) {
     return (
       <blockquote key={index} className="border-l-4 border-indigo-300 pl-4 py-2 my-4 bg-indigo-50 text-[#191C1E] text-lg italic">
@@ -144,7 +122,6 @@ const renderLine = (line, index) => {
     );
   }
 
-  // Bullet point: - text
   if (line.startsWith('- ')) {
     return (
       <li key={index} className="text-[#191C1E] text-lg leading-relaxed ml-6 mb-2 list-disc">
@@ -153,7 +130,6 @@ const renderLine = (line, index) => {
     );
   }
 
-  // Numbered list: 1. text
   const numberedMatch = line.match(/^(\d+)\.\s(.+)/);
   if (numberedMatch) {
     return (
@@ -163,12 +139,10 @@ const renderLine = (line, index) => {
     );
   }
 
-  // Horizontal rule: ---
   if (line.match(/^[-*_]{3,}$/)) {
     return <hr key={index} className="my-8 border-t border-[#E6E8EA]" />;
   }
 
-  // Bold paragraph: **text**
   if (line.startsWith('**') && line.endsWith('**')) {
     return (
       <p key={index} className="text-[#191C1E] text-lg leading-relaxed mb-4 font-bold">
@@ -177,12 +151,10 @@ const renderLine = (line, index) => {
     );
   }
 
-  // Empty line
   if (line.trim() === '') {
     return <div key={index} className="h-3" />;
   }
 
-  // Regular paragraph (with inline markdown support)
   return (
     <p key={index} className="text-[#191C1E] text-lg leading-relaxed mb-4">
       {parseInlineMarkdown(line)}
@@ -190,10 +162,6 @@ const renderLine = (line, index) => {
   );
 };
 
-/**
- * MarkdownRenderer - Renders markdown content to React elements
- * Supports: headers, bold, italic, code, links, images, lists, blockquotes, hr
- */
 const MarkdownRenderer = ({ content, className = '' }) => {
   if (!content) return null;
 

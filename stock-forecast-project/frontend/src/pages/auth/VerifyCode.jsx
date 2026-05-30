@@ -82,15 +82,12 @@ export default function VerifyCode() {
       <AuthCanvas />
 
       <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 460, padding: '0 24px', animation: 'fadeInUp 0.6s ease-out' }}>
-        {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <span style={{ font: `500 20px/1 ${S.fontD}`, color: S.white, letterSpacing: '-0.5px' }}>PRECISION ANALYTICS</span>
           <p style={{ font: `400 11px/1 ${S.fontU}`, color: S.dark2, textTransform: 'uppercase', letterSpacing: '1px', marginTop: 12 }}>Enterprise Terminal</p>
         </div>
 
-        {/* Card */}
         <div style={{ background: 'rgba(17,17,17,0.35)', border: `1px solid ${S.border}`, padding: '44px 36px', backdropFilter: 'blur(12px)' }}>
-          {/* Email Icon & Message */}
           <div style={{ textAlign: 'center', marginBottom: 36 }}>
             <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${S.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
               <Mail size={22} color={S.mid} />
@@ -109,7 +106,6 @@ export default function VerifyCode() {
             </div>
           )}
 
-          {/* OTP Inputs */}
           <div style={{ textAlign: 'center', marginBottom: 28 }}>
             <span style={{ font: `500 10px/1 ${S.fontU}`, color: S.mid, textTransform: 'uppercase', letterSpacing: '.5px' }}>Enter Verification Code</span>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 18, marginBottom: 28 }}>
@@ -143,7 +139,6 @@ export default function VerifyCode() {
             </button>
           </div>
 
-          {/* Resend & Back */}
           <div style={{ textAlign: 'center' }}>
             <p style={{ font: `400 12px/1 ${S.fontU}`, color: S.mid, marginBottom: 12 }}>Didn't receive the email?</p>
             <button onClick={handleResend} disabled={resending} style={{
@@ -160,7 +155,6 @@ export default function VerifyCode() {
           </div>
         </div>
 
-        {/* Footer */}
         <div style={{ marginTop: 48, textAlign: 'center' }}>
           <span style={{ font: `400 9px/1 ${S.fontU}`, color: S.dark2 }}>PRECISION ANALYTICS IDENTITY SERVICE &bull; V4.2.0</span>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 8 }}>

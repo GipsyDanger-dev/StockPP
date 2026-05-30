@@ -111,7 +111,7 @@ async def send_otp_endpoint(request: SendOtpRequest):
             "success": True,
             "message": f"OTP sent via {request.delivery_method}",
             "delivery_method": request.delivery_method,
-            "expires_in": 300  # 5 minutes in seconds
+            "expires_in": 300
         }
 
     except HTTPException:
@@ -203,7 +203,6 @@ async def reset_password_endpoint(request: ResetPasswordRequest):
 _forecasting_service = None
 
 def get_forecasting_service():
-    """Get or create the forecasting service instance (lazy initialization)"""
     global _forecasting_service
     if _forecasting_service is None:
         try:
@@ -399,7 +398,6 @@ async def get_live_quote(ticker: str = Path(..., description="Stock ticker symbo
 
         quote = FinnhubClient.get_quote(ticker_upper)
 
-        # Fallback to yfinance for unsupported tickers (e.g., .JK)
         if quote is None and ("." in ticker_upper or ticker_upper.endswith(".JK")):
             quote = FinnhubClient.get_quote_yfinance(ticker_upper)
 
@@ -895,9 +893,6 @@ async def upload_article_image_endpoint(
     image_type: Optional[str] = Query("general", description="Image type: header, thumbnail, inline, general"),
     user: dict = Depends(require_admin),
 ):
-    """
-    Upload an image for an article
-    """
     try:
         from core.supabase_client import upload_article_image
 

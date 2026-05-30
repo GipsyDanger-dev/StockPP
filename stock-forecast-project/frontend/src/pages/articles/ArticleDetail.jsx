@@ -96,7 +96,6 @@ const ArticleDetail = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Reading Progress Bar */}
       <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-gray-100">
         <div
           className="h-full bg-indigo-600 transition-all duration-150"
@@ -104,7 +103,6 @@ const ArticleDetail = () => {
         />
       </div>
 
-      {/* Navigation */}
       <nav className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-[#E6E8EA]">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <button
@@ -125,7 +123,6 @@ const ArticleDetail = () => {
         </div>
       </nav>
 
-      {/* Header Image */}
       {article.header_image && (
         <div className="max-w-5xl mx-auto px-6 pt-8">
           <img
@@ -136,27 +133,22 @@ const ArticleDetail = () => {
         </div>
       )}
 
-      {/* Article Header */}
       <header className="pt-12 pb-8 px-6">
         <div className="max-w-4xl mx-auto">
-          {/* Category Badge */}
           <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-6 border-2 ${getCategoryColor(article.category)}`}>
             {article.category}
           </span>
 
-          {/* Title */}
           <h1 className="text-4xl lg:text-5xl font-bold text-black leading-tight mb-6 tracking-tight">
             {article.title}
           </h1>
 
-          {/* Summary */}
           {article.summary && (
             <p className="text-xl text-[#45464D] leading-relaxed mb-8 font-medium">
               {article.summary}
             </p>
           )}
 
-          {/* Meta Info */}
           <div className="flex flex-wrap items-center gap-6 pb-8 border-b border-[#E6E8EA]">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-[#191C1E] rounded-full flex items-center justify-center">
@@ -179,10 +171,8 @@ const ArticleDetail = () => {
         </div>
       </header>
 
-      {/* Article Content */}
       <article className="px-6 pb-16">
         <div className="max-w-4xl mx-auto">
-          {/* Tags */}
           {article.tags && article.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-10">
               {article.tags.map((tag, index) => (
@@ -194,10 +184,8 @@ const ArticleDetail = () => {
             </div>
           )}
 
-          {/* Content Body */}
           <MarkdownRenderer content={article.content} className="prose prose-lg max-w-none" />
 
-          {/* Author Card */}
           <div className="mt-16 pt-8 border-t border-[#E6E8EA]">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-[#191C1E] rounded-full flex items-center justify-center">
@@ -214,7 +202,6 @@ const ArticleDetail = () => {
         </div>
       </article>
 
-      {/* Scroll to Top Button */}
       {showScrollTop && (
         <button
           onClick={scrollToTop}

@@ -106,7 +106,6 @@ const Insights = () => {
         </div>
       ) : (
         <div className="p-6 lg:p-12 max-w-7xl mx-auto space-y-12">
-          {/* Featured AI Insight */}
           {featured && (
             <div className="bg-white border-2 border-[#C6C6CD] rounded-xl overflow-hidden shadow-sm">
               <div className="bg-gradient-to-r from-[#0D1C2F] to-indigo-900 p-10 lg:p-14">
@@ -128,7 +127,6 @@ const Insights = () => {
             </div>
           )}
 
-          {/* Admin Published Articles */}
           {articles.length > 0 && (
             <div>
               <div className="flex items-center gap-3 mb-4">
@@ -136,7 +134,6 @@ const Insights = () => {
                 <h2 className="text-3xl font-bold text-black">Latest Articles</h2>
               </div>
 
-              {/* Category Filter */}
               {categories.length > 1 && (
                 <div className="flex flex-wrap gap-2 mb-8">
                   <button
@@ -172,7 +169,6 @@ const Insights = () => {
                     onClick={() => navigate(`/insights/${article.id}`)}
                     className="bg-white border-2 border-[#C6C6CD] rounded-xl overflow-hidden hover:shadow-lg hover:border-indigo-200 transition-all cursor-pointer group"
                   >
-                    {/* Thumbnail */}
                     {(article.thumbnail || article.header_image) && (
                       <div className="h-48 overflow-hidden">
                         <img
@@ -236,7 +232,6 @@ const Insights = () => {
             </div>
           )}
 
-          {/* AI Insight Cards */}
           {insightCards.length > 0 && (
             <div>
               <div className="flex items-center gap-3 mb-8">
@@ -263,7 +258,6 @@ const Insights = () => {
             </div>
           )}
 
-          {/* Empty State */}
           {articles.length === 0 && insightCards.length === 0 && (
             <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-12 text-center">
               <Lightbulb size={48} className="text-yellow-600 mx-auto mb-4" />
@@ -278,7 +272,6 @@ const Insights = () => {
             </div>
           )}
 
-          {/* CTA Section */}
           <div className="bg-black text-white rounded-xl p-10 lg:p-12 flex flex-col lg:flex-row justify-between items-center gap-8 shadow-2xl">
             <div className="max-w-2xl">
               <span className="px-4 py-1 border-2 border-white/20 rounded-md font-bold text-white mb-4 inline-block uppercase text-xs">AI Engine</span>

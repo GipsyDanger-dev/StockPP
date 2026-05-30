@@ -169,9 +169,7 @@ const Admin = () => {
       if (data.success) {
         setUsers(data.users);
       }
-    } catch {
-      // user fetch failed
-    } finally {
+    } catch {} finally {
       setUsersLoading(false);
     }
   };
@@ -211,9 +209,7 @@ const Admin = () => {
       queryClient.invalidateQueries(['articleStats']);
       queryClient.invalidateQueries(['insights']);
       setDeleteConfirm(null);
-    } catch {
-      // article deletion failed
-    } finally {
+    } catch {} finally {
       setActionLoading(null);
     }
   };
@@ -226,9 +222,7 @@ const Admin = () => {
       queryClient.invalidateQueries(['articles']);
       queryClient.invalidateQueries(['articleStats']);
       queryClient.invalidateQueries(['insights']);
-    } catch {
-      // article status update failed
-    } finally {
+    } catch {} finally {
       setActionLoading(null);
     }
   };
@@ -241,7 +235,6 @@ const Admin = () => {
 
   return (
     <div className="bg-[#0a0a0a] text-white min-h-screen">
-      {/* Header */}
       <header className="bg-[#111] px-6 lg:px-12 py-6 border-b border-[#1e1e1e]">
         <div className="flex items-center justify-between">
           <div>
@@ -275,7 +268,6 @@ const Admin = () => {
           </div>
         </div>
 
-        {/* Section Tabs */}
         <div className="flex gap-2 mt-6">
           {sections.map((section) => {
             const Icon = section.icon;
@@ -298,9 +290,7 @@ const Admin = () => {
         </div>
       </header>
 
-      {/* Content Area */}
       <div className="p-6 lg:p-12 max-w-7xl mx-auto">
-        {/* MODEL PERFORMANCE SECTION */}
         {activeSection === 'model-performance' && (
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -417,7 +407,6 @@ const Admin = () => {
           </>
         )}
 
-        {/* SYSTEM HEALTH SECTION */}
         {activeSection === 'system-health' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-[#111] rounded-xl border border-[#1e1e1e]">
@@ -493,7 +482,6 @@ const Admin = () => {
           </div>
         )}
 
-        {/* ARTICLES/CONTENT MANAGER SECTION */}
         {activeSection === 'articles' && (
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -641,7 +629,6 @@ const Admin = () => {
           </>
         )}
 
-        {/* USER MANAGEMENT SECTION */}
         {activeSection === 'users' && (
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -778,7 +765,6 @@ const Admin = () => {
           </>
         )}
 
-        {/* SETTINGS SECTION */}
         {activeSection === 'settings' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-[#111] p-6 rounded-xl border border-[#1e1e1e]">
@@ -856,7 +842,6 @@ const Admin = () => {
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[#111] rounded-xl p-6 max-w-sm w-full">

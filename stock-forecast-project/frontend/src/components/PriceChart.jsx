@@ -131,7 +131,6 @@ const PriceChart = ({ historical, forecast, indicators }) => {
   );
 };
 
-// Custom tooltip
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload || payload.length === 0) return null;
 

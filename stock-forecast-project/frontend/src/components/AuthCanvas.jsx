@@ -23,21 +23,18 @@ export default function AuthCanvas() {
     resize()
     window.addEventListener('resize', resize)
 
-    // Dodecahedron
     const mesh1 = new THREE.Mesh(
       new THREE.DodecahedronGeometry(2, 0),
       new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.08 })
     )
     scene.add(mesh1)
 
-    // Icosahedron
     const mesh2 = new THREE.Mesh(
       new THREE.IcosahedronGeometry(1.2, 1),
       new THREE.MeshBasicMaterial({ color: 0xFF6633, wireframe: true, transparent: true, opacity: 0.12 })
     )
     scene.add(mesh2)
 
-    // Particles
     const pCount = 30
     const pData = []
     const pPos = new Float32Array(pCount * 3)
@@ -54,7 +51,6 @@ export default function AuthCanvas() {
     pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3))
     scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0xFF6633, size: 0.04, transparent: true, opacity: 0.5 })))
 
-    // Ring
     const ring = new THREE.Mesh(
       new THREE.TorusGeometry(3, 0.008, 8, 64),
       new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.06 })

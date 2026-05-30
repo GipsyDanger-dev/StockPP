@@ -60,7 +60,6 @@ const Layout = ({ children }) => {
 
   return (
     <div className="flex min-h-screen bg-[#0a0a0a] text-white">
-      {/* Sidebar */}
       <aside
         className="fixed inset-y-0 left-0 z-40 bg-[#111] border-r border-[#1e1e1e] flex flex-col transition-transform duration-300 ease-in-out"
         style={{
@@ -68,7 +67,6 @@ const Layout = ({ children }) => {
           transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
         }}
       >
-        {/* Logo */}
         <div
           className="p-5 flex items-center gap-3 border-b border-[#1e1e1e] cursor-pointer hover:bg-[#1e1e1e] transition-colors"
           onClick={() => handleNav('/dashboard')}
@@ -85,7 +83,6 @@ const Layout = ({ children }) => {
           </div>
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           <p className="px-3 mb-2 text-[10px] font-semibold text-[#888] uppercase tracking-wider">
             Navigation
@@ -114,7 +111,6 @@ const Layout = ({ children }) => {
             );
           })}
 
-          {/* Admin Section */}
           {isAdmin && (
             <>
               <div className="pt-4 pb-2">
@@ -149,7 +145,6 @@ const Layout = ({ children }) => {
           )}
         </nav>
 
-        {/* User Section */}
         <div className="p-3 border-t border-[#1e1e1e]">
           <div className="flex items-center gap-3 px-3 py-2.5 mb-1">
             <div className="w-8 h-8 bg-[#131B2E] rounded-full flex items-center justify-center flex-shrink-0">
@@ -178,7 +173,6 @@ const Layout = ({ children }) => {
         </div>
       </aside>
 
-      {/* Mobile backdrop */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-30 lg:hidden backdrop-blur-sm"
@@ -187,12 +181,10 @@ const Layout = ({ children }) => {
         />
       )}
 
-      {/* Main content */}
       <div
         className="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out"
         style={{ marginLeft: sidebarOpen && window.innerWidth >= 1024 ? `${SIDEBAR_WIDTH}px` : '0' }}
       >
-        {/* Top bar */}
         <header className="sticky top-0 z-20 bg-[#111]/80 backdrop-blur-md border-b border-[#1e1e1e] px-4 py-3 flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -229,7 +221,6 @@ const Layout = ({ children }) => {
           </div>
         </header>
 
-        {/* Page content */}
         <main className="flex-1 overflow-x-hidden">
           {children}
         </main>

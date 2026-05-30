@@ -69,7 +69,6 @@ export default function SignUp() {
       <AuthCanvas />
 
       <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 460, padding: '0 24px', animation: 'fadeInUp 0.6s ease-out' }}>
-        {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <span style={{ font: `500 20px/1 ${S.fontD}`, color: S.white, letterSpacing: '-0.5px' }}>PRECISION ANALYTICS</span>
           <p style={{ font: `400 13px/20px ${S.fontD}`, color: S.mid, marginTop: 12 }}>
@@ -77,7 +76,6 @@ export default function SignUp() {
           </p>
         </div>
 
-        {/* Card */}
         <div style={{ background: 'rgba(17,17,17,0.35)', border: `1px solid ${S.border}`, padding: '44px 36px', backdropFilter: 'blur(12px)' }}>
           {error && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', marginBottom: 24, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
@@ -94,7 +92,6 @@ export default function SignUp() {
           )}
 
           <form onSubmit={handleSubmit}>
-            {/* Account Type Selector */}
             <div style={{ marginBottom: 28 }}>
               <label style={labelStyle}>Account Type</label>
               <div style={{ display: 'flex', gap: 10 }}>
@@ -103,7 +100,6 @@ export default function SignUp() {
               </div>
             </div>
 
-            {/* Full Name */}
             <div style={{ marginBottom: 22 }}>
               <label htmlFor="signup-name" style={labelStyle}>Full Name</label>
               <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(10,10,10,0.6)', border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
@@ -112,7 +108,6 @@ export default function SignUp() {
               </div>
             </div>
 
-            {/* Email */}
             <div style={{ marginBottom: 22 }}>
               <label htmlFor="signup-email" style={labelStyle}>{accountType === 'enterprise' ? 'Work Email' : 'Email'}</label>
               <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(10,10,10,0.6)', border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
@@ -121,7 +116,6 @@ export default function SignUp() {
               </div>
             </div>
 
-            {/* Organization — Enterprise only */}
             {accountType === 'enterprise' && (
               <div style={{ marginBottom: 22, animation: 'fadeInUp 0.3s ease-out' }}>
                 <label htmlFor="signup-org" style={labelStyle}>Organization</label>
@@ -132,7 +126,6 @@ export default function SignUp() {
               </div>
             )}
 
-            {/* Password */}
             <div style={{ marginBottom: 22 }}>
               <label htmlFor="signup-password" style={labelStyle}>Password</label>
               <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(10,10,10,0.6)', border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
@@ -144,7 +137,6 @@ export default function SignUp() {
               </div>
             </div>
 
-            {/* Terms Checkbox */}
             <div
               role="checkbox"
               aria-checked={agreed}
@@ -161,7 +153,6 @@ export default function SignUp() {
               </span>
             </div>
 
-            {/* Security Notice */}
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', marginBottom: 28, background: 'rgba(255,255,255,0.02)', border: `1px solid ${S.border}` }}>
               <Shield size={12} color={S.mid} style={{ marginTop: 2, flexShrink: 0 }} />
               <p style={{ font: `400 11px/16px ${S.fontU}`, color: S.mid }}>
@@ -171,7 +162,6 @@ export default function SignUp() {
               </p>
             </div>
 
-            {/* Submit */}
             <button type="submit" disabled={loading} style={{
               width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               background: S.orange, color: S.white, border: 'none', padding: '16px 0', cursor: loading ? 'default' : 'pointer',
@@ -182,13 +172,11 @@ export default function SignUp() {
           </form>
         </div>
 
-        {/* Login Link */}
         <div style={{ marginTop: 28, textAlign: 'center' }}>
           <span style={{ font: `400 13px/1 ${S.fontD}`, color: S.mid }}>Already have an account? </span>
           <Link to="/login" style={{ font: `500 13px/1 ${S.fontD}`, color: S.white, textDecoration: 'none' }} onMouseEnter={(e) => e.currentTarget.style.color = S.orange} onMouseLeave={(e) => e.currentTarget.style.color = S.white}>Log in here</Link>
         </div>
 
-        {/* Footer */}
         <div style={{ marginTop: 48, textAlign: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 12 }}>
             <span style={{ font: `400 10px/1 ${S.fontU}`, color: S.dark2 }}>Security</span>

@@ -141,7 +141,6 @@ class LSTMModel:
             raise
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        """Make predictions on new data"""
         if self.model is None:
             raise ValueError("Model not built. Call build_model() first")
 
@@ -153,7 +152,6 @@ class LSTMModel:
             raise
 
     def evaluate(self, X_test: np.ndarray, y_test: np.ndarray) -> Dict[str, float]:
-        """Evaluate model performance on test data (scaled values)."""
         try:
             predictions = self.predict(X_test)
 
@@ -232,7 +230,6 @@ class LSTMModel:
             raise
 
     def save_model(self, filepath: str = None) -> str:
-        """Save model to disk"""
         try:
             save_path = filepath or self.model_path
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
@@ -249,7 +246,6 @@ class LSTMModel:
             raise
 
     def load_model(self, filepath: str = None):
-        """Load pre-trained model from disk"""
         try:
             load_path = filepath or self.model_path
 
@@ -265,7 +261,6 @@ class LSTMModel:
             raise
 
     def get_summary(self) -> Dict[str, Any]:
-        """Get model summary information"""
         return {
             "window_size": self.window_size,
             "num_features": self.num_features,

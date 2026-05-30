@@ -59,7 +59,6 @@ class ForecastingService:
         try:
             ticker_upper = ticker.upper()
 
-            # Check cache (1 hour TTL)
             cache_key = f"{ticker_upper}_{period}_{days_ahead}"
             self._evict_expired_cache()
             if progress:
@@ -140,7 +139,6 @@ class ForecastingService:
             if progress:
                 progress.emit_sync("step", {"step": "scaling", "label": "Normalizing features...", "status": "running"})
 
-            # Scale features using per-feature scalers from training
             feature_data = df_with_indicators[self.data_engine.feature_columns].values
             scaled_columns = []
             for i in range(NUM_FEATURES):
@@ -171,26 +169,21 @@ class ForecastingService:
             if progress:
                 progress.emit_sync("step", {"step": "predicting", "label": f"Generating {days_ahead}-day forecast...", "status": "running"})
 
-            # Multi-step prediction with fresh indicator recalculation
-            # Model predicts returns (percentage change), not raw prices
             window = self.data_engine.window_size
             last_sequence = scaled_features[-window:].reshape(1, window, NUM_FEATURES)
             current_sequence = last_sequence.copy()
 
             close_scaler = feature_scalers[0]
 
-            # Volatility-based bounds: allow 3x recent daily volatility per step
             recent_returns = df_with_indicators['Close'].pct_change().dropna().iloc[-30:]
             daily_vol = float(recent_returns.std()) if len(recent_returns) > 1 else 0.02
-            max_daily_move = daily_vol * 3  # 3 sigma
+            max_daily_move = daily_vol * 3
             total_max_move = max_daily_move * days_ahead
             price_min = current_price * (1 - total_max_move)
             price_max = current_price * (1 + total_max_move)
-            # Hard safety bounds: never more than ±60%
             price_min = max(price_min, current_price * 0.40)
             price_max = min(price_max, current_price * 1.60)
 
-            # Rolling buffer of recent original-scale prices for indicator recalculation
             recent_prices = df_with_indicators['Close'].iloc[-50:].tolist()
             future_predictions = []
             last_price = current_price
@@ -199,35 +192,28 @@ class ForecastingService:
                 next_pred = model.predict(current_sequence, verbose=0)
                 pred_return = float(next_pred[0, 0])
 
-                # Convert return to price: price[t+1] = price[t] * (1 + return)
                 pred_price = last_price * (1 + pred_return)
 
-                # Clamp to reasonable range
                 pred_price = np.clip(pred_price, price_min, price_max)
                 future_predictions.append(pred_price)
                 last_price = pred_price
 
-                # Update rolling price buffer
                 recent_prices.append(pred_price)
                 if len(recent_prices) > 100:
                     recent_prices = recent_prices[-100:]
 
-                # Recalculate technical indicators from the updated price buffer
                 prices_arr = np.array(recent_prices)
 
-                # MA20
                 if len(prices_arr) >= 20:
                     new_ma20 = float(np.mean(prices_arr[-20:]))
                 else:
                     new_ma20 = float(np.mean(prices_arr))
 
-                # MA50
                 if len(prices_arr) >= 50:
                     new_ma50 = float(np.mean(prices_arr[-50:]))
                 else:
                     new_ma50 = float(np.mean(prices_arr))
 
-                # RSI (14-period)
                 if len(prices_arr) >= 15:
                     deltas = np.diff(prices_arr[-15:])
                     gains = np.where(deltas > 0, deltas, 0)
@@ -242,7 +228,6 @@ class ForecastingService:
                 else:
                     new_rsi = 50.0
 
-                # MACD (EMA12 - EMA26)
                 if len(prices_arr) >= 26:
                     ema12 = float(pd.Series(prices_arr).ewm(span=12, adjust=False).mean().iloc[-1])
                     ema26 = float(pd.Series(prices_arr).ewm(span=26, adjust=False).mean().iloc[-1])
@@ -250,10 +235,8 @@ class ForecastingService:
                 else:
                     new_macd = 0.0
 
-                # EWMA20
                 new_ewma20 = float(pd.Series(prices_arr).ewm(span=20, adjust=False).mean().iloc[-1])
 
-                # Bollinger Bands Width
                 if len(prices_arr) >= 20:
                     bb_mid = np.mean(prices_arr[-20:])
                     bb_std = np.std(prices_arr[-20:])
@@ -261,14 +244,12 @@ class ForecastingService:
                 else:
                     new_bb_width = 0.0
 
-                # ATR (14-period) - approximate from price changes
                 if len(prices_arr) >= 15:
                     price_changes = np.abs(np.diff(prices_arr[-15:]))
                     new_atr = float(np.mean(price_changes))
                 else:
                     new_atr = float(np.abs(prices_arr[-1] - prices_arr[-2])) if len(prices_arr) > 1 else 0.0
 
-                # OBV normalized - approximate
                 if len(prices_arr) >= 21:
                     obv_changes = np.sign(np.diff(prices_arr[-21:]))
                     obv_sum = np.sum(obv_changes)
@@ -276,7 +257,6 @@ class ForecastingService:
                 else:
                     new_obv_norm = 0.0
 
-                # Scale the new indicators using training scalers
                 new_close_scaled = close_scaler.transform([[pred_price]])[0, 0]
                 new_vol_scaled = feature_scalers[1].transform(
                     [[recent_prices[-2] if len(recent_prices) > 1 else pred_price]]
@@ -290,7 +270,6 @@ class ForecastingService:
                 new_atr_scaled = feature_scalers[8].transform([[new_atr]])[0, 0]
                 new_obv_norm_scaled = feature_scalers[9].transform([[new_obv_norm]])[0, 0]
 
-                # Build new row with all fresh features
                 new_row = np.array([new_close_scaled, new_vol_scaled, new_ma20_scaled,
                                     new_ma50_scaled, new_rsi_scaled, new_macd_scaled,
                                     new_ewma20_scaled, new_bb_width_scaled, new_atr_scaled,
@@ -301,23 +280,19 @@ class ForecastingService:
 
             future_prices = np.array(future_predictions)
 
-            # Damping for longer horizons: pull toward recent mean in original price space
             if days_ahead > 3:
                 for step in range(3, days_ahead):
                     recent_mean = np.mean(future_predictions[max(0, step-3):step])
                     future_prices[step] = 0.7 * future_prices[step] + 0.3 * recent_mean
 
-            # Clamp again after damping
             future_prices = np.clip(future_prices, price_min, price_max)
 
-            # Generate trading days only (skip weekends)
             forecast_dates = pd.bdate_range(
                 start=last_date + timedelta(days=1),
                 periods=days_ahead
             ).strftime("%Y-%m-%d").tolist()
             metrics = self.model_manager.get_model_metrics(ticker_upper) or {"rmse": 0, "mae": 0}
 
-            # Trend based on last forecast point (not first)
             last_forecast = future_prices[-1]
             trend = "Bullish" if last_forecast > current_price else "Bearish"
             change_percent = ((last_forecast - current_price) / current_price * 100)
@@ -370,7 +345,6 @@ class ForecastingService:
             except Exception as log_err:
                 logger.warning(f"Could not save prediction log: {str(log_err)}")
 
-            # Save to prediction history if user_id provided
             if user_id:
                 try:
                     from core.supabase_client import insert_prediction
@@ -404,7 +378,6 @@ class ForecastingService:
             return _error_response(ticker, "Market API is currently down or undergoing maintenance.")
 
     def validate_ticker(self, ticker: str) -> Dict:
-        """Validate if ticker exists and has data"""
         try:
             df = self.data_engine.fetch_data(ticker, period="1mo")
             valid = df is not None and len(df) > 0

@@ -45,7 +45,6 @@ export default function SignIn() {
       <AuthCanvas />
 
       <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 460, padding: '0 24px', animation: 'fadeInUp 0.6s ease-out' }}>
-        {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <span style={{ font: `500 20px/1 ${S.fontD}`, color: S.white, letterSpacing: '-0.5px' }}>PRECISION ANALYTICS</span>
           <p style={{ font: `400 13px/20px ${S.fontD}`, color: S.mid, marginTop: 12 }}>
@@ -53,7 +52,6 @@ export default function SignIn() {
           </p>
         </div>
 
-        {/* Card */}
         <div style={{ background: 'rgba(17,17,17,0.35)', border: `1px solid ${S.border}`, padding: '44px 36px', backdropFilter: 'blur(12px)' }}>
           {error && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', marginBottom: 24, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
@@ -63,7 +61,6 @@ export default function SignIn() {
           )}
 
           <form onSubmit={handleSubmit}>
-            {/* Email */}
             <div style={{ marginBottom: 24 }}>
               <label htmlFor="signin-email" style={labelStyle}>Corporate Email</label>
               <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(10,10,10,0.6)', border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
@@ -72,7 +69,6 @@ export default function SignIn() {
               </div>
             </div>
 
-            {/* Password */}
             <div style={{ marginBottom: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                 <label htmlFor="signin-password" style={{ ...labelStyle, marginBottom: 0 }}>Access Key</label>
@@ -87,7 +83,6 @@ export default function SignIn() {
               </div>
             </div>
 
-            {/* Security Notice */}
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', marginBottom: 28, background: 'rgba(255,255,255,0.02)', border: `1px solid ${S.border}` }}>
               <Shield size={12} color={S.mid} style={{ marginTop: 2, flexShrink: 0 }} />
               <p style={{ font: `400 11px/16px ${S.fontU}`, color: S.mid }}>
@@ -95,7 +90,6 @@ export default function SignIn() {
               </p>
             </div>
 
-            {/* Submit */}
             <button type="submit" disabled={loading} style={{
               width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               background: S.orange, color: S.white, border: 'none', padding: '16px 0', cursor: loading ? 'default' : 'pointer',
@@ -106,13 +100,11 @@ export default function SignIn() {
           </form>
         </div>
 
-        {/* Sign Up Link */}
         <div style={{ marginTop: 28, textAlign: 'center' }}>
           <span style={{ font: `400 13px/1 ${S.fontD}`, color: S.mid }}>Don't have an account? </span>
           <Link to="/signup" style={{ font: `500 13px/1 ${S.fontD}`, color: S.white, textDecoration: 'none' }} onMouseEnter={(e) => e.currentTarget.style.color = S.orange} onMouseLeave={(e) => e.currentTarget.style.color = S.white}>Register here</Link>
         </div>
 
-        {/* Footer */}
         <div style={{ marginTop: 48, textAlign: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 12 }}>
             <span style={{ font: `400 10px/1 ${S.fontU}`, color: S.dark2 }}>System Health</span>

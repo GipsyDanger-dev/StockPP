@@ -118,7 +118,6 @@ export default function NewPassword() {
       <AuthCanvas />
 
       <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 460, padding: '0 24px', animation: 'fadeInUp 0.6s ease-out' }}>
-        {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <span style={{ font: `500 20px/1 ${S.fontD}`, color: S.white, letterSpacing: '-0.5px' }}>PRECISION ANALYTICS</span>
           <p style={{ font: `400 13px/20px ${S.fontD}`, color: S.mid, marginTop: 12 }}>
@@ -126,7 +125,6 @@ export default function NewPassword() {
           </p>
         </div>
 
-        {/* Card */}
         <div style={{ background: 'rgba(17,17,17,0.35)', border: `1px solid ${S.border}`, padding: '44px 36px', backdropFilter: 'blur(12px)' }}>
           {error && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', marginBottom: 24, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
@@ -136,7 +134,6 @@ export default function NewPassword() {
           )}
 
           <form onSubmit={handleSubmit}>
-            {/* New Password */}
             <div style={{ marginBottom: 22 }}>
               <label htmlFor="new-password" style={labelStyle}>New Password</label>
               <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(10,10,10,0.6)', border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
@@ -146,7 +143,6 @@ export default function NewPassword() {
                   {showPassword ? <EyeOff size={14} color={S.mid} /> : <Eye size={14} color={S.mid} />}
                 </button>
               </div>
-              {/* Strength Bar */}
               {form.password && (
                 <div style={{ marginTop: 10 }}>
                   <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
@@ -162,7 +158,6 @@ export default function NewPassword() {
               )}
             </div>
 
-            {/* Confirm Password */}
             <div style={{ marginBottom: 22 }}>
               <label htmlFor="confirm-password" style={labelStyle}>Confirm New Password</label>
               <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(10,10,10,0.6)', border: `1px solid ${S.border}`, transition: 'border-color .2s' }} onFocus={(e) => e.currentTarget.style.borderColor = S.orange} onBlur={(e) => e.currentTarget.style.borderColor = S.border}>
@@ -174,7 +169,6 @@ export default function NewPassword() {
               </div>
             </div>
 
-            {/* Password Requirements */}
             <div style={{ padding: '16px 18px', marginBottom: 28, background: 'rgba(255,255,255,0.02)', border: `1px solid ${S.border}` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                 <Shield size={12} color={S.mid} />
@@ -188,7 +182,6 @@ export default function NewPassword() {
               </div>
             </div>
 
-            {/* Submit */}
             <button type="submit" disabled={loading} style={{
               width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               background: S.orange, color: S.white, border: 'none', padding: '16px 0', cursor: loading ? 'default' : 'pointer',
@@ -199,14 +192,12 @@ export default function NewPassword() {
           </form>
         </div>
 
-        {/* Back to Login */}
         <div style={{ marginTop: 28, textAlign: 'center' }}>
           <Link to="/login" style={{ font: `400 13px/1 ${S.fontD}`, color: S.mid, textDecoration: 'none', transition: 'color .2s' }} onMouseEnter={(e) => e.currentTarget.style.color = S.white} onMouseLeave={(e) => e.currentTarget.style.color = S.mid}>
             Back to User Login
           </Link>
         </div>
 
-        {/* Footer */}
         <div style={{ marginTop: 48, textAlign: 'center' }}>
           <span style={{ font: `400 9px/1 ${S.fontU}`, color: S.dark2 }}>PRECISION ANALYTICS IDENTITY SERVICE &bull; V4.2.0</span>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 8 }}>

@@ -46,12 +46,14 @@ class DataEngine:
             df = df.sort_index()
 
             # Fetch market context: S&P 500, VIX, 10Y Treasury yield
+            # Strip timezone from stock index to avoid EDT/EST mismatch
+            df.index = df.index.tz_localize(None)
             market_tickers = {'^GSPC': 'SP500', '^VIX': 'VIX', '^TNX': 'TNX'}
             for mkt_ticker, col_name in market_tickers.items():
                 try:
                     mkt = yf.Ticker(mkt_ticker)
                     mkt_df = mkt.history(period=period)[['Close']].rename(columns={'Close': col_name})
-                    mkt_df.index = pd.to_datetime(mkt_df.index)
+                    mkt_df.index = pd.to_datetime(mkt_df.index).tz_localize(None)
                     df = df.join(mkt_df, how='left')
                     df[col_name] = df[col_name].ffill().bfill()
                     logger.info(f"Fetched {col_name} ({mkt_ticker}): {len(mkt_df)} points")

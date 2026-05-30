@@ -232,7 +232,7 @@ async def forecast_stock(request: PredictionRequest, user: dict = Depends(get_cu
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error in forecast endpoint: {type(e).__name__}: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/forecast/stream")
@@ -320,7 +320,7 @@ async def get_forecast_by_ticker(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error in get_forecast_by_ticker: {type(e).__name__}: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @router.get("/validate/{ticker}")
 async def validate_ticker(ticker: str = Path(..., description="Stock ticker symbol")):
@@ -455,7 +455,7 @@ async def get_historical_data(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error getting historical data: {type(e).__name__}: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @router.get("/metrics/{ticker}")
 async def get_model_metrics(ticker: str = Path(..., description="Stock ticker symbol"), user: dict = Depends(get_current_user)):
@@ -522,7 +522,7 @@ async def trigger_retrain(ticker: str = Path(..., description="Stock ticker symb
 
     except Exception as e:
         logger.error(f"Error triggering retrain for {ticker}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/retrain/stream/{ticker}")
@@ -679,7 +679,7 @@ async def trigger_batch_retrain(
 
     except Exception as e:
         logger.error(f"Error in batch retrain: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/market/summary")
@@ -1129,7 +1129,7 @@ async def score_stock(ticker: str, user: dict = Depends(get_current_user)):
         return result
     except Exception as e:
         logger.error(f"Error scoring {ticker}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Scoring error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/sentiment/{ticker}")
@@ -1150,7 +1150,7 @@ async def get_sentiment(ticker: str, user: dict = Depends(get_current_user)):
         }
     except Exception as e:
         logger.error(f"Error getting sentiment for {ticker}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Sentiment error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 class RankRequest(BaseModel):
@@ -1168,7 +1168,7 @@ async def rank_stocks(req: RankRequest, user: dict = Depends(get_current_user)):
         return {"rankings": results, "count": len(results)}
     except Exception as e:
         logger.error(f"Error ranking stocks: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Ranking error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/users")

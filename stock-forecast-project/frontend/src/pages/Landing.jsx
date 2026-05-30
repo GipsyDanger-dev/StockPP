@@ -15,16 +15,16 @@ import { ScrollTrigger } from 'gsap/dist/ScrollTrigger'
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
 const MARQUEE_ITEMS = [
-  { symbol: 'NVDA', price: '$875.40', change: '+2.3%', up: true },
-  { symbol: 'AAPL', price: '$198.11', change: '+1.1%', up: true },
-  { symbol: 'MSFT', price: '$420.55', change: '−0.4%', up: false },
-  { symbol: 'GOOGL', price: '$174.23', change: '+0.8%', up: true },
-  { symbol: 'TSLA', price: '$248.90', change: '−1.2%', up: false },
-  { symbol: 'AMZN', price: '$185.60', change: '+1.7%', up: true },
-  { symbol: 'META', price: '$510.20', change: '+2.1%', up: true },
-  { symbol: 'AMD', price: '$164.30', change: '−0.6%', up: false },
-  { symbol: 'PLTR', price: '$22.45', change: '+3.4%', up: true },
-  { symbol: 'BBCA.JK', price: 'IDR 9,350', change: '+0.5%', up: true },
+  { symbol: 'NVDA', price: '$211.14', change: '+2.3%', up: true },
+  { symbol: 'AAPL', price: '$312.06', change: '+1.1%', up: true },
+  { symbol: 'MSFT', price: '$450.24', change: '−0.4%', up: false },
+  { symbol: 'GOOGL', price: '$380.34', change: '+0.8%', up: true },
+  { symbol: 'TSLA', price: '$435.79', change: '−1.2%', up: false },
+  { symbol: 'AMZN', price: '$270.64', change: '+1.7%', up: true },
+  { symbol: 'META', price: '$632.51', change: '+2.1%', up: true },
+  { symbol: 'AMD', price: '$516.10', change: '−0.6%', up: false },
+  { symbol: 'PLTR', price: '$156.54', change: '+3.4%', up: true },
+  { symbol: 'BBCA.JK', price: 'IDR 5,700', change: '+0.5%', up: true },
 ]
 
 export default function Landing() {
@@ -410,7 +410,7 @@ export default function Landing() {
 
             <div className="dark-cta-actions" data-cta-enter="">
               <button onClick={() => navigate('/signup')} className="dark-cta-btn-primary">Start Forecasting Free</button>
-              <button onClick={() => navigate('/dashboard')} className="dark-cta-btn-ghost">View Dashboard</button>
+              <button onClick={() => navigate('/login')} className="dark-cta-btn-ghost">View Dashboard</button>
             </div>
 
             <div className="dark-cta-metrics" data-cta-enter="">
@@ -419,12 +419,12 @@ export default function Landing() {
                 <span className="dark-cta-metric-label">Uptime SLA</span>
               </div>
               <div className="dark-cta-metric">
-                <span className="dark-cta-metric-val" data-cta-count="0.018" data-cta-decimals="3">0</span>
-                <span className="dark-cta-metric-label">Avg MAE</span>
+                <span className="dark-cta-metric-val" data-cta-count="2.3" data-cta-suffix="%" data-cta-decimals="1">0</span>
+                <span className="dark-cta-metric-label">Avg MAPE</span>
               </div>
               <div className="dark-cta-metric">
-                <span className="dark-cta-metric-val" data-cta-count="30" data-cta-suffix="+">0</span>
-                <span className="dark-cta-metric-label">Global Tickers</span>
+                <span className="dark-cta-metric-val" data-cta-count="5" data-cta-suffix="+">0</span>
+                <span className="dark-cta-metric-label">Trained Tickers</span>
               </div>
               <div className="dark-cta-metric">
                 <span className="dark-cta-metric-val" data-cta-count="88" data-cta-suffix="%">0</span>
@@ -456,10 +456,10 @@ export default function Landing() {
           </div>
           {[
             { num: '01', icon: <polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/>, name: 'FastAPI', desc: 'High-performance async Python framework — 31 REST endpoints, Pydantic v2', tag: 'Backend' },
-            { num: '02', icon: <><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 12l10 5 10-5"/><path d="M2 17l10 5 10-5"/></>, name: 'TensorFlow / Keras', desc: '3-layer LSTM, 50 units/layer, Adam optimizer, 70-epoch training, MSE loss', tag: 'ML Engine' },
+            { num: '02', icon: <><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 12l10 5 10-5"/><path d="M2 17l10 5 10-5"/></>, name: 'TensorFlow / Keras', desc: '3-layer LSTM (128/64/32), Adam optimizer, 150-epoch training, Huber loss, cosine annealing', tag: 'ML Engine' },
             { num: '03', icon: <><circle cx="12" cy="12" r="1.8"/><ellipse cx="12" cy="12" rx="10" ry="3.8"/><ellipse cx="12" cy="12" rx="10" ry="3.8" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="3.8" transform="rotate(120 12 12)"/></>, name: 'React 18 + Vite', desc: 'SPA with HMR, React Router v7, TanStack Query v5, 16 custom hooks', tag: 'Frontend' },
             { num: '04', icon: <><path d="M6.5 8C7.5 5.5 9.5 4 12 4c4 0 4.5 3 6.5 3.5C20 8 22 6.5 22 6.5"/><path d="M2 14C3 11.5 5 10 7.5 10c4 0 4.5 3 6.5 3.5C16 14 18 12.5 18 12.5"/></>, name: 'Tailwind CSS 3', desc: 'Utility-first with custom design tokens, zero-radius system, 8px base grid', tag: 'Styling' },
-            { num: '05', icon: <><circle cx="12" cy="4" r="1.8"/><circle cx="4" cy="19" r="1.8"/><circle cx="20" cy="19" r="1.8"/><line x1="12" y1="5.8" x2="5.2" y2="17.4"/><line x1="12" y1="5.8" x2="18.8" y2="17.4"/><line x1="5.8" y1="19" x2="18.2" y2="19"/></>, name: 'Scikit-learn', desc: 'MinMaxScaler normalization, walk-forward cross-validation across 5 folds', tag: 'ML Tools' },
+            { num: '05', icon: <><circle cx="12" cy="4" r="1.8"/><circle cx="4" cy="19" r="1.8"/><circle cx="20" cy="19" r="1.8"/><line x1="12" y1="5.8" x2="5.2" y2="17.4"/><line x1="12" y1="5.8" x2="18.8" y2="17.4"/><line x1="5.8" y1="19" x2="18.2" y2="19"/></>, name: 'Scikit-learn', desc: 'Per-feature StandardScaler normalization, walk-forward cross-validation across 5 folds', tag: 'ML Tools' },
             { num: '06', icon: <><polyline points="3,17 7,11 11,14 15,7 21,9"/><line x1="3" y1="20" x2="21" y2="20"/></>, name: 'yfinance + Finnhub', desc: '5-year OHLCV historical pulls, real-time quotes, 30-second auto-refresh', tag: 'Data' },
             { num: '07', icon: <><ellipse cx="12" cy="5" rx="8" ry="2.5"/><path d="M4 5v4c0 1.38 3.58 2.5 8 2.5s8-1.12 8-2.5V5"/><path d="M4 9v5c0 1.38 3.58 2.5 8 2.5s8-1.12 8-2.5V9"/><path d="M4 14v5c0 1.38 3.58 2.5 8 2.5s8-1.12 8-2.5v-5"/></>, name: 'Supabase', desc: 'PostgreSQL + Auth + Storage — 6 tables, RBAC, model artifact buckets', tag: 'Database' },
           ].map(t => (
@@ -495,10 +495,10 @@ export default function Landing() {
                   <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 12l10 5 10-5M2 17l10 5 10-5"/></svg>
                 </div>
                 <p className="card-title">LSTM Prediction Engine</p>
-                <p className="card-body">Three-layer LSTM processes 20-day windows of 6 technical indicators. Walk-forward validation, 5 folds, 2% tolerance gate.</p>
+                <p className="card-body">Three-layer LSTM processes 30-day windows of 14 features including market context. Walk-forward validation, 5 folds, 2% tolerance gate.</p>
                 <div className="lstm-stats">
-                  <div className="lstm-stat"><span className="lstm-stat-val">3x50</span><span className="lstm-stat-lbl">LSTM Units</span></div>
-                  <div className="lstm-stat"><span className="lstm-stat-val">20d</span><span className="lstm-stat-lbl">Window</span></div>
+                  <div className="lstm-stat"><span className="lstm-stat-val">128/64/32</span><span className="lstm-stat-lbl">LSTM Units</span></div>
+                  <div className="lstm-stat"><span className="lstm-stat-val">30d</span><span className="lstm-stat-lbl">Window</span></div>
                   <div className="lstm-stat"><span className="lstm-stat-val">5-Fold</span><span className="lstm-stat-lbl">Validation</span></div>
                   <div className="lstm-stat"><span className="lstm-stat-val">7-Day</span><span className="lstm-stat-lbl">Forecast</span></div>
                 </div>
@@ -528,10 +528,10 @@ export default function Landing() {
                 <p className="card-title">Accuracy Metrics</p>
                 <p className="card-body">RMSE, MAE, R² per model. 2% tolerance gate before deployment.</p>
                 <div className="acc-stats">
-                  <div className="acc-stat"><span className="acc-stat-val">0.024</span><span className="acc-stat-lbl">RMSE</span></div>
-                  <div className="acc-stat"><span className="acc-stat-val">0.018</span><span className="acc-stat-lbl">MAE</span></div>
-                  <div className="acc-stat"><span className="acc-stat-val">0.94</span><span className="acc-stat-lbl">R²</span></div>
-                  <div className="acc-stat" style={{ borderLeft: '1px solid #1C1C1C' }}><span className="acc-stat-val">88%</span><span className="acc-stat-lbl">Confidence</span></div>
+                  <div className="acc-stat"><span className="acc-stat-val">1.1%</span><span className="acc-stat-lbl">AAPL MAPE</span></div>
+                  <div className="acc-stat"><span className="acc-stat-val">1.6%</span><span className="acc-stat-lbl">NVDA MAPE</span></div>
+                  <div className="acc-stat"><span className="acc-stat-val">1.7%</span><span className="acc-stat-lbl">MSFT MAPE</span></div>
+                  <div className="acc-stat" style={{ borderLeft: '1px solid #1C1C1C' }}><span className="acc-stat-val">55%</span><span className="acc-stat-lbl">Dir. Accuracy</span></div>
                 </div>
               </div>
             </div>
@@ -546,9 +546,9 @@ export default function Landing() {
                   <p className="card-title">Auto Validation</p>
                   <p className="card-body">Predictions validated daily against actual closes. Direction accuracy and mean percent error tracked per ticker.</p>
                   <div className="val-list">
-                    <div className="val-row"><div className="val-chk"><svg viewBox="0 0 12 12"><polyline points="1,6 4,9.5 11,2"/></svg></div><span className="val-ticker">NVDA</span><span className="val-match">↑ Match</span><span className="val-pct">+1.9%</span></div>
-                    <div className="val-row"><div className="val-chk"><svg viewBox="0 0 12 12"><polyline points="1,6 4,9.5 11,2"/></svg></div><span className="val-ticker">AAPL</span><span className="val-match">↑ Match</span><span className="val-pct">+1.1%</span></div>
-                    <div className="val-row"><div className="val-chk"><svg viewBox="0 0 12 12"><polyline points="1,6 4,9.5 11,2"/></svg></div><span className="val-ticker">BBCA.JK</span><span className="val-match">↑ Match</span><span className="val-pct">+0.8%</span></div>
+                    <div className="val-row"><div className="val-chk"><svg viewBox="0 0 12 12"><polyline points="1,6 4,9.5 11,2"/></svg></div><span className="val-ticker">NVDA</span><span className="val-match">MAPE</span><span className="val-pct">1.6%</span></div>
+                    <div className="val-row"><div className="val-chk"><svg viewBox="0 0 12 12"><polyline points="1,6 4,9.5 11,2"/></svg></div><span className="val-ticker">AAPL</span><span className="val-match">MAPE</span><span className="val-pct">1.1%</span></div>
+                    <div className="val-row"><div className="val-chk"><svg viewBox="0 0 12 12"><polyline points="1,6 4,9.5 11,2"/></svg></div><span className="val-ticker">MSFT</span><span className="val-match">MAPE</span><span className="val-pct">1.7%</span></div>
                   </div>
                 </div>
                 <div className="val-right">
@@ -566,9 +566,9 @@ export default function Landing() {
           <div className="stats-grid">
             {[
               { count: '99.2', suffix: '%', dec: '0', label: 'Uptime SLA' },
-              { count: '0.018', suffix: '', dec: '3', label: 'Avg MAE Error' },
-              { count: '30', suffix: '+', dec: '0', label: 'Global Tickers' },
-              { count: '88', suffix: '%', dec: '0', label: 'Model Confidence' },
+              { count: '2.3', suffix: '%', dec: '1', label: 'Avg MAPE' },
+              { count: '5', suffix: '+', dec: '0', label: 'Trained Tickers' },
+              { count: '14', suffix: '', dec: '0', label: 'Features per Model' },
             ].map((s, i) => (
               <div key={i} className="stat-card" data-enter="" style={{ borderColor: 'var(--gray-dark)' }}>
                 <div className="stat-value" data-count={s.count} data-suffix={s.suffix} data-decimals={s.dec}>0</div>
@@ -586,9 +586,9 @@ export default function Landing() {
           <h3 style={{ textAlign: 'center', color: 'var(--white)', marginBottom: 52 }} data-enter="">How It Works</h3>
           <div className="how-steps-grid">
             {[
-              { n: '01', title: 'Fetch Data', desc: '5 years of historical data pulled from Yahoo Finance. 6 technical indicators computed in real-time.' },
-              { n: '02', title: 'Normalize', desc: 'MinMaxScaler transforms features to 0–1 range. 20-day sliding windows created for sequence input.' },
-              { n: '03', title: 'Predict', desc: '3-layer LSTM with 50 units each. 70-epoch training with Adam optimizer and MSE loss function.' },
+              { n: '01', title: 'Fetch Data', desc: '5 years of historical data pulled from Yahoo Finance. 14 features including market context (S&P 500, VIX, Treasury yield).' },
+              { n: '02', title: 'Normalize', desc: 'Per-feature StandardScaler fitted on training data only. 30-day sliding windows created for sequence input.' },
+              { n: '03', title: 'Predict', desc: '3-layer LSTM (128/64/32) trained 150 epochs with Huber loss, cosine annealing, and dynamic SVM ensemble.' },
               { n: '04', title: 'Display', desc: '7-day forecast with confidence intervals. Interactive charts showing historical + predicted prices.' },
             ].map((s, i) => (
               <div key={i} className="step" data-enter="" style={{ minWidth: 'auto', padding: '40px 24px' }}>
@@ -642,19 +642,12 @@ export default function Landing() {
                 { label: 'Features', href: '#features' },
                 { label: 'Pricing', href: '#pricing' },
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'API', href: '#' },
               ]},
               { title: 'Company', links: [
-                { label: 'About', href: '#' },
                 { label: 'Blog', href: '/insights' },
-                { label: 'Careers', href: '#' },
-                { label: 'Contact', href: '#' },
               ]},
               { title: 'Resources', links: [
-                { label: 'Documentation', href: '#' },
                 { label: 'Market Insights', href: '/insights' },
-                { label: 'Status', href: '#' },
-                { label: 'Changelog', href: '#' },
               ]},
             ].map(col => (
               <div key={col.title} className="footer-col">

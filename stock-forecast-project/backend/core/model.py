@@ -71,22 +71,22 @@ class LSTMModel:
         try:
             from tensorflow.keras.layers import BatchNormalization
 
-            layers = []
+            model = Sequential()
             for i, units in enumerate(lstm_units):
-                layers.append(LSTM(units=units, return_sequences=(i < len(lstm_units) - 1),
-                                   input_shape=(self.window_size, self.num_features) if i == 0 else None))
+                if i == 0:
+                    model.add(LSTM(units=units, return_sequences=(i < len(lstm_units) - 1),
+                                   input_shape=(self.window_size, self.num_features)))
+                else:
+                    model.add(LSTM(units=units, return_sequences=(i < len(lstm_units) - 1)))
                 if i < len(lstm_units) - 1:
-                    layers.append(BatchNormalization())
-                layers.append(Dropout(dropout_rates[i] if i < len(dropout_rates) else 0.2))
+                    model.add(BatchNormalization())
+                model.add(Dropout(dropout_rates[i] if i < len(dropout_rates) else 0.2))
 
-            layers.extend([
-                Dense(units=32, activation='relu'),
-                Dropout(0.1),
-                Dense(units=16, activation='relu'),
-                Dense(units=1)
-            ])
+            model.add(Dense(units=32, activation='relu'))
+            model.add(Dropout(0.1))
+            model.add(Dense(units=16, activation='relu'))
+            model.add(Dense(units=1))
 
-            model = Sequential(layers)
             model.compile(optimizer=Adam(learning_rate=learning_rate), loss='huber', metrics=['mae'])
             self.model = model
             return model

@@ -239,11 +239,15 @@ class RetrainingOrchestrator:
 
             # Gate on test-set metrics (same eval method as stored old metrics)
             gating_metrics = {"rmse": new_metrics["rmse"], "mae": new_metrics["mae"], "mse": new_metrics.get("mse", new_metrics["rmse"] ** 2)}
-            logger.info("Validating model improvement using test-set metrics...")
-            is_better = self.model_manager.validate_model_improvement(
-                old_metrics or {},
-                gating_metrics
-            )
+            if force_retrain:
+                logger.info("force_retrain=True — bypassing improvement gate")
+                is_better = True
+            else:
+                logger.info("Validating model improvement using test-set metrics...")
+                is_better = self.model_manager.validate_model_improvement(
+                    old_metrics or {},
+                    gating_metrics
+                )
 
             if is_better:
                 if progress:

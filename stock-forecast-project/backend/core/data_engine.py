@@ -89,11 +89,12 @@ class DataEngine:
         true_range = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
         df['ATR'] = true_range.rolling(window=14).mean()
 
+        # Forward-fill zero-volume days (holidays/stale data on IDX) before OBV
+        df['Volume'] = df['Volume'].replace(0, np.nan).ffill().fillna(1)
+
         # OBV (On-Balance Volume) - normalized
         obv = (np.sign(df['Close'].diff()) * df['Volume']).fillna(0).cumsum()
         df['OBV_norm'] = (obv - obv.rolling(20).mean()) / obv.rolling(20).std()
-
-        df['Volume'] = df['Volume'].replace(0, 1)  # Avoid division by zero
 
         df = df.dropna()
 

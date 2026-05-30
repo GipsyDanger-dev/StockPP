@@ -121,20 +121,28 @@ class ModelManager:
                 return False
 
             storage = self.supabase_client.get_storage()
+            bucket = storage.from_("models")
+
+            # Delete existing files before re-uploading
+            for file_name in ["model.keras", "close_scaler.pkl", "feature_scalers.pkl"]:
+                try:
+                    bucket.remove([f"{ticker}/{file_name}"])
+                except Exception:
+                    pass
 
             with open(model_path, "rb") as f:
                 path = f"{ticker}/model.keras"
-                storage.from_("models").upload(path, f, {"content-type": "application/octet-stream"})
+                bucket.upload(path, f, {"content-type": "application/octet-stream"})
                 logger.info(f"Uploaded model to Supabase: {path}")
 
             if scaler_path and scaler_path.exists():
                 with open(scaler_path, "rb") as f:
-                    storage.from_("models").upload(f"{ticker}/{scaler_path.name}", f, {"content-type": "application/octet-stream"})
+                    bucket.upload(f"{ticker}/{scaler_path.name}", f, {"content-type": "application/octet-stream"})
                     logger.info(f"Uploaded price scaler to Supabase: {ticker}/{scaler_path.name}")
 
             if feature_scaler_path and feature_scaler_path.exists():
                 with open(feature_scaler_path, "rb") as f:
-                    storage.from_("models").upload(f"{ticker}/{feature_scaler_path.name}", f, {"content-type": "application/octet-stream"})
+                    bucket.upload(f"{ticker}/{feature_scaler_path.name}", f, {"content-type": "application/octet-stream"})
                     logger.info(f"Uploaded feature scaler to Supabase: {ticker}/{feature_scaler_path.name}")
 
             try:

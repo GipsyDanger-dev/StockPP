@@ -205,9 +205,9 @@ class RetrainingOrchestrator:
             old_metrics = self.model_manager.get_model_metrics(ticker_upper)
             result["old_metrics"] = old_metrics
 
-            # Use walk-forward RMSE as the primary gating metric
-            gating_metrics = {"rmse": wf_metrics["rmse"], "mae": wf_metrics["mae"]}
-            logger.info("Validating model improvement using walk-forward metrics...")
+            # Gate on test-set metrics (same eval method as stored old metrics)
+            gating_metrics = {"rmse": new_metrics["rmse"], "mae": new_metrics["mae"]}
+            logger.info("Validating model improvement using test-set metrics...")
             is_better = self.model_manager.validate_model_improvement(
                 old_metrics or {},
                 gating_metrics

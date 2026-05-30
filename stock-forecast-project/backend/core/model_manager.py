@@ -54,7 +54,8 @@ class ModelManager:
         return self.model_dir / f"{ticker.upper()}_{version}.keras"
 
     def save_model(self, model, ticker: str, metrics: Dict, scaler: Any = None,
-                   feature_scaler: Any = None, feature_scalers: list = None) -> bool:
+                   feature_scaler: Any = None, feature_scalers: list = None,
+                   ensemble_weights: Dict = None) -> bool:
         """Save a model with metadata and optional scalers"""
         try:
             ticker = ticker.upper()
@@ -90,6 +91,8 @@ class ModelManager:
                 version_info["scaler_path"] = str(scaler_path)
             if feature_scaler_path:
                 version_info["feature_scaler_path"] = str(feature_scaler_path)
+            if ensemble_weights:
+                version_info["ensemble_weights"] = ensemble_weights
 
             self.metadata[ticker]["current"] = version_info
             self.metadata[ticker]["versions"].append(version_info)
@@ -308,6 +311,12 @@ class ModelManager:
         if ticker in self.metadata and "current" in self.metadata[ticker]:
             return self.metadata[ticker]["current"].get("metrics", {})
 
+        return None
+
+    def get_ensemble_weights(self, ticker: str) -> Optional[Dict]:
+        ticker = ticker.upper()
+        if ticker in self.metadata and "current" in self.metadata[ticker]:
+            return self.metadata[ticker]["current"].get("ensemble_weights")
         return None
 
     def get_model_age(self, ticker: str) -> Optional[float]:

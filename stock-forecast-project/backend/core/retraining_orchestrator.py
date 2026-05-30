@@ -217,6 +217,20 @@ class RetrainingOrchestrator:
             )
             logger.info(f"SVM metrics - RMSE: ${svm_metrics['rmse']:.2f}, MAE: ${svm_metrics['mae']:.2f}")
 
+            # Dynamic ensemble weighting based on RMSE
+            lstm_rmse = new_metrics["rmse"]
+            svm_rmse = svm_metrics["rmse"]
+            if svm_rmse < lstm_rmse:
+                total = lstm_rmse + svm_rmse
+                ensemble_weights = {
+                    "lstm_weight": round(svm_rmse / total, 4),
+                    "svm_weight": round(lstm_rmse / total, 4)
+                }
+                logger.info(f"Ensemble weights - LSTM: {ensemble_weights['lstm_weight']:.4f}, SVM: {ensemble_weights['svm_weight']:.4f}")
+            else:
+                ensemble_weights = {"lstm_weight": 1.0, "svm_weight": 0.0}
+                logger.info("SVM worse than LSTM — using LSTM only (no ensemble)")
+
             svm_path = str(self.model_manager.model_dir / f"{ticker_upper}_svm.pkl")
             svm_model.save_model(svm_path)
             self.model_manager.save_svm_model(ticker_upper, svm_path)
@@ -241,7 +255,8 @@ class RetrainingOrchestrator:
                     ticker_upper,
                     new_metrics,
                     close_scaler,
-                    feature_scalers=feature_scalers
+                    feature_scalers=feature_scalers,
+                    ensemble_weights=ensemble_weights
                 )
 
                 result["model_saved"] = saved

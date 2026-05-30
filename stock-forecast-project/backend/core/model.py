@@ -3,7 +3,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
-from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, LearningRateScheduler
+from tensorflow.keras.callbacks import EarlyStopping, LearningRateScheduler
 from tensorflow.keras.optimizers import Adam
 import math
 from sklearn.metrics import mean_squared_error, mean_absolute_error
@@ -122,13 +122,6 @@ class LSTMModel:
                     restore_best_weights=True,
                     min_delta=1e-5
                 ),
-                ReduceLROnPlateau(
-                    monitor='val_loss',
-                    factor=0.5,
-                    patience=10,
-                    min_lr=1e-6,
-                    verbose=1
-                ),
                 LearningRateScheduler(cosine_annealing, verbose=0)
             ]
 
@@ -187,14 +180,18 @@ class LSTMModel:
             rmse = np.sqrt(mean_squared_error(y_test, predictions))
             mae = mean_absolute_error(y_test, predictions)
 
+            direction_correct = np.sum(np.sign(predictions.flatten()) == np.sign(y_test.flatten()))
+            directional_accuracy = float(direction_correct / len(y_test) * 100)
+
             metrics = {
                 "rmse": float(rmse),
                 "mae": float(mae),
                 "mse": float(rmse ** 2),
+                "directional_accuracy": round(directional_accuracy, 2),
                 "test_samples": len(X_test)
             }
 
-            logger.info(f"Model evaluation (scaled) - RMSE: {rmse:.4f}, MAE: {mae:.4f}")
+            logger.info(f"Model evaluation (scaled) - RMSE: {rmse:.4f}, MAE: {mae:.4f}, Dir.Acc: {directional_accuracy:.2f}%")
 
             return metrics
 
@@ -244,15 +241,19 @@ class LSTMModel:
                 mae = mean_absolute_error(actual_returns, predicted_returns)
                 mape = 0
 
+            direction_correct = np.sum(np.sign(predicted_returns) == np.sign(actual_returns))
+            directional_accuracy = round(float(direction_correct / len(actual_returns) * 100), 2)
+
             metrics = {
                 "rmse": round(float(rmse), 2),
                 "mae": round(float(mae), 2),
                 "mse": round(float(rmse ** 2), 2),
                 "mape": round(float(mape), 2),
+                "directional_accuracy": directional_accuracy,
                 "test_samples": len(X_test)
             }
 
-            logger.info(f"Model evaluation (original scale) - RMSE: ${rmse:.2f}, MAE: ${mae:.2f}, MAPE: {mape:.2f}%")
+            logger.info(f"Model evaluation (original scale) - RMSE: ${rmse:.2f}, MAE: ${mae:.2f}, MAPE: {mape:.2f}%, Dir.Acc: {directional_accuracy}%")
 
             return metrics
 

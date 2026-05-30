@@ -6,7 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-NUM_FEATURES = 11
+NUM_FEATURES = 14
 
 
 class DataEngine:
@@ -22,7 +22,7 @@ class DataEngine:
         self.close_scaler: Optional[StandardScaler] = None
         self.original_close_prices = None
         self.scaled_data = None
-        self.feature_columns = ['Close', 'Volume', 'MA20', 'MA50', 'RSI', 'MACD', 'EWMA20', 'BB_Width', 'ATR', 'OBV_norm', 'ROC']
+        self.feature_columns = ['Close', 'Volume', 'MA20', 'MA50', 'RSI', 'MACD', 'EWMA20', 'BB_Width', 'ATR', 'OBV_norm', 'ROC', 'SP500', 'VIX', 'TNX']
 
     def fetch_data(self, ticker: str, period: str = "5y") -> pd.DataFrame:
         """Fetch historical stock data using yfinance. Finnhub free tier doesn't support historical candles."""
@@ -44,6 +44,20 @@ class DataEngine:
             df = df[required_cols].copy()
             df.index = pd.to_datetime(df.index)
             df = df.sort_index()
+
+            # Fetch market context: S&P 500, VIX, 10Y Treasury yield
+            market_tickers = {'^GSPC': 'SP500', '^VIX': 'VIX', '^TNX': 'TNX'}
+            for mkt_ticker, col_name in market_tickers.items():
+                try:
+                    mkt = yf.Ticker(mkt_ticker)
+                    mkt_df = mkt.history(period=period)[['Close']].rename(columns={'Close': col_name})
+                    mkt_df.index = pd.to_datetime(mkt_df.index)
+                    df = df.join(mkt_df, how='left')
+                    df[col_name] = df[col_name].ffill().bfill()
+                    logger.info(f"Fetched {col_name} ({mkt_ticker}): {len(mkt_df)} points")
+                except Exception as mkt_err:
+                    logger.warning(f"Failed to fetch {col_name}: {mkt_err}")
+                    df[col_name] = 0.0
 
             logger.info(f"Successfully fetched {len(df)} days of data for {ticker}")
             return df

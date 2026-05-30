@@ -377,6 +377,68 @@ class ModelManager:
                 }
         return info
 
+    def save_svm_model(self, ticker: str, svm_model_path: str) -> bool:
+        try:
+            ticker = ticker.upper()
+            svm_dest = self.model_dir / f"{ticker}_svm.pkl"
+
+            import shutil
+            shutil.copy2(svm_model_path, svm_dest)
+
+            if ticker in self.metadata:
+                self.metadata[ticker]["svm_path"] = str(svm_dest)
+                self._save_metadata()
+
+            if self.use_cloud_storage and self.supabase_client:
+                try:
+                    storage = self.supabase_client.get_storage()
+                    bucket = storage.from_("models")
+                    try:
+                        bucket.remove([f"{ticker}/svm_model.pkl"])
+                    except Exception:
+                        pass
+                    with open(svm_dest, "rb") as f:
+                        bucket.upload(f"{ticker}/svm_model.pkl", f, {"content-type": "application/octet-stream"})
+                    logger.info(f"Uploaded SVM model to Supabase for {ticker}")
+                except Exception as e:
+                    logger.warning(f"Failed to upload SVM model to Supabase: {e}")
+
+            logger.info(f"Saved SVM model for {ticker} to {svm_dest}")
+            return True
+        except Exception as e:
+            logger.error(f"Error saving SVM model for {ticker}: {str(e)}")
+            return False
+
+    def load_svm_model(self, ticker: str):
+        try:
+            ticker = ticker.upper()
+            svm_path = self.model_dir / f"{ticker}_svm.pkl"
+
+            if not svm_path.exists():
+                if self.use_cloud_storage and self.supabase_client:
+                    try:
+                        storage = self.supabase_client.get_storage()
+                        cloud_path = f"{ticker}/svm_model.pkl"
+                        data = storage.from_("models").download(cloud_path)
+                        if data:
+                            with open(svm_path, 'wb') as f:
+                                f.write(data)
+                            logger.info(f"Downloaded SVM model from Supabase for {ticker}")
+                    except Exception as e:
+                        logger.debug(f"SVM model not in Supabase for {ticker}: {e}")
+                        return None
+
+            if not svm_path.exists():
+                return None
+
+            from .svm_model import SVMModel
+            svm = SVMModel()
+            svm.load_model(str(svm_path))
+            return svm
+        except Exception as e:
+            logger.error(f"Error loading SVM model for {ticker}: {str(e)}")
+            return None
+
     def _save_scaler(self, scaler: Any, ticker: str, suffix: str = "_scaler") -> Path:
         ticker = ticker.upper()
         scaler_path = self.scaler_dir / f"{ticker}{suffix}.pkl"

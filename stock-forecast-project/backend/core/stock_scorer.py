@@ -3,6 +3,7 @@ import numpy as np
 from typing import Dict, List, Optional
 from .finnhub_client import FinnhubClient
 from .data_engine import DataEngine
+from .sentiment_service import SentimentService
 
 logger = logging.getLogger(__name__)
 
@@ -16,19 +17,21 @@ class StockScorer:
     """
 
     DEFAULT_WEIGHTS = {
-        'value': 0.15,       # PE, PBV valuation
-        'profitability': 0.15,  # ROE, profit margin
-        'safety': 0.15,      # Debt-to-equity, current ratio
-        'momentum': 0.15,    # RSI, MACD signals
-        'trend': 0.15,       # Price vs MA, EWMA
+        'value': 0.12,       # PE, PBV valuation
+        'profitability': 0.12,  # ROE, profit margin
+        'safety': 0.12,      # Debt-to-equity, current ratio
+        'momentum': 0.12,    # RSI, MACD signals
+        'trend': 0.12,       # Price vs MA, EWMA
         'volatility': 0.10,  # Low volatility preferred
         'performance': 0.10, # 52-week return
         'liquidity': 0.05,   # Volume consistency
+        'sentiment': 0.15,   # News + social sentiment
     }
 
     def __init__(self, weights: Dict[str, float] = None):
         self.weights = weights or self.DEFAULT_WEIGHTS
         self.data_engine = DataEngine(window_size=30)
+        self.sentiment_service = SentimentService()
 
     def score_stock(self, ticker: str, period: str = "1y") -> Dict:
         try:
@@ -69,6 +72,9 @@ class StockScorer:
 
             # Liquidity score (volume consistency)
             scores['liquidity'] = self._score_liquidity(df)
+
+            # Sentiment score (news + social)
+            scores['sentiment'] = self._score_sentiment(ticker)
 
             # Weighted composite score
             composite = sum(
@@ -289,6 +295,11 @@ class StockScorer:
             return 0.5
         else:
             return 0.3
+
+    def _score_sentiment(self, ticker: str) -> float:
+        sentiment = self.sentiment_service.get_sentiment(ticker)
+        score = sentiment.get("combined_score", 0.0)
+        return np.clip(0.5 + score * 0.5, 0, 1)
 
     def _grade(self, score: float) -> str:
         if score >= 0.8:

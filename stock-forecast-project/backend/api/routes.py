@@ -1132,6 +1132,27 @@ async def score_stock(ticker: str, user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=f"Scoring error: {str(e)}")
 
 
+@router.get("/sentiment/{ticker}")
+async def get_sentiment(ticker: str, user: dict = Depends(get_current_user)):
+    """Get sentiment analysis for a ticker (news + social media)."""
+    try:
+        from core.sentiment_service import SentimentService
+        service = SentimentService()
+        result = service.get_sentiment(ticker.upper())
+        return {
+            "ticker": result["ticker"],
+            "news_score": result["news_score"],
+            "social_score": result["social_score"],
+            "combined_score": result["combined_score"],
+            "news_available": result["news_available"],
+            "social_available": result["social_available"],
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error getting sentiment for {ticker}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Sentiment error: {str(e)}")
+
+
 class RankRequest(BaseModel):
     tickers: List[str]
     period: str = "1y"

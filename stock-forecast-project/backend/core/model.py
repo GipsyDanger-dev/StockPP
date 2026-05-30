@@ -65,6 +65,35 @@ class LSTMModel:
             logger.error(f"Error building model: {str(e)}")
             raise
 
+    def build_model_custom(self, lstm_units: tuple = (128, 64, 32),
+                           dropout_rates: tuple = (0.2, 0.2, 0.3),
+                           learning_rate: float = 0.0008) -> keras.Model:
+        try:
+            from tensorflow.keras.layers import BatchNormalization
+
+            layers = []
+            for i, units in enumerate(lstm_units):
+                layers.append(LSTM(units=units, return_sequences=(i < len(lstm_units) - 1),
+                                   input_shape=(self.window_size, self.num_features) if i == 0 else None))
+                if i < len(lstm_units) - 1:
+                    layers.append(BatchNormalization())
+                layers.append(Dropout(dropout_rates[i] if i < len(dropout_rates) else 0.2))
+
+            layers.extend([
+                Dense(units=32, activation='relu'),
+                Dropout(0.1),
+                Dense(units=16, activation='relu'),
+                Dense(units=1)
+            ])
+
+            model = Sequential(layers)
+            model.compile(optimizer=Adam(learning_rate=learning_rate), loss='huber', metrics=['mae'])
+            self.model = model
+            return model
+        except Exception as e:
+            logger.error(f"Error building custom model: {str(e)}")
+            raise
+
     def train(self, X_train: np.ndarray, y_train: np.ndarray,
               epochs: int = 100, batch_size: int = 32,
               validation_split: float = 0.2,
@@ -161,6 +190,7 @@ class LSTMModel:
             metrics = {
                 "rmse": float(rmse),
                 "mae": float(mae),
+                "mse": float(rmse ** 2),
                 "test_samples": len(X_test)
             }
 
@@ -217,6 +247,7 @@ class LSTMModel:
             metrics = {
                 "rmse": round(float(rmse), 2),
                 "mae": round(float(mae), 2),
+                "mse": round(float(rmse ** 2), 2),
                 "mape": round(float(mape), 2),
                 "test_samples": len(X_test)
             }

@@ -300,4 +300,13 @@ export const rankStocks = async (tickers, period = '1y') => {
   }
 };
 
+export const getSentiment = async (ticker) => {
+  try {
+    const response = await apiClient.get(`/sentiment/${ticker}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: 'Failed to get sentiment' };
+  }
+};
+
 export default apiClient;

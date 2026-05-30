@@ -6,7 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-NUM_FEATURES = 10
+NUM_FEATURES = 11
 
 
 class DataEngine:
@@ -22,7 +22,7 @@ class DataEngine:
         self.close_scaler: Optional[StandardScaler] = None
         self.original_close_prices = None
         self.scaled_data = None
-        self.feature_columns = ['Close', 'Volume', 'MA20', 'MA50', 'RSI', 'MACD', 'EWMA20', 'BB_Width', 'ATR', 'OBV_norm']
+        self.feature_columns = ['Close', 'Volume', 'MA20', 'MA50', 'RSI', 'MACD', 'EWMA20', 'BB_Width', 'ATR', 'OBV_norm', 'ROC']
 
     def fetch_data(self, ticker: str, period: str = "5y") -> pd.DataFrame:
         """Fetch historical stock data using yfinance. Finnhub free tier doesn't support historical candles."""
@@ -89,6 +89,8 @@ class DataEngine:
 
         obv = (np.sign(df['Close'].diff()) * df['Volume']).fillna(0).cumsum()
         df['OBV_norm'] = (obv - obv.rolling(20).mean()) / obv.rolling(20).std()
+
+        df['ROC'] = ((df['Close'] - df['Close'].shift(12)) / df['Close'].shift(12)) * 100
 
         df = df.dropna()
 

@@ -6,6 +6,8 @@ from sklearn.preprocessing import StandardScaler
 
 from .model_manager import ModelManager
 from .model import LSTMModel
+from .svm_model import SVMModel
+from .hyperparameter_tuner import HyperparameterTuner
 from .data_engine import DataEngine, NUM_FEATURES
 
 logger = logging.getLogger(__name__)
@@ -26,7 +28,7 @@ class RetrainingOrchestrator:
         df_with_indicators = self.data_engine._add_technical_indicators(df)
         total_len = len(df_with_indicators)
         fold_size = total_len // (n_splits + 1)
-        rmses, maes, mapes = [], [], []
+        rmses, maes, mses, mapes = [], [], [], []
         original_prices = df_with_indicators['Close'].values
 
         for i in range(n_splits):
@@ -82,14 +84,16 @@ class RetrainingOrchestrator:
             )
             rmses.append(metrics["rmse"])
             maes.append(metrics["mae"])
+            mses.append(metrics.get("mse", metrics["rmse"] ** 2))
             mapes.append(metrics.get("mape", 0))
 
         if not rmses:
-            return {"rmse": float('inf'), "mae": float('inf'), "mape": float('inf')}
+            return {"rmse": float('inf'), "mae": float('inf'), "mse": float('inf'), "mape": float('inf')}
 
         result = {
             "rmse": float(np.mean(rmses)),
             "mae": float(np.mean(maes)),
+            "mse": float(np.mean(mses)),
             "folds_used": len(rmses)
         }
         if mapes:
@@ -137,7 +141,7 @@ class RetrainingOrchestrator:
                 return result
 
             if progress:
-                progress.emit_sync("train_step", {"step": "indicators", "label": "Computing 10 technical indicators...", "status": "running"})
+                progress.emit_sync("train_step", {"step": "indicators", "label": "Computing 11 technical indicators...", "status": "running"})
 
             logger.info("Preparing data with technical indicators...")
             df_with_indicators = self.data_engine._add_technical_indicators(df)
@@ -172,9 +176,30 @@ class RetrainingOrchestrator:
             if progress:
                 progress.emit_sync("train_step", {"step": "building", "label": "Building prediction model...", "status": "running"})
 
+            tuned_params = None
+            if force_retrain:
+                if progress:
+                    progress.emit_sync("train_step", {"step": "tuning", "label": "Running hyperparameter search (20 trials)...", "status": "running"})
+                logger.info("Running hyperparameter tuning with Optuna...")
+                tuner = HyperparameterTuner(n_trials=20, quick_epochs=30)
+                val_size = max(30, int(len(X_train) * 0.1))
+                X_tune_train, X_tune_val = X_train[:-val_size], X_train[-val_size:]
+                y_tune_train, y_tune_val = y_train[:-val_size], y_train[-val_size:]
+                tuned_params = tuner.tune(X_tune_train, y_tune_train, X_tune_val, y_tune_val)
+                logger.info(f"Tuned params: {tuned_params}")
+
             logger.info("Building new model...")
             model = LSTMModel(window_size=30, num_features=NUM_FEATURES)
-            model.build_model()
+            if tuned_params and tuned_params.get("best_rmse") is not None:
+                model.build_model_custom(
+                    lstm_units=tuned_params["lstm_units"],
+                    dropout_rates=tuned_params["dropout_rates"],
+                    learning_rate=tuned_params["learning_rate"]
+                )
+                batch_size = tuned_params.get("batch_size", batch_size)
+                logger.info(f"Using tuned architecture: units={tuned_params['lstm_units']}, lr={tuned_params['learning_rate']:.6f}")
+            else:
+                model.build_model()
 
             if progress:
                 progress.emit_sync("train_step", {"step": "training", "label": f"Training model ({epochs} epochs)...", "status": "running"})
@@ -195,11 +220,27 @@ class RetrainingOrchestrator:
             )
             result["new_metrics"] = new_metrics
 
+            if progress:
+                progress.emit_sync("train_step", {"step": "svm_training", "label": "Training SVM ensemble model...", "status": "running"})
+
+            svm_model = SVMModel(window_size=30, num_features=NUM_FEATURES)
+            svm_model.train(X_train, y_train)
+            svm_metrics = svm_model.evaluate_on_original_scale(
+                X_test, y_test, close_scaler,
+                original_prices=original_prices,
+                test_start_idx=split_row
+            )
+            logger.info(f"SVM metrics - RMSE: ${svm_metrics['rmse']:.2f}, MAE: ${svm_metrics['mae']:.2f}")
+
+            svm_path = str(self.model_manager.model_dir / f"{ticker_upper}_svm.pkl")
+            svm_model.save_model(svm_path)
+            self.model_manager.save_svm_model(ticker_upper, svm_path)
+
             old_metrics = self.model_manager.get_model_metrics(ticker_upper)
             result["old_metrics"] = old_metrics
 
             # Gate on test-set metrics (same eval method as stored old metrics)
-            gating_metrics = {"rmse": new_metrics["rmse"], "mae": new_metrics["mae"]}
+            gating_metrics = {"rmse": new_metrics["rmse"], "mae": new_metrics["mae"], "mse": new_metrics.get("mse", new_metrics["rmse"] ** 2)}
             logger.info("Validating model improvement using test-set metrics...")
             is_better = self.model_manager.validate_model_improvement(
                 old_metrics or {},
@@ -230,7 +271,8 @@ class RetrainingOrchestrator:
             if progress:
                 progress.emit_sync("train_complete", {
                     "rmse": round(float(gating_metrics.get("rmse", 0)), 2),
-                    "mae": round(float(gating_metrics.get("mae", 0)), 2)
+                    "mae": round(float(gating_metrics.get("mae", 0)), 2),
+                    "mse": round(float(gating_metrics.get("mse", 0)), 2)
                 })
 
             return result

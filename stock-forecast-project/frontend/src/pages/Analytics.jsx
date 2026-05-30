@@ -309,10 +309,19 @@ const AnalyticsDetail = ({ ticker }) => {
     return { label: 'Below EWMA', color: 'text-rose-600', bg: 'bg-rose-50 border-rose-200' };
   };
 
+  const getRocSignal = (roc) => {
+    if (roc === null || roc === undefined) return { label: 'N/A', color: 'text-slate-600', bg: 'bg-slate-50 border-slate-200' };
+    if (roc > 5) return { label: 'Strong Momentum', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' };
+    if (roc > 0) return { label: 'Positive Momentum', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' };
+    if (roc < -5) return { label: 'Weak Momentum', color: 'text-rose-600', bg: 'bg-rose-50 border-rose-200' };
+    return { label: 'Negative Momentum', color: 'text-rose-600', bg: 'bg-rose-50 border-rose-200' };
+  };
+
   const rsiSignal = getRsiSignal(indicators.rsi);
   const maSignal = getMaSignal(indicators.ma20, indicators.ma50);
   const macdSignal = getMacdSignal(indicators.macd);
   const ewmaSignal = getEwmaSignal(indicators.ewma20, currentPrice);
+  const rocSignal = getRocSignal(indicators.roc);
 
   return (
     <div className="min-h-screen bg-white text-[#191C1E]">
@@ -359,7 +368,7 @@ const AnalyticsDetail = ({ ticker }) => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-12">
           <div className={`border-2 rounded-xl p-6 shadow-sm ${rsiSignal.bg}`}>
             <p className="text-[#45464D] font-bold tracking-widest text-sm mb-3">RSI (14)</p>
             <p className="text-4xl font-bold text-black mb-2">{indicators.rsi?.toFixed(2) || 'N/A'}</p>
@@ -431,6 +440,22 @@ const AnalyticsDetail = ({ ticker }) => {
                 : ' Price below EWMA suggests bearish trend.'}
             </p>
           </div>
+
+          <div className={`border-2 rounded-xl p-6 shadow-sm ${rocSignal.bg}`}>
+            <p className="text-[#45464D] font-bold tracking-widest text-sm mb-3">ROC (12)</p>
+            <p className="text-4xl font-bold text-black mb-2">{indicators.roc?.toFixed(2) || 'N/A'}%</p>
+            <span className={`inline-block px-3 py-1 rounded-lg font-bold text-sm ${rocSignal.color} ${rocSignal.bg}`}>
+              {rocSignal.label}
+            </span>
+            <p className="text-xs text-[#45464D] mt-4">
+              Rate of Change (12-day).
+              {indicators.roc > 0
+                ? ' Positive ROC indicates upward price momentum.'
+                : indicators.roc < 0
+                ? ' Negative ROC indicates downward price momentum.'
+                : ' Flat ROC indicates sideways movement.'}
+            </p>
+          </div>
         </div>
 
         {scoreData && !scoreData.error && (
@@ -482,6 +507,54 @@ const AnalyticsDetail = ({ ticker }) => {
           </div>
         )}
 
+        {data.sentiment && (data.sentiment.news_available || data.sentiment.social_available) && (
+          <div className="bg-white border-2 border-[#E0E3E5] rounded-xl p-6 mb-12 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-bold text-black text-xl">Market Sentiment</h3>
+                <p className="text-[#45464D] text-sm">News & social media analysis from Finnhub</p>
+              </div>
+              <div className="text-right">
+                <span className={`text-4xl font-bold ${
+                  data.sentiment.combined_score > 0.1 ? 'text-emerald-600' :
+                  data.sentiment.combined_score < -0.1 ? 'text-rose-600' : 'text-slate-600'
+                }`}>
+                  {data.sentiment.combined_score > 0 ? '+' : ''}{(data.sentiment.combined_score * 100).toFixed(1)}%
+                </span>
+                <p className="text-[#45464D] text-sm">Combined Score</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+              {data.sentiment.news_available && (
+                <div className="bg-[#F7F9FB] rounded-lg p-4">
+                  <p className="text-xs text-[#45464D] font-bold tracking-wider mb-1">NEWS SENTIMENT</p>
+                  <p className={`text-2xl font-bold ${data.sentiment.news_score > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    {data.sentiment.news_score > 0 ? '+' : ''}{(data.sentiment.news_score * 100).toFixed(1)}%
+                  </p>
+                </div>
+              )}
+              {data.sentiment.social_available && (
+                <div className="bg-[#F7F9FB] rounded-lg p-4">
+                  <p className="text-xs text-[#45464D] font-bold tracking-wider mb-1">SOCIAL SENTIMENT</p>
+                  <p className={`text-2xl font-bold ${data.sentiment.social_score > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    {data.sentiment.social_score > 0 ? '+' : ''}{(data.sentiment.social_score * 100).toFixed(1)}%
+                  </p>
+                </div>
+              )}
+              <div className="bg-[#F7F9FB] rounded-lg p-4">
+                <p className="text-xs text-[#45464D] font-bold tracking-wider mb-1">SIGNAL</p>
+                <p className={`text-lg font-bold ${
+                  data.sentiment.combined_score > 0.1 ? 'text-emerald-600' :
+                  data.sentiment.combined_score < -0.1 ? 'text-rose-600' : 'text-slate-600'
+                }`}>
+                  {data.sentiment.combined_score > 0.1 ? 'Bullish' :
+                   data.sentiment.combined_score < -0.1 ? 'Bearish' : 'Neutral'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white border-2 border-[#E0E3E5] rounded-xl overflow-hidden mb-12 shadow-sm">
           <div className="bg-[#F2F4F6] p-6 flex justify-between items-center border-b border-[#E0E3E5]">
             <div className="flex gap-8">
@@ -510,6 +583,10 @@ const AnalyticsDetail = ({ ticker }) => {
               <div>
                 <p className="text-[#45464D] text-sm font-medium mb-1">MAE (Mean Absolute Error)</p>
                 <p className="text-4xl font-bold text-black">{data.metrics?.mae?.toFixed(4) || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-[#45464D] text-sm font-medium mb-1">MSE (Mean Squared Error)</p>
+                <p className="text-4xl font-bold text-black">{data.metrics?.mse?.toFixed(4) || 'N/A'}</p>
               </div>
               <div className="pt-4 border-t border-[#E0E3E5]">
                 <p className="text-[#45464D] text-sm font-medium mb-1">Model Source</p>
@@ -552,6 +629,10 @@ const AnalyticsDetail = ({ ticker }) => {
               <div className="flex justify-between items-center p-6 px-10">
                 <span className="text-[#45464D] text-lg font-medium">MA Signal</span>
                 <span className={`text-xl font-bold ${maSignal.color}`}>{maSignal.label}</span>
+              </div>
+              <div className="flex justify-between items-center p-6 px-10">
+                <span className="text-[#45464D] text-lg font-medium">ROC Signal</span>
+                <span className={`text-xl font-bold ${rocSignal.color}`}>{rocSignal.label}</span>
               </div>
             </div>
           </div>

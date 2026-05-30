@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 try:
     from .data_engine import DataEngine, NUM_FEATURES
     from .model_manager import ModelManager
+    from .sentiment_service import SentimentService
     HAS_ML_DEPENDENCIES = True
 except Exception as e:
     logger.warning(f"ML dependencies not available: {str(e)}")
@@ -23,7 +24,7 @@ def _error_response(ticker: str, message: str) -> Dict:
         "current_price": None,
         "historical": [],
         "forecast": [],
-        "indicators": {"rsi": None, "ma20": None, "ma50": None, "macd": None, "ewma20": None},
+        "indicators": {"rsi": None, "ma20": None, "ma50": None, "macd": None, "ewma20": None, "roc": None},
         "historical_indicators": [],
         "metrics": {"rmse": None, "mae": None},
         "trend": None,
@@ -39,6 +40,7 @@ class ForecastingService:
             if HAS_ML_DEPENDENCIES:
                 self.data_engine = DataEngine(window_size=30)
                 self.model_manager = model_manager or ModelManager()
+                self.sentiment_service = SentimentService()
             else:
                 self.data_engine = None
                 self.model_manager = None
@@ -75,11 +77,15 @@ class ForecastingService:
 
             model, saved_scaler = None, None
             feature_scalers = None
+            svm_model = None
             if self.model_manager:
                 if progress:
                     progress.emit_sync("step", {"step": "loading_model", "label": "Loading prediction model...", "status": "running"})
                 model, saved_scaler = self.model_manager.load_model_and_scaler(ticker_upper)
                 feature_scalers = self.model_manager.load_feature_scalers(ticker_upper)
+                svm_model = self.model_manager.load_svm_model(ticker_upper)
+                if svm_model:
+                    logger.info(f"SVM ensemble model loaded for {ticker_upper}")
 
             needs_retrain = model is None or saved_scaler is None or feature_scalers is None
             if needs_retrain:
@@ -129,7 +135,7 @@ class ForecastingService:
                 return _error_response(ticker_upper, "Market API is currently down or undergoing maintenance.")
 
             if progress:
-                progress.emit_sync("step", {"step": "indicators", "label": "Computing 10 technical indicators...", "status": "running"})
+                progress.emit_sync("step", {"step": "indicators", "label": "Computing 11 technical indicators...", "status": "running"})
 
             df_with_indicators = self.data_engine._add_technical_indicators(df)
 
@@ -159,12 +165,14 @@ class ForecastingService:
             historical_ma50 = df_with_indicators['MA50'].iloc[-30:].tolist()
             historical_macd = df_with_indicators['MACD'].iloc[-30:].tolist()
             historical_ewma20 = df_with_indicators['EWMA20'].iloc[-30:].tolist()
+            historical_roc = df_with_indicators['ROC'].iloc[-30:].tolist()
 
             current_rsi = float(df_with_indicators['RSI'].iloc[-1])
             current_ma20 = float(df_with_indicators['MA20'].iloc[-1])
             current_ma50 = float(df_with_indicators['MA50'].iloc[-1])
             current_macd = float(df_with_indicators['MACD'].iloc[-1])
             current_ewma20 = float(df_with_indicators['EWMA20'].iloc[-1])
+            current_roc = float(df_with_indicators['ROC'].iloc[-1])
 
             if progress:
                 progress.emit_sync("step", {"step": "predicting", "label": f"Generating {days_ahead}-day forecast...", "status": "running"})
@@ -188,9 +196,19 @@ class ForecastingService:
             future_predictions = []
             last_price = current_price
 
+            use_ensemble = svm_model is not None and svm_model.is_trained
+            if use_ensemble:
+                logger.info(f"Using LSTM+SVM ensemble (0.7/0.3) for {ticker_upper}")
+
             for step in range(days_ahead):
-                next_pred = model.predict(current_sequence, verbose=0)
-                pred_return = float(next_pred[0, 0])
+                lstm_pred = model.predict(current_sequence, verbose=0)
+                lstm_return = float(lstm_pred[0, 0])
+
+                if use_ensemble:
+                    svm_return = float(svm_model.predict(current_sequence)[0, 0])
+                    pred_return = 0.7 * lstm_return + 0.3 * svm_return
+                else:
+                    pred_return = lstm_return
 
                 pred_price = last_price * (1 + pred_return)
 
@@ -257,6 +275,12 @@ class ForecastingService:
                 else:
                     new_obv_norm = 0.0
 
+                if len(prices_arr) >= 13:
+                    prev_price = prices_arr[-13]
+                    new_roc = ((pred_price - prev_price) / prev_price * 100) if prev_price != 0 else 0.0
+                else:
+                    new_roc = 0.0
+
                 new_close_scaled = close_scaler.transform([[pred_price]])[0, 0]
                 new_vol_scaled = feature_scalers[1].transform(
                     [[recent_prices[-2] if len(recent_prices) > 1 else pred_price]]
@@ -269,11 +293,12 @@ class ForecastingService:
                 new_bb_width_scaled = feature_scalers[7].transform([[new_bb_width]])[0, 0]
                 new_atr_scaled = feature_scalers[8].transform([[new_atr]])[0, 0]
                 new_obv_norm_scaled = feature_scalers[9].transform([[new_obv_norm]])[0, 0]
+                new_roc_scaled = feature_scalers[10].transform([[new_roc]])[0, 0]
 
                 new_row = np.array([new_close_scaled, new_vol_scaled, new_ma20_scaled,
                                     new_ma50_scaled, new_rsi_scaled, new_macd_scaled,
                                     new_ewma20_scaled, new_bb_width_scaled, new_atr_scaled,
-                                    new_obv_norm_scaled])
+                                    new_obv_norm_scaled, new_roc_scaled])
 
                 new_val = new_row.reshape(1, 1, NUM_FEATURES)
                 current_sequence = np.append(current_sequence[:, 1:, :], new_val, axis=1)
@@ -286,6 +311,13 @@ class ForecastingService:
                     future_prices[step] = 0.7 * future_prices[step] + 0.3 * recent_mean
 
             future_prices = np.clip(future_prices, price_min, price_max)
+
+            sentiment_data = self.sentiment_service.get_sentiment(ticker_upper)
+            sentiment_adj = self.sentiment_service.get_price_adjustment(ticker_upper)
+            if sentiment_adj != 1.0:
+                future_prices *= sentiment_adj
+                future_prices = np.clip(future_prices, price_min, price_max)
+                logger.info(f"Sentiment adjustment applied: {sentiment_adj:.4f} (score={sentiment_data['combined_score']:.4f})")
 
             forecast_dates = pd.bdate_range(
                 start=last_date + timedelta(days=1),
@@ -308,7 +340,8 @@ class ForecastingService:
                     "ma20": round(current_ma20, 2),
                     "ma50": round(current_ma50, 2),
                     "macd": round(current_macd, 4),
-                    "ewma20": round(current_ewma20, 2)
+                    "ewma20": round(current_ewma20, 2),
+                    "roc": round(current_roc, 2)
                 },
                 "historical_indicators": [
                     {
@@ -317,20 +350,30 @@ class ForecastingService:
                         "ma20": round(float(m20), 2),
                         "ma50": round(float(m50), 2),
                         "macd": round(float(mc), 4),
-                        "ewma20": round(float(e), 2)
+                        "ewma20": round(float(e), 2),
+                        "roc": round(float(rc), 2)
                     }
-                    for d, r, m20, m50, mc, e in zip(
-                        historical_dates, historical_rsi, historical_ma20, historical_ma50, historical_macd, historical_ewma20
+                    for d, r, m20, m50, mc, e, rc in zip(
+                        historical_dates, historical_rsi, historical_ma20, historical_ma50, historical_macd, historical_ewma20, historical_roc
                     )
                 ],
                 "metrics": {
                     "rmse": round(float(metrics.get("rmse", 0)), 4),
-                    "mae": round(float(metrics.get("mae", 0)), 4)
+                    "mae": round(float(metrics.get("mae", 0)), 4),
+                    "mse": round(float(metrics.get("mse", metrics.get("rmse", 0) ** 2)), 4)
                 },
                 "trend": trend,
                 "change_percent": round(float(change_percent), 2),
                 "timestamp": datetime.now().isoformat(),
-                "model_source": "persisted"
+                "model_source": "persisted",
+                "model_type": "LSTM+SVM Ensemble" if use_ensemble else "LSTM",
+                "sentiment": {
+                    "news_score": sentiment_data.get("news_score", 0),
+                    "social_score": sentiment_data.get("social_score", 0),
+                    "combined_score": sentiment_data.get("combined_score", 0),
+                    "news_available": sentiment_data.get("news_available", False),
+                    "social_available": sentiment_data.get("social_available", False)
+                }
             }
 
             try:

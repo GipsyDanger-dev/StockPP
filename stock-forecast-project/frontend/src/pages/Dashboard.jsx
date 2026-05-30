@@ -254,9 +254,10 @@ const Dashboard = () => {
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               {[
                 { label: 'MAE', value: data.metrics?.mae?.toFixed(4) || 'N/A', sub: 'Error' },
+                { label: 'MSE', value: data.metrics?.mse?.toFixed(4) || 'N/A', sub: 'Squared Error' },
                 { label: 'R-Squared', value: data.metrics?.r_square?.toFixed(3) || 'N/A', sub: 'Fit' },
               ].map((stat, i) => (
                 <div key={i} className="bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl p-4 hover:border-slate-300 transition-colors">

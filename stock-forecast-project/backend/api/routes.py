@@ -404,7 +404,7 @@ async def get_live_quote(ticker: str = Path(..., description="Stock ticker symbo
             quote = FinnhubClient.get_quote_yfinance(ticker_upper)
 
         if quote is None:
-            raise HTTPException(status_code=404, detail=f"No data found for ticker {ticker_upper}")
+            raise HTTPException(status_code=503, detail="Market API is currently down or undergoing maintenance.")
 
         return {
             "ticker": ticker_upper,

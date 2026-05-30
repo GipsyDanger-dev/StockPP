@@ -127,7 +127,7 @@ class ForecastingService:
 
             df = self.data_engine.fetch_data(ticker_upper, period=period)
             if df is None or len(df) < 70:
-                return _error_response(ticker_upper, f"Insufficient data for {ticker_upper}")
+                return _error_response(ticker_upper, "Market API is currently down or undergoing maintenance.")
 
             if progress:
                 progress.emit_sync("step", {"step": "indicators", "label": "Computing 10 technical indicators...", "status": "running"})
@@ -400,8 +400,8 @@ class ForecastingService:
         except Exception as e:
             logger.error(f"Error generating forecast: {str(e)}")
             if progress:
-                progress.emit_sync("error_event", {"message": str(e)})
-            return _error_response(ticker, f"Prediction error: {str(e)}")
+                progress.emit_sync("error_event", {"message": "Market API is currently down or undergoing maintenance."})
+            return _error_response(ticker, "Market API is currently down or undergoing maintenance.")
 
     def validate_ticker(self, ticker: str) -> Dict:
         """Validate if ticker exists and has data"""

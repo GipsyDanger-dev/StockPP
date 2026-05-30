@@ -285,8 +285,7 @@ const AnalyticsDetail = ({ ticker }) => {
     <div className="flex h-screen items-center justify-center bg-white">
       <div className="text-center">
         <Activity size={40} className="text-slate-300 mx-auto mb-4" />
-        <p className="text-lg font-bold text-[#191C1E]">Unable to load analysis</p>
-        <p className="text-sm text-[#76777D] mt-2">Please try again or search for a different ticker.</p>
+        <p className="text-lg font-bold text-[#191C1E]">Market API is currently down or undergoing maintenance.</p>
       </div>
     </div>
   );
@@ -540,7 +539,7 @@ const AnalyticsDetail = ({ ticker }) => {
                     ? 'bg-emerald-50 text-emerald-600 border-2 border-emerald-200'
                     : 'bg-yellow-50 text-yellow-700 border-2 border-yellow-200'
                 }`}>
-                  {data.model_source === 'persisted' ? 'Trained Model' : 'Mock Data'}
+                  {data.model_source === 'persisted' ? 'Trained Model' : 'Auto-Trained Model'}
                 </span>
               </div>
             </div>

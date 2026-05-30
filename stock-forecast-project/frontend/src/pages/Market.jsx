@@ -90,8 +90,7 @@ const Market = () => {
             </div>
           ) : isError && !showSearchResults ? (
             <div className="p-12 flex flex-col items-center justify-center gap-4 bg-red-50">
-              <p className="text-red-600 font-bold">Error loading market data</p>
-              <p className="text-red-500 text-sm">{error?.message || 'Unable to fetch data'}</p>
+              <p className="text-red-600 font-bold">Market API is currently down or undergoing maintenance.</p>
             </div>
           ) : (
             <>

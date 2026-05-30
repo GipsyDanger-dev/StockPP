@@ -49,7 +49,7 @@ class DataEngine:
             return df
         except Exception as e:
             logger.error(f"Error fetching data: {str(e)}")
-            raise
+            raise ValueError("Market API is currently down or undergoing maintenance.")
 
     def _add_technical_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
         """

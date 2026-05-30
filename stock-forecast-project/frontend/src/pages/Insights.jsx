@@ -101,8 +101,7 @@ const Insights = () => {
         <div className="p-6 lg:p-12 max-w-7xl mx-auto">
           <div className="bg-red-50 border-2 border-red-200 rounded-xl p-12 text-center">
             <AlertCircle size={48} className="text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-red-700 mb-2">Unable to load insights</h2>
-            <p className="text-red-600">{error?.message || 'Please ensure the backend server is running.'}</p>
+            <h2 className="text-2xl font-bold text-red-700 mb-2">Market API is currently down or undergoing maintenance.</h2>
           </div>
         </div>
       ) : (

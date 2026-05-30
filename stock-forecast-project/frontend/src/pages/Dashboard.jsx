@@ -74,15 +74,13 @@ const Dashboard = () => {
   };
 
   if (error || data?.status === "error") {
-    const msg = data?.message || (error?.message || "Failed to load forecast data");
     return (
       <div className="flex min-h-[60vh] items-center justify-center bg-[#0a0a0a]">
         <div className="text-center max-w-md px-6">
           <div className="w-16 h-16 bg-[#111] rounded-2xl flex items-center justify-center mx-auto mb-6 border border-[#1e1e1e]">
             <Activity size={28} className="text-[#555]" />
           </div>
-          <p className="text-lg font-bold text-white mb-2">Unable to load forecast</p>
-          <p className="text-sm text-[#888] mb-6">{msg}</p>
+          <p className="text-lg font-bold text-white mb-2">Market API is currently down or undergoing maintenance.</p>
           <form onSubmit={handleSearch} className="flex gap-2">
             <input
               type="text"

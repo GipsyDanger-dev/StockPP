@@ -70,7 +70,8 @@ def validate_prediction(prediction: Dict) -> Dict:
         mean_absolute_error = sum(errors) / len(errors)
         mean_percent_error = sum(percent_errors) / len(percent_errors) if percent_errors else 0
 
-        actual_last_price = actual_prices[-1]["price"]
+        valid_actuals = [p for p in actual_prices if p["price"] is not None]
+        actual_last_price = valid_actuals[-1]["price"] if valid_actuals else None
         if actual_last_price and actual_last_price > 0:
             actual_change_percent = ((actual_last_price - current_price) / current_price) * 100
             predicted_trend = prediction.get("trend", "")

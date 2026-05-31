@@ -309,6 +309,19 @@ class ForecastingService:
                 else:
                     new_roc = 0.0
 
+                # RET_1D, RET_5D, VOL_RATIO, MA_RATIO — momentum/volatility features
+                new_ret_1d = (pred_price - prices_arr[-2]) / prices_arr[-2] if len(prices_arr) > 1 and prices_arr[-2] != 0 else 0.0
+                new_ret_5d = (pred_price - prices_arr[-6]) / prices_arr[-6] if len(prices_arr) > 5 and prices_arr[-6] != 0 else 0.0
+                if len(prices_arr) >= 20:
+                    rets_20 = np.diff(prices_arr[-21:]) / prices_arr[-21:-1]
+                    vol_20 = float(np.std(rets_20))
+                    rets_60 = np.diff(prices_arr[-61:]) / prices_arr[-61:-1] if len(prices_arr) >= 61 else rets_20
+                    vol_60 = float(np.std(rets_60))
+                    new_vol_ratio = vol_20 / vol_60 if vol_60 > 0 else 1.0
+                else:
+                    new_vol_ratio = 1.0
+                new_ma_ratio = pred_price / new_ma20 if new_ma20 != 0 else 1.0
+
                 # Volume — carry forward with exponential decay (better than using price)
                 last_known_volume *= 0.95  # 5% decay per step
 
@@ -326,12 +339,18 @@ class ForecastingService:
                 new_sp500_scaled = feature_scalers[11].transform([[last_sp500]])[0, 0]
                 new_vix_scaled = feature_scalers[12].transform([[last_vix]])[0, 0]
                 new_tnx_scaled = feature_scalers[13].transform([[last_tnx]])[0, 0]
+                new_ret_1d_scaled = feature_scalers[14].transform([[new_ret_1d]])[0, 0]
+                new_ret_5d_scaled = feature_scalers[15].transform([[new_ret_5d]])[0, 0]
+                new_vol_ratio_scaled = feature_scalers[16].transform([[new_vol_ratio]])[0, 0]
+                new_ma_ratio_scaled = feature_scalers[17].transform([[new_ma_ratio]])[0, 0]
 
                 new_row = np.array([new_close_scaled, new_vol_scaled, new_ma20_scaled,
                                     new_ma50_scaled, new_rsi_scaled, new_macd_scaled,
                                     new_ewma20_scaled, new_bb_width_scaled, new_atr_scaled,
                                     new_obv_norm_scaled, new_roc_scaled,
-                                    new_sp500_scaled, new_vix_scaled, new_tnx_scaled])
+                                    new_sp500_scaled, new_vix_scaled, new_tnx_scaled,
+                                    new_ret_1d_scaled, new_ret_5d_scaled,
+                                    new_vol_ratio_scaled, new_ma_ratio_scaled])
 
                 new_val = new_row.reshape(1, 1, NUM_FEATURES)
                 current_sequence = np.append(current_sequence[:, 1:, :], new_val, axis=1)

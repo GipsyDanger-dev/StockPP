@@ -44,17 +44,17 @@ const Market = () => {
   const showSearchResults = searchTerm.length >= 2;
 
   return (
-    <div className="bg-white text-[#191C1E]">
-      <header className="bg-[#F7F9FB] px-6 lg:px-12 py-10 border-b border-[#E0E3E5]">
+    <div className="bg-white text-[var(--light-text)]">
+      <header className="bg-[var(--light-surface)] px-6 lg:px-12 py-10 border-b border-[var(--light-border)]">
         <h1 className="text-5xl lg:text-7xl font-bold text-black mb-4 tracking-tighter">Market Explorer</h1>
-        <p className="text-[#45464D] text-xl lg:text-2xl">Real-time equities overview. Search any ticker.</p>
+        <p className="text-[var(--light-text-secondary)] text-xl lg:text-2xl">Real-time equities overview. Search any ticker.</p>
 
         <div className="flex gap-4 mt-8 flex-wrap">
           {sectors.map(sector => (
             <button
               key={sector}
               onClick={() => setActiveSector(sector)}
-              className={`px-8 py-3 rounded-full font-bold border-2 transition-all ${activeSector === sector ? 'bg-black text-white border-black' : 'bg-white text-black border-[#C6C6CD] hover:bg-slate-100'}`}
+              className={`px-8 py-3 rounded-full font-bold border-2 transition-all ${activeSector === sector ? 'bg-black text-white border-black' : 'bg-white text-black border-[var(--light-border-alt)] hover:bg-slate-100'}`}
             >
               {sector}
             </button>
@@ -63,21 +63,21 @@ const Market = () => {
       </header>
 
       <div className="p-6 lg:p-12 max-w-7xl mx-auto">
-        <div className="bg-white border-2 border-[#C6C6CD] rounded-xl overflow-hidden shadow-sm">
-          <div className="p-6 bg-[#F7F9FB] border-b border-[#C6C6CD]">
+        <div className="bg-white border-2 border-[var(--light-border-alt)] rounded-xl overflow-hidden shadow-sm">
+          <div className="p-6 bg-[var(--light-surface)] border-b border-[var(--light-border-alt)]">
             <div className="relative max-w-xl">
               <input
                 type="text"
                 placeholder="Search any ticker (e.g. AAPL, TSLA, BBCA.JK)..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full py-4 px-12 border-2 border-[#C6C6CD] rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full py-4 px-12 border-2 border-[var(--light-border-alt)] rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <Search className="absolute left-4 top-4 text-slate-400" size={24} />
               {isSearching && <Loader className="absolute right-4 top-4 animate-spin text-indigo-600" size={24} />}
             </div>
             {showSearchResults && (
-              <p className="text-sm text-[#45464D] mt-3">
+              <p className="text-sm text-[var(--light-text-secondary)] mt-3">
                 Search results for "{searchTerm}" - Click to view analysis
               </p>
             )}
@@ -86,7 +86,7 @@ const Market = () => {
           {isLoading && !showSearchResults ? (
             <div className="p-12 flex flex-col items-center justify-center gap-4">
               <Loader className="animate-spin text-indigo-600" size={40} />
-              <p className="text-[#45464D]">Loading market data...</p>
+              <p className="text-[var(--light-text-secondary)]">Loading market data...</p>
             </div>
           ) : isError && !showSearchResults ? (
             <div className="p-12 flex flex-col items-center justify-center gap-4 bg-red-50">
@@ -96,7 +96,7 @@ const Market = () => {
             <>
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
-                  <thead className="bg-[#F7F9FB] text-[#45464D] font-bold text-sm tracking-widest uppercase border-b border-[#C6C6CD]">
+                  <thead className="bg-[var(--light-surface)] text-[var(--light-text-secondary)] font-bold text-sm tracking-widest uppercase border-b border-[var(--light-border-alt)]">
                     <tr>
                       <th className="p-6">Ticker</th>
                       <th className="p-6">Company</th>
@@ -117,8 +117,8 @@ const Market = () => {
                             className="hover:bg-indigo-50 cursor-pointer transition-colors"
                           >
                             <td className="p-6 font-bold text-xl">{result.symbol}</td>
-                            <td className="p-6 text-[#45464D] text-lg">{result.name}</td>
-                            <td className="p-6 text-[#45464D]">{result.type}</td>
+                            <td className="p-6 text-[var(--light-text-secondary)] text-lg">{result.name}</td>
+                            <td className="p-6 text-[var(--light-text-secondary)]">{result.type}</td>
                             <td className="p-6 text-right">
                               <span className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg font-bold">
                                 View Analysis
@@ -128,7 +128,7 @@ const Market = () => {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={4} className="p-12 text-center text-[#45464D]">
+                          <td colSpan={4} className="p-12 text-center text-[var(--light-text-secondary)]">
                             {isSearching ? 'Searching...' : 'No results found'}
                           </td>
                         </tr>
@@ -137,8 +137,8 @@ const Market = () => {
                       filteredStocks.map((stock) => (
                         <tr key={stock.ticker} onClick={() => navigate(`/analytics/${stock.ticker}`)} className="hover:bg-slate-50 cursor-pointer transition-colors">
                           <td className="p-6 font-bold text-xl">{stock.ticker}</td>
-                          <td className="p-6 text-[#45464D] text-lg">{stock.name}</td>
-                          <td className="p-6 text-[#45464D]">{stock.sector || 'N/A'}</td>
+                          <td className="p-6 text-[var(--light-text-secondary)] text-lg">{stock.name}</td>
+                          <td className="p-6 text-[var(--light-text-secondary)]">{stock.sector || 'N/A'}</td>
                           <td className="p-6 font-bold text-xl">${stock.price?.toFixed(2) || 'N/A'}</td>
                           <td className={`p-6 text-right font-bold text-lg ${stock.change_percent >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                             {stock.change_percent >= 0 ? '+' : ''}{stock.change_percent?.toFixed(2) || '0'}%
@@ -151,8 +151,8 @@ const Market = () => {
               </div>
 
               {!showSearchResults && (
-                <div className="p-6 bg-[#F7F9FB] flex items-center border-t border-[#C6C6CD]">
-                  <span className="text-[#45464D]">Showing {filteredStocks.length} of {stocks.length} results</span>
+                <div className="p-6 bg-[var(--light-surface)] flex items-center border-t border-[var(--light-border-alt)]">
+                  <span className="text-[var(--light-text-secondary)]">Showing {filteredStocks.length} of {stocks.length} results</span>
                 </div>
               )}
             </>

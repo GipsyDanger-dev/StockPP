@@ -57,10 +57,10 @@ const Insights = () => {
   };
 
   return (
-    <div className="bg-white text-[#191C1E]">
-      <header className="bg-[#F7F9FB] px-6 lg:px-12 py-10 border-b border-[#E0E3E5]">
+    <div className="bg-white text-[var(--light-text)]">
+      <header className="bg-[var(--light-surface)] px-6 lg:px-12 py-10 border-b border-[var(--light-border)]">
         <h1 className="text-5xl lg:text-7xl font-bold text-black mb-4 tracking-tighter">Market Insights</h1>
-        <p className="text-[#45464D] text-xl lg:text-2xl max-w-4xl">
+        <p className="text-[var(--light-text-secondary)] text-xl lg:text-2xl max-w-4xl">
           AI-driven analysis powered by your LSTM models and expert articles from our team.
         </p>
 
@@ -95,7 +95,7 @@ const Insights = () => {
       {isLoading && articlesLoading ? (
         <div className="p-6 lg:p-12 flex flex-col items-center justify-center gap-4">
           <Loader className="animate-spin text-indigo-600" size={40} />
-          <p className="text-[#45464D] text-lg font-medium">Loading insights...</p>
+          <p className="text-[var(--light-text-secondary)] text-lg font-medium">Loading insights...</p>
         </div>
       ) : isError ? (
         <div className="p-6 lg:p-12 max-w-7xl mx-auto">
@@ -107,7 +107,7 @@ const Insights = () => {
       ) : (
         <div className="p-6 lg:p-12 max-w-7xl mx-auto space-y-12">
           {featured && (
-            <div className="bg-white border-2 border-[#C6C6CD] rounded-xl overflow-hidden shadow-sm">
+            <div className="bg-white border-2 border-[var(--light-border-alt)] rounded-xl overflow-hidden shadow-sm">
               <div className="bg-gradient-to-r from-[#0D1C2F] to-indigo-900 p-10 lg:p-14">
                 <span className="inline-block bg-white/10 backdrop-blur text-white border border-white/20 px-4 py-1 rounded-lg font-bold text-sm mb-6">
                   {featured.category}
@@ -130,7 +130,7 @@ const Insights = () => {
           {articles.length > 0 && (
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <BookOpen className="w-6 h-6 text-[#45464D]" />
+                <BookOpen className="w-6 h-6 text-[var(--light-text-secondary)]" />
                 <h2 className="text-3xl font-bold text-black">Latest Articles</h2>
               </div>
 
@@ -141,7 +141,7 @@ const Insights = () => {
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                       !selectedCategory
                         ? 'bg-[#131B2E] text-white'
-                        : 'bg-[#F7F9FB] text-[#45464D] border border-[#C6C6CD] hover:bg-[#E8EAED]'
+                        : 'bg-[var(--light-surface)] text-[var(--light-text-secondary)] border border-[var(--light-border-alt)] hover:bg-[#E8EAED]'
                     }`}
                   >
                     All
@@ -153,7 +153,7 @@ const Insights = () => {
                       className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                         selectedCategory === cat
                           ? 'bg-[#131B2E] text-white'
-                          : 'bg-[#F7F9FB] text-[#45464D] border border-[#C6C6CD] hover:bg-[#E8EAED]'
+                          : 'bg-[var(--light-surface)] text-[var(--light-text-secondary)] border border-[var(--light-border-alt)] hover:bg-[#E8EAED]'
                       }`}
                     >
                       {cat}
@@ -167,7 +167,7 @@ const Insights = () => {
                   <div
                     key={article.id}
                     onClick={() => navigate(`/insights/${article.id}`)}
-                    className="bg-white border-2 border-[#C6C6CD] rounded-xl overflow-hidden hover:shadow-lg hover:border-indigo-200 transition-all cursor-pointer group"
+                    className="bg-white border-2 border-[var(--light-border-alt)] rounded-xl overflow-hidden hover:shadow-lg hover:border-indigo-200 transition-all cursor-pointer group"
                   >
                     {(article.thumbnail || article.header_image) && (
                       <div className="h-48 overflow-hidden">
@@ -195,29 +195,29 @@ const Insights = () => {
                         </div>
                       </div>
                       <h3 className="text-2xl font-bold text-black mb-3 group-hover:text-indigo-600 transition-colors">{article.title}</h3>
-                      <p className="text-[#45464D] text-lg leading-relaxed mb-4">
+                      <p className="text-[var(--light-text-secondary)] text-lg leading-relaxed mb-4">
                         {article.summary || article.content?.substring(0, 200) + '...'}
                       </p>
                       {article.tags && article.tags.length > 0 && (
                         <div className="flex flex-wrap gap-2 mb-4">
                           {article.tags.slice(0, 3).map((tag, i) => (
-                            <span key={i} className="flex items-center gap-1 text-xs text-[#45464D] bg-[#F7F9FB] px-2 py-1 rounded-full">
+                            <span key={i} className="flex items-center gap-1 text-xs text-[var(--light-text-secondary)] bg-[var(--light-surface)] px-2 py-1 rounded-full">
                               <Tag className="w-3 h-3" />
                               {tag}
                             </span>
                           ))}
                         </div>
                       )}
-                      <div className="flex items-center justify-between mt-6 pt-4 border-t border-[#E6E8EA]">
+                      <div className="flex items-center justify-between mt-6 pt-4 border-t border-[var(--light-border)]">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-[#191C1E] rounded-full flex items-center justify-center">
+                          <div className="w-8 h-8 bg-[var(--light-text)] rounded-full flex items-center justify-center">
                             <span className="text-white text-xs font-bold">
                               {article.author?.charAt(0) || 'A'}
                             </span>
                           </div>
                           <div>
                             <p className="text-black text-sm font-medium">{article.author || 'Admin'}</p>
-                            <p className="text-[#45464D] text-xs">{formatDate(article.created_at)}</p>
+                            <p className="text-[var(--light-text-secondary)] text-xs">{formatDate(article.created_at)}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-1 text-indigo-600 text-sm font-medium group-hover:gap-2 transition-all">
@@ -235,14 +235,14 @@ const Insights = () => {
           {insightCards.length > 0 && (
             <div>
               <div className="flex items-center gap-3 mb-8">
-                <Activity className="w-6 h-6 text-[#45464D]" />
+                <Activity className="w-6 h-6 text-[var(--light-text-secondary)]" />
                 <h2 className="text-3xl font-bold text-black">AI Model Insights</h2>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {insightCards.map((card) => (
-                  <div key={card.id} className="bg-white border-2 border-[#C6C6CD] rounded-xl p-8 hover:shadow-md transition-shadow">
+                  <div key={card.id} className="bg-white border-2 border-[var(--light-border-alt)] rounded-xl p-8 hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-4 mb-6">
-                      <div className="p-3 bg-[#F7F9FB] rounded-lg text-[#45464D]">
+                      <div className="p-3 bg-[var(--light-surface)] rounded-lg text-[var(--light-text-secondary)]">
                         {getIcon(card.icon)}
                       </div>
                       <span className="px-3 py-1 bg-indigo-50 text-indigo-600 border-2 border-indigo-200 rounded-md font-bold text-xs">
@@ -250,7 +250,7 @@ const Insights = () => {
                       </span>
                     </div>
                     <h3 className="text-2xl font-bold text-black mb-4">{card.title}</h3>
-                    <p className="text-[#45464D] text-lg leading-relaxed">{card.content}</p>
+                    <p className="text-[var(--light-text-secondary)] text-lg leading-relaxed">{card.content}</p>
                     <p className="text-slate-400 text-sm mt-6">{card.date}</p>
                   </div>
                 ))}

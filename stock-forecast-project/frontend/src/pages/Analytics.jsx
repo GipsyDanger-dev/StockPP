@@ -42,15 +42,15 @@ const AnalyticsOverview = () => {
   const showSearchResults = searchTerm.length >= 2;
 
   return (
-    <div className="min-h-screen bg-white text-[#191C1E]">
-      <header className="bg-[#F7F9FB] px-6 lg:px-12 py-8 border-b border-[#E0E3E5]">
+    <div className="min-h-screen bg-white text-[var(--light-text)]">
+      <header className="bg-[var(--light-surface)] px-6 lg:px-12 py-8 border-b border-[var(--light-border)]">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
             <Activity className="text-white" size={28} />
           </div>
           <div>
             <h1 className="text-3xl lg:text-5xl font-bold tracking-tight text-black">ANALYTICS OVERVIEW</h1>
-            <p className="text-[#45464D] text-lg mt-1">Select a stock to view detailed analysis with technical indicators</p>
+            <p className="text-[var(--light-text-secondary)] text-lg mt-1">Select a stock to view detailed analysis with technical indicators</p>
           </div>
         </div>
       </header>
@@ -63,14 +63,14 @@ const AnalyticsOverview = () => {
               placeholder="Search any ticker to analyze (e.g. AAPL, TSLA, NVDA)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full py-4 px-12 border-2 border-[#C6C6CD] rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full py-4 px-12 border-2 border-[var(--light-border-alt)] rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
             <Search className="absolute left-4 top-4 text-slate-400" size={24} />
             {isSearching && <Loader className="absolute right-4 top-4 animate-spin text-indigo-600" size={24} />}
           </div>
 
           {showSearchResults && (
-            <div className="mt-4 bg-white border-2 border-[#C6C6CD] rounded-xl overflow-hidden shadow-sm max-w-2xl">
+            <div className="mt-4 bg-white border-2 border-[var(--light-border-alt)] rounded-xl overflow-hidden shadow-sm max-w-2xl">
               {searchResults.length > 0 ? (
                 <div className="divide-y divide-slate-100">
                   {searchResults.map((result) => (
@@ -84,7 +84,7 @@ const AnalyticsOverview = () => {
                     >
                       <div>
                         <span className="font-bold text-lg">{result.symbol}</span>
-                        <span className="text-[#45464D] ml-3">{result.name}</span>
+                        <span className="text-[var(--light-text-secondary)] ml-3">{result.name}</span>
                       </div>
                       <span className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg font-bold text-sm">
                         Analyze
@@ -93,7 +93,7 @@ const AnalyticsOverview = () => {
                   ))}
                 </div>
               ) : (
-                <div className="p-6 text-center text-[#45464D]">
+                <div className="p-6 text-center text-[var(--light-text-secondary)]">
                   {isSearching ? 'Searching...' : 'No results found'}
                 </div>
               )}
@@ -104,13 +104,13 @@ const AnalyticsOverview = () => {
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <Loader className="animate-spin text-indigo-600" size={40} />
-            <span className="ml-4 text-[#45464D] text-lg">Loading market data...</span>
+            <span className="ml-4 text-[var(--light-text-secondary)] text-lg">Loading market data...</span>
           </div>
         ) : (
           <>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-              <div className="bg-white border-2 border-[#E0E3E5] rounded-xl overflow-hidden shadow-sm">
-                <div className="bg-[#F0FDF4] p-6 border-b border-[#E0E3E5]">
+              <div className="bg-white border-2 border-[var(--light-border)] rounded-xl overflow-hidden shadow-sm">
+                <div className="bg-[var(--light-section-alt)] p-6 border-b border-[var(--light-border)]">
                   <div className="flex items-center gap-3">
                     <TrendingUp className="text-emerald-600" size={24} />
                     <h3 className="font-bold text-emerald-700 tracking-widest text-sm">TOP GAINERS</h3>
@@ -128,7 +128,7 @@ const AnalyticsOverview = () => {
                     >
                       <div>
                         <span className="font-bold text-xl">{stock.ticker}</span>
-                        <span className="text-[#45464D] ml-3 text-sm">{stock.name}</span>
+                        <span className="text-[var(--light-text-secondary)] ml-3 text-sm">{stock.name}</span>
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-lg">${stock.price?.toFixed(2)}</p>
@@ -139,8 +139,8 @@ const AnalyticsOverview = () => {
                 </div>
               </div>
 
-              <div className="bg-white border-2 border-[#E0E3E5] rounded-xl overflow-hidden shadow-sm">
-                <div className="bg-rose-50 p-6 border-b border-[#E0E3E5]">
+              <div className="bg-white border-2 border-[var(--light-border)] rounded-xl overflow-hidden shadow-sm">
+                <div className="bg-rose-50 p-6 border-b border-[var(--light-border)]">
                   <div className="flex items-center gap-3">
                     <TrendingDown className="text-rose-600" size={24} />
                     <h3 className="font-bold text-rose-700 tracking-widest text-sm">TOP LOSERS</h3>
@@ -158,7 +158,7 @@ const AnalyticsOverview = () => {
                     >
                       <div>
                         <span className="font-bold text-xl">{stock.ticker}</span>
-                        <span className="text-[#45464D] ml-3 text-sm">{stock.name}</span>
+                        <span className="text-[var(--light-text-secondary)] ml-3 text-sm">{stock.name}</span>
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-lg">${stock.price?.toFixed(2)}</p>
@@ -170,13 +170,13 @@ const AnalyticsOverview = () => {
               </div>
             </div>
 
-            <div className="bg-white border-2 border-[#E0E3E5] rounded-xl overflow-hidden shadow-sm">
-              <div className="bg-[#F2F4F6] p-6 border-b border-[#E0E3E5]">
-                <h3 className="font-bold tracking-widest text-[#45464D]">ALL WATCHLIST STOCKS</h3>
+            <div className="bg-white border-2 border-[var(--light-border)] rounded-xl overflow-hidden shadow-sm">
+              <div className="bg-[var(--light-section)] p-6 border-b border-[var(--light-border)]">
+                <h3 className="font-bold tracking-widest text-[var(--light-text-secondary)]">ALL WATCHLIST STOCKS</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
-                  <thead className="bg-[#F7F9FB] text-[#45464D] font-bold text-sm tracking-widest uppercase border-b border-[#E0E3E5]">
+                  <thead className="bg-[var(--light-surface)] text-[var(--light-text-secondary)] font-bold text-sm tracking-widest uppercase border-b border-[var(--light-border)]">
                     <tr>
                       <th className="p-5">Ticker</th>
                       <th className="p-5">Company</th>
@@ -195,8 +195,8 @@ const AnalyticsOverview = () => {
                         aria-label={`View ${stock.ticker} analysis`}
                       >
                         <td className="p-5 font-bold text-lg">{stock.ticker}</td>
-                        <td className="p-5 text-[#45464D]">{stock.name}</td>
-                        <td className="p-5 text-[#45464D]">{stock.sector || 'N/A'}</td>
+                        <td className="p-5 text-[var(--light-text-secondary)]">{stock.name}</td>
+                        <td className="p-5 text-[var(--light-text-secondary)]">{stock.sector || 'N/A'}</td>
                         <td className="p-5 font-bold">${stock.price?.toFixed(2) || 'N/A'}</td>
                         <td className={`p-5 text-right font-bold ${stock.change_percent >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                           {stock.change_percent >= 0 ? '+' : ''}{stock.change_percent?.toFixed(2) || '0'}%
@@ -266,7 +266,7 @@ const AnalyticsDetail = ({ ticker }) => {
       ) : (
         <div className="text-center">
           <Loader className="animate-spin text-indigo-600 mx-auto mb-4" size={40} />
-          <p className="text-lg font-bold text-[#191C1E]">ANALYZING MARKET DATA...</p>
+          <p className="text-lg font-bold text-[var(--light-text)]">ANALYZING MARKET DATA...</p>
         </div>
       )}
     </div>
@@ -276,7 +276,7 @@ const AnalyticsDetail = ({ ticker }) => {
     <div className="flex h-screen items-center justify-center bg-white">
       <div className="text-center">
         <Activity size={40} className="text-slate-300 mx-auto mb-4" />
-        <p className="text-lg font-bold text-[#191C1E]">Market API is currently down or undergoing maintenance.</p>
+        <p className="text-lg font-bold text-[var(--light-text)]">Market API is currently down or undergoing maintenance.</p>
       </div>
     </div>
   );
@@ -324,8 +324,8 @@ const AnalyticsDetail = ({ ticker }) => {
   const rocSignal = getRocSignal(indicators.roc);
 
   return (
-    <div className="min-h-screen bg-white text-[#191C1E]">
-      <header className="bg-[#F7F9FB] px-6 lg:px-12 py-8 flex items-center border-b border-[#E0E3E5]">
+    <div className="min-h-screen bg-white text-[var(--light-text)]">
+      <header className="bg-[var(--light-surface)] px-6 lg:px-12 py-8 flex items-center border-b border-[var(--light-border)]">
         <button onClick={() => navigate('/analytics')} className="mr-6 p-2 hover:bg-slate-200 rounded-full transition-colors" aria-label="Back to Analytics Overview">
           <ChevronLeft size={32} />
         </button>
@@ -344,7 +344,7 @@ const AnalyticsDetail = ({ ticker }) => {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-12 gap-6">
           <div>
             <h2 className="text-6xl lg:text-8xl font-bold text-black mb-2">{data.ticker}</h2>
-            <p className="text-[#45464D] text-xl lg:text-2xl">Asset Class: Equity &bull; Currency: USD</p>
+            <p className="text-[var(--light-text-secondary)] text-xl lg:text-2xl">Asset Class: Equity &bull; Currency: USD</p>
             {liveQuote && (
               <p className="text-sm text-emerald-600 font-medium mt-2">Live from Finnhub</p>
             )}
@@ -370,7 +370,7 @@ const AnalyticsDetail = ({ ticker }) => {
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-12">
           <div className={`border-2 rounded-xl p-6 shadow-sm ${rsiSignal.bg}`}>
-            <p className="text-[#45464D] font-bold tracking-widest text-sm mb-3">RSI (14)</p>
+            <p className="text-[var(--light-text-secondary)] font-bold tracking-widest text-sm mb-3">RSI (14)</p>
             <p className="text-4xl font-bold text-black mb-2">{indicators.rsi?.toFixed(2) || 'N/A'}</p>
             <span className={`inline-block px-3 py-1 rounded-lg font-bold text-sm ${rsiSignal.color} ${rsiSignal.bg}`}>
               {rsiSignal.label}
@@ -381,7 +381,7 @@ const AnalyticsDetail = ({ ticker }) => {
                 style={{ width: `${Math.min(100, Math.max(0, indicators.rsi || 0))}%` }}
               />
             </div>
-            <div className="flex justify-between text-xs text-[#45464D] mt-1">
+            <div className="flex justify-between text-xs text-[var(--light-text-secondary)] mt-1">
               <span>0</span>
               <span>30 (Oversold)</span>
               <span>70 (Overbought)</span>
@@ -390,14 +390,14 @@ const AnalyticsDetail = ({ ticker }) => {
           </div>
 
           <div className={`border-2 rounded-xl p-6 shadow-sm ${maSignal.bg}`}>
-            <p className="text-[#45464D] font-bold tracking-widest text-sm mb-3">MOVING AVERAGES</p>
+            <p className="text-[var(--light-text-secondary)] font-bold tracking-widest text-sm mb-3">MOVING AVERAGES</p>
             <div className="space-y-3">
               <div>
-                <p className="text-[#45464D] text-sm">MA20 (Short-term)</p>
+                <p className="text-[var(--light-text-secondary)] text-sm">MA20 (Short-term)</p>
                 <p className="text-2xl font-bold text-black">{formatCurrency(indicators.ma20)}</p>
               </div>
               <div>
-                <p className="text-[#45464D] text-sm">MA50 (Long-term)</p>
+                <p className="text-[var(--light-text-secondary)] text-sm">MA50 (Long-term)</p>
                 <p className="text-2xl font-bold text-black">{formatCurrency(indicators.ma50)}</p>
               </div>
             </div>
@@ -405,7 +405,7 @@ const AnalyticsDetail = ({ ticker }) => {
               <span className={`inline-block px-3 py-1 rounded-lg font-bold text-sm ${maSignal.color} ${maSignal.bg}`}>
                 {maSignal.label}
               </span>
-              <p className="text-xs text-[#45464D] mt-2">
+              <p className="text-xs text-[var(--light-text-secondary)] mt-2">
                 {indicators.ma20 > indicators.ma50
                   ? 'MA20 above MA50 suggests upward momentum'
                   : 'MA20 below MA50 suggests downward pressure'}
@@ -414,12 +414,12 @@ const AnalyticsDetail = ({ ticker }) => {
           </div>
 
           <div className={`border-2 rounded-xl p-6 shadow-sm ${macdSignal.bg}`}>
-            <p className="text-[#45464D] font-bold tracking-widest text-sm mb-3">MACD</p>
+            <p className="text-[var(--light-text-secondary)] font-bold tracking-widest text-sm mb-3">MACD</p>
             <p className="text-4xl font-bold text-black mb-2">{indicators.macd?.toFixed(4) || 'N/A'}</p>
             <span className={`inline-block px-3 py-1 rounded-lg font-bold text-sm ${macdSignal.color} ${macdSignal.bg}`}>
               {macdSignal.label}
             </span>
-            <p className="text-xs text-[#45464D] mt-4">
+            <p className="text-xs text-[var(--light-text-secondary)] mt-4">
               MACD = 12-day EMA - 26-day EMA.
               {indicators.macd > 0
                 ? ' Positive values indicate bullish momentum.'
@@ -428,12 +428,12 @@ const AnalyticsDetail = ({ ticker }) => {
           </div>
 
           <div className={`border-2 rounded-xl p-6 shadow-sm ${ewmaSignal.bg}`}>
-            <p className="text-[#45464D] font-bold tracking-widest text-sm mb-3">EWMA (20)</p>
+            <p className="text-[var(--light-text-secondary)] font-bold tracking-widest text-sm mb-3">EWMA (20)</p>
             <p className="text-4xl font-bold text-black mb-2">{formatCurrency(indicators.ewma20)}</p>
             <span className={`inline-block px-3 py-1 rounded-lg font-bold text-sm ${ewmaSignal.color} ${ewmaSignal.bg}`}>
               {ewmaSignal.label}
             </span>
-            <p className="text-xs text-[#45464D] mt-4">
+            <p className="text-xs text-[var(--light-text-secondary)] mt-4">
               Exponentially Weighted MA (span=20).
               {indicators.ewma20 && currentPrice > indicators.ewma20
                 ? ' Price above EWMA suggests bullish trend.'
@@ -442,12 +442,12 @@ const AnalyticsDetail = ({ ticker }) => {
           </div>
 
           <div className={`border-2 rounded-xl p-6 shadow-sm ${rocSignal.bg}`}>
-            <p className="text-[#45464D] font-bold tracking-widest text-sm mb-3">ROC (12)</p>
+            <p className="text-[var(--light-text-secondary)] font-bold tracking-widest text-sm mb-3">ROC (12)</p>
             <p className="text-4xl font-bold text-black mb-2">{indicators.roc?.toFixed(2) || 'N/A'}%</p>
             <span className={`inline-block px-3 py-1 rounded-lg font-bold text-sm ${rocSignal.color} ${rocSignal.bg}`}>
               {rocSignal.label}
             </span>
-            <p className="text-xs text-[#45464D] mt-4">
+            <p className="text-xs text-[var(--light-text-secondary)] mt-4">
               Rate of Change (12-day).
               {indicators.roc > 0
                 ? ' Positive ROC indicates upward price momentum.'
@@ -459,11 +459,11 @@ const AnalyticsDetail = ({ ticker }) => {
         </div>
 
         {scoreData && !scoreData.error && (
-          <div className="bg-white border-2 border-[#E0E3E5] rounded-xl p-6 mb-12 shadow-sm">
+          <div className="bg-white border-2 border-[var(--light-border)] rounded-xl p-6 mb-12 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="font-bold text-black text-xl">Stock Score</h3>
-                <p className="text-[#45464D] text-sm">ACO-inspired composite analysis</p>
+                <p className="text-[var(--light-text-secondary)] text-sm">ACO-inspired composite analysis</p>
               </div>
               <div className="text-right">
                 <span className={`text-5xl font-bold ${
@@ -474,14 +474,14 @@ const AnalyticsDetail = ({ ticker }) => {
                 }`}>
                   {scoreData.grade}
                 </span>
-                <p className="text-[#45464D] text-sm">{(scoreData.score * 100).toFixed(0)}/100</p>
+                <p className="text-[var(--light-text-secondary)] text-sm">{(scoreData.score * 100).toFixed(0)}/100</p>
               </div>
             </div>
             {scoreData.sub_scores && (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
                 {Object.entries(scoreData.sub_scores).map(([key, val]) => (
-                  <div key={key} className="bg-[#F7F9FB] rounded-lg p-3">
-                    <p className="text-xs text-[#45464D] capitalize">{key}</p>
+                  <div key={key} className="bg-[var(--light-surface)] rounded-lg p-3">
+                    <p className="text-xs text-[var(--light-text-secondary)] capitalize">{key}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <div className="flex-1 bg-slate-200 h-2 rounded-full overflow-hidden">
                         <div
@@ -508,11 +508,11 @@ const AnalyticsDetail = ({ ticker }) => {
         )}
 
         {data.sentiment && (data.sentiment.news_available || data.sentiment.social_available) && (
-          <div className="bg-white border-2 border-[#E0E3E5] rounded-xl p-6 mb-12 shadow-sm">
+          <div className="bg-white border-2 border-[var(--light-border)] rounded-xl p-6 mb-12 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="font-bold text-black text-xl">Market Sentiment</h3>
-                <p className="text-[#45464D] text-sm">News & social media analysis from Finnhub</p>
+                <p className="text-[var(--light-text-secondary)] text-sm">News & social media analysis from Finnhub</p>
               </div>
               <div className="text-right">
                 <span className={`text-4xl font-bold ${
@@ -521,28 +521,28 @@ const AnalyticsDetail = ({ ticker }) => {
                 }`}>
                   {data.sentiment.combined_score > 0 ? '+' : ''}{(data.sentiment.combined_score * 100).toFixed(1)}%
                 </span>
-                <p className="text-[#45464D] text-sm">Combined Score</p>
+                <p className="text-[var(--light-text-secondary)] text-sm">Combined Score</p>
               </div>
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
               {data.sentiment.news_available && (
-                <div className="bg-[#F7F9FB] rounded-lg p-4">
-                  <p className="text-xs text-[#45464D] font-bold tracking-wider mb-1">NEWS SENTIMENT</p>
+                <div className="bg-[var(--light-surface)] rounded-lg p-4">
+                  <p className="text-xs text-[var(--light-text-secondary)] font-bold tracking-wider mb-1">NEWS SENTIMENT</p>
                   <p className={`text-2xl font-bold ${data.sentiment.news_score > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                     {data.sentiment.news_score > 0 ? '+' : ''}{(data.sentiment.news_score * 100).toFixed(1)}%
                   </p>
                 </div>
               )}
               {data.sentiment.social_available && (
-                <div className="bg-[#F7F9FB] rounded-lg p-4">
-                  <p className="text-xs text-[#45464D] font-bold tracking-wider mb-1">SOCIAL SENTIMENT</p>
+                <div className="bg-[var(--light-surface)] rounded-lg p-4">
+                  <p className="text-xs text-[var(--light-text-secondary)] font-bold tracking-wider mb-1">SOCIAL SENTIMENT</p>
                   <p className={`text-2xl font-bold ${data.sentiment.social_score > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                     {data.sentiment.social_score > 0 ? '+' : ''}{(data.sentiment.social_score * 100).toFixed(1)}%
                   </p>
                 </div>
               )}
-              <div className="bg-[#F7F9FB] rounded-lg p-4">
-                <p className="text-xs text-[#45464D] font-bold tracking-wider mb-1">SIGNAL</p>
+              <div className="bg-[var(--light-surface)] rounded-lg p-4">
+                <p className="text-xs text-[var(--light-text-secondary)] font-bold tracking-wider mb-1">SIGNAL</p>
                 <p className={`text-lg font-bold ${
                   data.sentiment.combined_score > 0.1 ? 'text-emerald-600' :
                   data.sentiment.combined_score < -0.1 ? 'text-rose-600' : 'text-slate-600'
@@ -555,13 +555,13 @@ const AnalyticsDetail = ({ ticker }) => {
           </div>
         )}
 
-        <div className="bg-white border-2 border-[#E0E3E5] rounded-xl overflow-hidden mb-12 shadow-sm">
-          <div className="bg-[#F2F4F6] p-6 flex justify-between items-center border-b border-[#E0E3E5]">
+        <div className="bg-white border-2 border-[var(--light-border)] rounded-xl overflow-hidden mb-12 shadow-sm">
+          <div className="bg-[var(--light-section)] p-6 flex justify-between items-center border-b border-[var(--light-border)]">
             <div className="flex gap-8">
               <span className="font-bold text-black text-lg border-b-4 border-indigo-600 pb-1">Actual vs Forecast</span>
-              <span className="text-[#45464D] text-lg">Indigo = Actual &bull; Green dashed = Forecast &bull; Orange = MA20 &bull; Cyan = MA50 &bull; Purple = EWMA20</span>
+              <span className="text-[var(--light-text-secondary)] text-lg">Indigo = Actual &bull; Green dashed = Forecast &bull; Orange = MA20 &bull; Cyan = MA50 &bull; Purple = EWMA20</span>
             </div>
-            <BarChart2 size={24} className="text-[#45464D]" />
+            <BarChart2 size={24} className="text-[var(--light-text-secondary)]" />
           </div>
           <div className="p-6 h-[500px]">
              <PriceChart
@@ -573,23 +573,23 @@ const AnalyticsDetail = ({ ticker }) => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12">
-          <div className="bg-white border-2 border-[#E0E3E5] p-10 rounded-xl shadow-sm">
-            <p className="text-[#45464D] font-bold tracking-widest text-sm mb-6">MODEL METRICS</p>
+          <div className="bg-white border-2 border-[var(--light-border)] p-10 rounded-xl shadow-sm">
+            <p className="text-[var(--light-text-secondary)] font-bold tracking-widest text-sm mb-6">MODEL METRICS</p>
             <div className="space-y-6">
               <div>
-                <p className="text-[#45464D] text-sm font-medium mb-1">RMSE (Root Mean Square Error)</p>
+                <p className="text-[var(--light-text-secondary)] text-sm font-medium mb-1">RMSE (Root Mean Square Error)</p>
                 <p className="text-4xl font-bold text-black">{data.metrics?.rmse?.toFixed(4) || 'N/A'}</p>
               </div>
               <div>
-                <p className="text-[#45464D] text-sm font-medium mb-1">MAE (Mean Absolute Error)</p>
+                <p className="text-[var(--light-text-secondary)] text-sm font-medium mb-1">MAE (Mean Absolute Error)</p>
                 <p className="text-4xl font-bold text-black">{data.metrics?.mae?.toFixed(4) || 'N/A'}</p>
               </div>
               <div>
-                <p className="text-[#45464D] text-sm font-medium mb-1">MSE (Mean Squared Error)</p>
+                <p className="text-[var(--light-text-secondary)] text-sm font-medium mb-1">MSE (Mean Squared Error)</p>
                 <p className="text-4xl font-bold text-black">{data.metrics?.mse?.toFixed(4) || 'N/A'}</p>
               </div>
-              <div className="pt-4 border-t border-[#E0E3E5]">
-                <p className="text-[#45464D] text-sm font-medium mb-1">Model Source</p>
+              <div className="pt-4 border-t border-[var(--light-border)]">
+                <p className="text-[var(--light-text-secondary)] text-sm font-medium mb-1">Model Source</p>
                 <span className={`inline-block px-4 py-1 rounded-lg font-bold text-sm ${
                   data.model_source === 'persisted'
                     ? 'bg-emerald-50 text-emerald-600 border-2 border-emerald-200'
@@ -601,37 +601,37 @@ const AnalyticsDetail = ({ ticker }) => {
             </div>
           </div>
 
-          <div className="bg-white border-2 border-[#E0E3E5] rounded-xl overflow-hidden shadow-sm">
-            <div className="bg-[#F2F4F6] p-6 border-b border-[#E0E3E5]">
+          <div className="bg-white border-2 border-[var(--light-border)] rounded-xl overflow-hidden shadow-sm">
+            <div className="bg-[var(--light-section)] p-6 border-b border-[var(--light-border)]">
               <p className="font-bold text-black tracking-widest text-sm">FORECAST SUMMARY</p>
             </div>
-            <div className="divide-y divide-[#E0E3E5]">
+            <div className="divide-y divide-[var(--light-border)]">
               <div className="flex justify-between items-center p-6 px-10">
-                <span className="text-[#45464D] text-lg font-medium">Current Price</span>
+                <span className="text-[var(--light-text-secondary)] text-lg font-medium">Current Price</span>
                 <span className="text-xl font-bold text-black">{formatCurrency(currentPrice)}</span>
               </div>
               <div className="flex justify-between items-center p-6 px-10">
-                <span className="text-[#45464D] text-lg font-medium">Trend</span>
+                <span className="text-[var(--light-text-secondary)] text-lg font-medium">Trend</span>
                 <span className={`text-xl font-bold ${data.trend === 'Bullish' ? 'text-emerald-600' : 'text-rose-600'}`}>
                   {data.trend}
                 </span>
               </div>
               <div className="flex justify-between items-center p-6 px-10">
-                <span className="text-[#45464D] text-lg font-medium">Change %</span>
+                <span className="text-[var(--light-text-secondary)] text-lg font-medium">Change %</span>
                 <span className={`text-xl font-bold ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
                   {formatPercent(changePercent)}
                 </span>
               </div>
               <div className="flex justify-between items-center p-6 px-10">
-                <span className="text-[#45464D] text-lg font-medium">RSI Signal</span>
+                <span className="text-[var(--light-text-secondary)] text-lg font-medium">RSI Signal</span>
                 <span className={`text-xl font-bold ${rsiSignal.color}`}>{rsiSignal.label}</span>
               </div>
               <div className="flex justify-between items-center p-6 px-10">
-                <span className="text-[#45464D] text-lg font-medium">MA Signal</span>
+                <span className="text-[var(--light-text-secondary)] text-lg font-medium">MA Signal</span>
                 <span className={`text-xl font-bold ${maSignal.color}`}>{maSignal.label}</span>
               </div>
               <div className="flex justify-between items-center p-6 px-10">
-                <span className="text-[#45464D] text-lg font-medium">ROC Signal</span>
+                <span className="text-[var(--light-text-secondary)] text-lg font-medium">ROC Signal</span>
                 <span className={`text-xl font-bold ${rocSignal.color}`}>{rocSignal.label}</span>
               </div>
             </div>
@@ -653,8 +653,8 @@ const Analytics = () => {
 };
 
 const LiveCard = ({ label, value, positive }) => (
-  <div className="bg-[#F7F9FB] border-2 border-[#E0E3E5] rounded-xl p-4 text-center">
-    <p className="text-[#45464D] text-sm font-medium mb-1">{label}</p>
+  <div className="bg-[var(--light-surface)] border-2 border-[var(--light-border)] rounded-xl p-4 text-center">
+    <p className="text-[var(--light-text-secondary)] text-sm font-medium mb-1">{label}</p>
     <p className={`text-lg font-bold ${positive === true ? 'text-emerald-600' : positive === false ? 'text-rose-600' : 'text-black'}`}>{value}</p>
   </div>
 );

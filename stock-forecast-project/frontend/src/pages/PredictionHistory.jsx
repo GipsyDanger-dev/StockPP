@@ -75,12 +75,12 @@ const PredictionHistory = () => {
   const tickers = [...new Set(predictions.map(p => p.ticker))];
 
   return (
-    <div className="bg-[#0a0a0a] text-white min-h-screen">
-      <header className="bg-[#111] px-6 lg:px-12 py-10 border-b border-[#1e1e1e]">
+    <div className="bg-[var(--dark-bg)] text-white min-h-screen">
+      <header className="bg-[var(--dark-surface)] px-6 lg:px-12 py-10 border-b border-[var(--dark-border)]">
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-4xl lg:text-5xl font-bold text-white mb-3 tracking-tight">Prediction Tracker</h1>
-            <p className="text-[#888] text-lg">
+            <p className="text-[var(--gray-mid)] text-lg">
               Validate your predictions against actual market performance.
             </p>
           </div>
@@ -89,7 +89,7 @@ const PredictionHistory = () => {
               <button
                 onClick={handleValidateAll}
                 disabled={validating === 'all'}
-                className="flex items-center gap-2 px-4 py-2 bg-[#FF6633] text-white rounded-lg hover:bg-[#E55A22] transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--orange)] text-white rounded-lg hover:bg-[var(--orange-hover)] transition-colors disabled:opacity-50"
               >
                 {validating === 'all' ? (
                   <Loader className="w-4 h-4 animate-spin" />
@@ -102,7 +102,7 @@ const PredictionHistory = () => {
             <button
               onClick={() => refetch()}
               disabled={isFetching}
-              className="flex items-center gap-2 px-4 py-2 bg-[#1e1e1e] border border-[#1e1e1e] rounded-lg hover:bg-[#2a2a2a] transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--dark-border)] border border-[var(--dark-border)] rounded-lg hover:bg-[var(--dark-hover)] transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
               <span className="text-sm font-medium">Refresh</span>
@@ -116,7 +116,7 @@ const PredictionHistory = () => {
           <SummaryCard label="TOTAL" value={predictions.length.toString()} icon={BarChart3} />
           <SummaryCard label="VALIDATED" value={validated.length.toString()} icon={CheckCircle} color="text-emerald-400" />
           <SummaryCard label="PENDING" value={pending.length.toString()} icon={Clock} color="text-yellow-400" />
-          <SummaryCard label="DIRECTION" value={`${directionAccuracy}%`} icon={Target} color="text-[#FF6633]" />
+          <SummaryCard label="DIRECTION" value={`${directionAccuracy}%`} icon={Target} color="text-[var(--orange)]" />
           <SummaryCard label="AVG ERROR" value={`${avgMPE}%`} icon={Zap} color={parseFloat(avgMPE) <= 2 ? 'text-emerald-400' : parseFloat(avgMPE) <= 5 ? 'text-yellow-400' : 'text-red-400'} />
         </div>
 
@@ -125,8 +125,8 @@ const PredictionHistory = () => {
             onClick={() => { setTickerFilter(null); setStatusFilter(null); }}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               !tickerFilter && !statusFilter
-                ? 'bg-[#FF6633] text-white'
-                : 'bg-[#111] text-[#888] border border-[#1e1e1e] hover:bg-[#1e1e1e]'
+                ? 'bg-[var(--orange)] text-white'
+                : 'bg-[var(--dark-surface)] text-[var(--gray-mid)] border border-[var(--dark-border)] hover:bg-[var(--dark-border)]'
             }`}
           >
             All
@@ -135,8 +135,8 @@ const PredictionHistory = () => {
             onClick={() => setStatusFilter(statusFilter === 'validated' ? null : 'validated')}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               statusFilter === 'validated'
-                ? 'bg-[#FF6633] text-white'
-                : 'bg-[#111] text-[#888] border border-[#1e1e1e] hover:bg-[#1e1e1e]'
+                ? 'bg-[var(--orange)] text-white'
+                : 'bg-[var(--dark-surface)] text-[var(--gray-mid)] border border-[var(--dark-border)] hover:bg-[var(--dark-border)]'
             }`}
           >
             Validated
@@ -145,23 +145,23 @@ const PredictionHistory = () => {
             onClick={() => setStatusFilter(statusFilter === 'pending' ? null : 'pending')}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               statusFilter === 'pending'
-                ? 'bg-[#FF6633] text-white'
-                : 'bg-[#111] text-[#888] border border-[#1e1e1e] hover:bg-[#1e1e1e]'
+                ? 'bg-[var(--orange)] text-white'
+                : 'bg-[var(--dark-surface)] text-[var(--gray-mid)] border border-[var(--dark-border)] hover:bg-[var(--dark-border)]'
             }`}
           >
             Pending
           </button>
           {tickers.length > 1 && (
             <>
-              <div className="w-px bg-[#1e1e1e] mx-1" />
+              <div className="w-px bg-[var(--dark-border)] mx-1" />
               {tickers.map(t => (
                 <button
                   key={t}
                   onClick={() => setTickerFilter(tickerFilter === t ? null : t)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     tickerFilter === t
-                      ? 'bg-[#FF6633] text-white'
-                      : 'bg-[#111] text-[#888] border border-[#1e1e1e] hover:bg-[#1e1e1e]'
+                      ? 'bg-[var(--orange)] text-white'
+                      : 'bg-[var(--dark-surface)] text-[var(--gray-mid)] border border-[var(--dark-border)] hover:bg-[var(--dark-border)]'
                   }`}
                 >
                   {t}
@@ -171,27 +171,27 @@ const PredictionHistory = () => {
           )}
         </div>
 
-        <div className="bg-[#111] border border-[#1e1e1e] rounded-xl overflow-hidden">
+        <div className="bg-[var(--dark-surface)] border border-[var(--dark-border)] rounded-xl overflow-hidden">
           {isLoading ? (
             <div className="p-12 flex flex-col items-center justify-center gap-4">
-              <Loader className="animate-spin text-[#FF6633]" size={40} />
-              <p className="text-[#888]">Loading prediction history...</p>
+              <Loader className="animate-spin text-[var(--orange)]" size={40} />
+              <p className="text-[var(--gray-mid)]">Loading prediction history...</p>
             </div>
           ) : predictions.length === 0 ? (
             <div className="p-12 flex flex-col items-center justify-center gap-4">
-              <Activity className="text-[#555]" size={48} />
-              <p className="text-[#888] font-bold text-lg">No predictions yet</p>
-              <p className="text-[#888] text-sm">Make a prediction on the Dashboard to start tracking accuracy.</p>
+              <Activity className="text-[var(--gray-dark)]" size={48} />
+              <p className="text-[var(--gray-mid)] font-bold text-lg">No predictions yet</p>
+              <p className="text-[var(--gray-mid)] text-sm">Make a prediction on the Dashboard to start tracking accuracy.</p>
               <button
                 onClick={() => navigate('/dashboard')}
-                className="mt-2 px-6 py-2 bg-[#FF6633] text-white rounded-lg font-medium hover:bg-[#E55A22] transition-colors"
+                className="mt-2 px-6 py-2 bg-[var(--orange)] text-white rounded-lg font-medium hover:bg-[var(--orange-hover)] transition-colors"
               >
                 Go to Dashboard
               </button>
             </div>
           ) : (
             <>
-              <div className="bg-[#111] grid grid-cols-6 p-4 border-b border-[#1e1e1e] text-[#888] text-xs uppercase tracking-wider font-bold">
+              <div className="bg-[var(--dark-surface)] grid grid-cols-6 p-4 border-b border-[var(--dark-border)] text-[var(--gray-mid)] text-xs uppercase tracking-wider font-bold">
                 <div className="col-span-1">Ticker</div>
                 <div className="col-span-1">Date</div>
                 <div className="col-span-1">Predicted</div>
@@ -200,18 +200,18 @@ const PredictionHistory = () => {
                 <div className="col-span-1 text-right">Action</div>
               </div>
 
-              <div className="divide-y divide-[#1e1e1e]">
+              <div className="divide-y divide-[var(--dark-border)]">
                 {predictions.map((pred) => {
                   const lastPredicted = pred.predicted_prices?.[pred.predicted_prices.length - 1];
                   const lastActual = pred.actual_prices?.[pred.actual_prices.length - 1];
                   const isPending = pred.status === 'pending';
 
                   return (
-                    <div key={pred.id} className="grid grid-cols-6 p-4 items-center hover:bg-[#111] transition-colors">
+                    <div key={pred.id} className="grid grid-cols-6 p-4 items-center hover:bg-[var(--dark-surface)] transition-colors">
                       <div className="col-span-1 flex items-center gap-2">
                         <button
                           onClick={() => navigate(`/analytics/${pred.ticker}`)}
-                          className="font-bold text-sm text-white hover:text-[#FF6633] transition-colors"
+                          className="font-bold text-sm text-white hover:text-[var(--orange)] transition-colors"
                         >
                           {pred.ticker}
                         </button>
@@ -222,20 +222,20 @@ const PredictionHistory = () => {
                         )}
                       </div>
 
-                      <div className="col-span-1 text-sm text-[#888]">
+                      <div className="col-span-1 text-sm text-[var(--gray-mid)]">
                         {formatDate(pred.created_at)}
                       </div>
 
                       <div className="col-span-1">
                         <p className="text-sm font-bold">${lastPredicted?.price?.toFixed(2) || '-'}</p>
-                        <p className="text-xs text-[#555]">
+                        <p className="text-xs text-[var(--gray-dark)]">
                           {pred.predicted_change_percent > 0 ? '+' : ''}{pred.predicted_change_percent?.toFixed(2)}%
                         </p>
                       </div>
 
                       <div className="col-span-1">
                         {isPending ? (
-                          <span className="text-xs text-[#555]">Waiting...</span>
+                          <span className="text-xs text-[var(--gray-dark)]">Waiting...</span>
                         ) : (
                           <>
                             <p className="text-sm font-bold">${lastActual?.price?.toFixed(2) || '-'}</p>
@@ -287,10 +287,10 @@ const PredictionHistory = () => {
                         ) : (
                           <button
                             onClick={() => navigate(`/analytics/${pred.ticker}`)}
-                            className="p-1.5 hover:bg-[#1e1e1e] rounded transition-colors"
+                            className="p-1.5 hover:bg-[var(--dark-border)] rounded transition-colors"
                             aria-label={`View ${pred.ticker} analytics`}
                           >
-                            <ChevronRight className="w-4 h-4 text-[#888]" />
+                            <ChevronRight className="w-4 h-4 text-[var(--gray-mid)]" />
                           </button>
                         )}
                       </div>
@@ -299,8 +299,8 @@ const PredictionHistory = () => {
                 })}
               </div>
 
-              <div className="p-4 border-t border-[#1e1e1e] bg-[#111]">
-                <p className="text-[#888] text-xs">
+              <div className="p-4 border-t border-[var(--dark-border)] bg-[var(--dark-surface)]">
+                <p className="text-[var(--gray-mid)] text-xs">
                   Showing {predictions.length} prediction{predictions.length !== 1 ? 's' : ''}
                 </p>
               </div>
@@ -313,10 +313,10 @@ const PredictionHistory = () => {
 };
 
 const SummaryCard = ({ label, value, icon: Icon, color = 'text-white' }) => (
-  <div className="bg-[#111] border border-[#1e1e1e] p-4 rounded-xl">
+  <div className="bg-[var(--dark-surface)] border border-[var(--dark-border)] p-4 rounded-xl">
     <div className="flex items-center gap-2 mb-2">
       <Icon className={`w-4 h-4 ${color}`} />
-      <span className="text-[#555] text-[10px] font-bold tracking-wider">{label}</span>
+      <span className="text-[var(--gray-dark)] text-[10px] font-bold tracking-wider">{label}</span>
     </div>
     <p className={`text-2xl font-bold ${color}`}>{value}</p>
   </div>

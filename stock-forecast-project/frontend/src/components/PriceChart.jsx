@@ -46,17 +46,17 @@ const PriceChart = ({ historical, forecast, indicators }) => {
     : null;
 
   return (
-    <div className="h-[400px] w-full bg-[#0a0a0a] p-4 rounded-xl border border-[#1e1e1e]">
+    <div className="h-[400px] w-full bg-[var(--dark-bg)] p-4 rounded-xl border border-[var(--dark-border)]">
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e1e1e" />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--dark-border)" />
           <XAxis
             dataKey="date"
-            tick={{ fontSize: 11, fill: '#888' }}
+            tick={{ fontSize: 11, fill: 'var(--gray-mid)' }}
             tickFormatter={(val) => val.slice(5)}
-            stroke="#1e1e1e"
+            stroke="var(--dark-border)"
           />
-          <YAxis domain={['auto', 'auto']} tick={{ fontSize: 11, fill: '#888' }} stroke="#1e1e1e" />
+          <YAxis domain={['auto', 'auto']} tick={{ fontSize: 11, fill: 'var(--gray-mid)' }} stroke="var(--dark-border)" />
           <Tooltip
             content={<CustomTooltip />}
           />
@@ -141,8 +141,8 @@ const CustomTooltip = ({ active, payload, label }) => {
   const isForecast = dataPoint?.type === 'forecast';
 
   return (
-    <div className="bg-[#111] border border-[#1e1e1e] rounded-lg p-3">
-      <p className="text-xs text-[#888] font-bold mb-2">{label}</p>
+    <div className="bg-[var(--dark-surface)] border border-[var(--dark-border)] rounded-lg p-3">
+      <p className="text-xs text-[var(--gray-mid)] font-bold mb-2">{label}</p>
       {isForecast && (
         <p className="text-xs text-emerald-600 font-bold mb-1">PREDICTED</p>
       )}

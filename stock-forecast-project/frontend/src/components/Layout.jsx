@@ -59,32 +59,32 @@ const Layout = ({ children }) => {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#0a0a0a] text-white">
+    <div className="flex min-h-screen bg-[var(--dark-bg)] text-white">
       <aside
-        className="fixed inset-y-0 left-0 z-40 bg-[#111] border-r border-[#1e1e1e] flex flex-col transition-transform duration-300 ease-in-out"
+        className="fixed inset-y-0 left-0 z-40 bg-[var(--dark-surface)] border-r border-[var(--dark-border)] flex flex-col transition-transform duration-300 ease-in-out"
         style={{
           width: `${SIDEBAR_WIDTH}px`,
           transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
         }}
       >
         <div
-          className="p-5 flex items-center gap-3 border-b border-[#1e1e1e] cursor-pointer hover:bg-[#1e1e1e] transition-colors"
+          className="p-5 flex items-center gap-3 border-b border-[var(--dark-border)] cursor-pointer hover:bg-[var(--dark-border)] transition-colors"
           onClick={() => handleNav('/dashboard')}
           role="button"
           aria-label="Go to Dashboard"
           tabIndex={0}
         >
-          <div className="w-9 h-9 bg-[#131B2E] rounded-lg flex items-center justify-center">
+          <div className="w-9 h-9 bg-[var(--dark-navy)] rounded-lg flex items-center justify-center">
             <Activity className="text-white" size={18} />
           </div>
           <div>
             <span className="font-bold text-sm tracking-wide text-white">PRECISION</span>
-            <span className="block text-[10px] text-[#888] tracking-wider">ANALYTICS</span>
+            <span className="block text-[10px] text-[var(--gray-mid)] tracking-wider">ANALYTICS</span>
           </div>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          <p className="px-3 mb-2 text-[10px] font-semibold text-[#888] uppercase tracking-wider">
+          <p className="px-3 mb-2 text-[10px] font-semibold text-[var(--gray-mid)] uppercase tracking-wider">
             Navigation
           </p>
           {navItems.map((item) => {
@@ -96,8 +96,8 @@ const Layout = ({ children }) => {
                 onClick={() => handleNav(item.path)}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 ${
                   active
-                    ? 'bg-[#131B2E] text-white shadow-sm'
-                    : 'text-[#888] hover:bg-[#1e1e1e] hover:text-white'
+                    ? 'bg-[var(--dark-navy)] text-white shadow-sm'
+                    : 'text-[var(--gray-mid)] hover:bg-[var(--dark-border)] hover:text-white'
                 }`}
                 role="button"
                 aria-label={item.label}
@@ -114,7 +114,7 @@ const Layout = ({ children }) => {
           {isAdmin && (
             <>
               <div className="pt-4 pb-2">
-                <p className="px-3 text-[10px] font-semibold text-[#888] uppercase tracking-wider">
+                <p className="px-3 text-[10px] font-semibold text-[var(--gray-mid)] uppercase tracking-wider">
                   Administration
                 </p>
               </div>
@@ -127,8 +127,8 @@ const Layout = ({ children }) => {
                     onClick={() => handleNav(item.path)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 ${
                       active
-                        ? 'bg-[#131B2E] text-white shadow-sm'
-                        : 'text-[#888] hover:bg-[#1e1e1e] hover:text-white'
+                        ? 'bg-[var(--dark-navy)] text-white shadow-sm'
+                        : 'text-[var(--gray-mid)] hover:bg-[var(--dark-border)] hover:text-white'
                     }`}
                     role="button"
                     aria-label={item.label}
@@ -145,16 +145,16 @@ const Layout = ({ children }) => {
           )}
         </nav>
 
-        <div className="p-3 border-t border-[#1e1e1e]">
+        <div className="p-3 border-t border-[var(--dark-border)]">
           <div className="flex items-center gap-3 px-3 py-2.5 mb-1">
-            <div className="w-8 h-8 bg-[#131B2E] rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 bg-[var(--dark-navy)] rounded-full flex items-center justify-center flex-shrink-0">
               <User className="w-4 h-4 text-white" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white truncate">
                 {user?.user_metadata?.full_name || 'User'}
               </p>
-              <p className="text-[11px] text-[#888] truncate">{user?.email || ''}</p>
+              <p className="text-[11px] text-[var(--gray-mid)] truncate">{user?.email || ''}</p>
             </div>
             {isAdmin && (
               <span className="flex items-center gap-1 px-2 py-0.5 bg-indigo-500/10 text-indigo-400 rounded text-[10px] font-semibold flex-shrink-0">
@@ -165,7 +165,7 @@ const Layout = ({ children }) => {
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 text-[#888] hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2 text-[var(--gray-mid)] hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
           >
             <LogOut size={16} />
             <span className="text-sm font-medium">Sign Out</span>
@@ -185,10 +185,10 @@ const Layout = ({ children }) => {
         className="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out"
         style={{ marginLeft: sidebarOpen && window.innerWidth >= 1024 ? `${SIDEBAR_WIDTH}px` : '0' }}
       >
-        <header className="sticky top-0 z-20 bg-[#111]/80 backdrop-blur-md border-b border-[#1e1e1e] px-4 py-3 flex items-center gap-3">
+        <header className="sticky top-0 z-20 bg-[var(--dark-surface)]/80 backdrop-blur-md border-b border-[var(--dark-border)] px-4 py-3 flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-[#1e1e1e] rounded-lg transition-colors relative"
+            className="p-2 hover:bg-[var(--dark-border)] rounded-lg transition-colors relative"
             aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
           >
             <div className="w-5 h-5 relative">
@@ -217,7 +217,7 @@ const Layout = ({ children }) => {
             tabIndex={0}
           >
             <span className="text-sm font-bold text-white tracking-wide">PRECISION</span>
-            <span className="text-[10px] text-[#888] font-medium">ANALYTICS</span>
+            <span className="text-[10px] text-[var(--gray-mid)] font-medium">ANALYTICS</span>
           </div>
         </header>
 

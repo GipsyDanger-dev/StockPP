@@ -5,8 +5,8 @@ import { Eye, EyeOff, ArrowRight, Loader, AlertCircle, CheckCircle, User, Mail, 
 import AuthCanvas from '../../components/AuthCanvas';
 
 const S = {
-  dark: '#0a0a0a', surface: '#111', border: '#1e1e1e', mid: '#888', dark2: '#555',
-  orange: '#FF6633', hover: '#E55A22', white: '#FFF',
+  dark: 'var(--dark-bg)', surface: 'var(--dark-surface)', border: 'var(--dark-border)', mid: 'var(--gray-mid)', dark2: 'var(--gray-dark)',
+  orange: 'var(--orange)', hover: 'var(--orange-hover)', white: 'var(--white)',
   fontD: 'var(--font-display)', fontU: 'var(--font-ui)',
 };
 

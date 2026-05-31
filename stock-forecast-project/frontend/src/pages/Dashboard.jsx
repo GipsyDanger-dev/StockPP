@@ -42,10 +42,10 @@ function PulseDot({ color = "bg-emerald-400" }) {
 
 function SkeletonCard() {
   return (
-    <div className="bg-[#0a0a0a] border border-[#1e1e1e] rounded-2xl p-8 animate-pulse">
+    <div className="bg-[var(--dark-bg)] border border-[var(--dark-border)] rounded-2xl p-8 animate-pulse">
       <div className="h-4 bg-slate-100 rounded w-1/3 mb-6" />
       <div className="h-10 bg-slate-100 rounded w-1/2 mb-4" />
-      <div className="h-[300px] bg-[#111] rounded-xl" />
+      <div className="h-[300px] bg-[var(--dark-surface)] rounded-xl" />
     </div>
   );
 }
@@ -75,21 +75,21 @@ const Dashboard = () => {
 
   if (error || data?.status === "error") {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center bg-[#0a0a0a]">
+      <div className="flex min-h-[60vh] items-center justify-center bg-[var(--dark-bg)]">
         <div className="text-center max-w-md px-6">
-          <div className="w-16 h-16 bg-[#111] rounded-2xl flex items-center justify-center mx-auto mb-6 border border-[#1e1e1e]">
-            <Activity size={28} className="text-[#555]" />
+          <div className="w-16 h-16 bg-[var(--dark-surface)] rounded-2xl flex items-center justify-center mx-auto mb-6 border border-[var(--dark-border)]">
+            <Activity size={28} className="text-[var(--gray-dark)]" />
           </div>
           <p className="text-lg font-bold text-white mb-2">Market API is currently down or undergoing maintenance.</p>
           <form onSubmit={handleSearch} className="flex gap-2">
             <input
               type="text"
               placeholder="Try another ticker..."
-              className="flex-1 bg-[#1e1e1e] border border-[#1e1e1e] rounded-xl py-2.5 px-4 text-sm text-white placeholder-[#555] focus:outline-none focus:ring-2 focus:ring-[#FF6633] focus:border-transparent"
+              className="flex-1 bg-[var(--dark-border)] border border-[var(--dark-border)] rounded-xl py-2.5 px-4 text-sm text-white placeholder-[var(--gray-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--orange)] focus:border-transparent"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
-            <button type="submit" className="bg-[#FF6633] text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#E55A22] transition-colors">
+            <button type="submit" className="bg-[var(--orange)] text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-[var(--orange-hover)] transition-colors">
               Search
             </button>
           </form>
@@ -103,7 +103,7 @@ const Dashboard = () => {
       <div className="p-6 lg:p-10 max-w-7xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <PulseDot />
-          <span className="text-sm font-medium text-[#888]">AI Engine initializing...</span>
+          <span className="text-sm font-medium text-[var(--gray-mid)]">AI Engine initializing...</span>
         </div>
         {stream.steps.length > 0 ? (
           <ProgressOverlay
@@ -134,18 +134,18 @@ const Dashboard = () => {
 
   return (
     <div className="text-white">
-      <header className="bg-[#111]/80 backdrop-blur-md sticky top-0 z-10 px-6 py-3 flex justify-between items-center border-b border-[#1e1e1e]">
+      <header className="bg-[var(--dark-surface)]/80 backdrop-blur-md sticky top-0 z-10 px-6 py-3 flex justify-between items-center border-b border-[var(--dark-border)]">
         <form onSubmit={handleSearch} className="flex relative w-80">
           <input
             type="text"
             placeholder="Search ticker..."
-            className="w-full bg-[#1e1e1e] border border-[#1e1e1e] rounded-xl py-2.5 px-10 text-sm text-white placeholder-[#555] focus:outline-none focus:ring-2 focus:ring-[#FF6633] focus:border-transparent transition-all"
+            className="w-full bg-[var(--dark-border)] border border-[var(--dark-border)] rounded-xl py-2.5 px-10 text-sm text-white placeholder-[var(--gray-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--orange)] focus:border-transparent transition-all"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
-          <Search size={16} className="absolute left-3.5 top-3 text-[#555]" />
+          <Search size={16} className="absolute left-3.5 top-3 text-[var(--gray-dark)]" />
         </form>
-        <div className="flex items-center gap-2 text-sm text-[#888]">
+        <div className="flex items-center gap-2 text-sm text-[var(--gray-mid)]">
           <PulseDot color="bg-emerald-400" />
           <span className="font-medium">Live</span>
         </div>
@@ -154,24 +154,24 @@ const Dashboard = () => {
       <div className="p-6 lg:p-10 max-w-7xl mx-auto space-y-8">
         <div className={`transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 bg-[#FF6633]/10 rounded-lg flex items-center justify-center border border-[#FF6633]/20">
-              <Zap size={16} className="text-[#FF6633]" />
+            <div className="w-8 h-8 bg-[var(--orange)]/10 rounded-lg flex items-center justify-center border border-[var(--orange)]/20">
+              <Zap size={16} className="text-[var(--orange)]" />
             </div>
-            <span className="text-xs font-bold text-[#FF6633] tracking-wider uppercase">AI Forecast Engine</span>
+            <span className="text-xs font-bold text-[var(--orange)] tracking-wider uppercase">AI Forecast Engine</span>
           </div>
           <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-2 text-white">
             {ticker} Forecast
           </h1>
-          <p className="text-[#888] text-lg">
+          <p className="text-[var(--gray-mid)] text-lg">
             7-day prediction powered by LSTM neural networks
           </p>
         </div>
 
         <div className={`grid grid-cols-1 lg:grid-cols-3 gap-6 transition-all duration-700 delay-150 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <div className="lg:col-span-2 bg-[#0a0a0a] border border-[#1e1e1e] rounded-2xl p-6 lg:p-8 hover:border-[#2a2a2a] transition-colors duration-300">
+          <div className="lg:col-span-2 bg-[var(--dark-bg)] border border-[var(--dark-border)] rounded-2xl p-6 lg:p-8 hover:border-[var(--dark-hover)] transition-colors duration-300">
             <div className="flex justify-between items-start mb-6">
               <div>
-                <p className="text-[#888] font-semibold text-xs tracking-wider uppercase mb-1">
+                <p className="text-[var(--gray-mid)] font-semibold text-xs tracking-wider uppercase mb-1">
                   Current Price
                 </p>
                 <h2 className="text-3xl lg:text-4xl font-bold tracking-tight">
@@ -197,7 +197,7 @@ const Dashboard = () => {
           </div>
 
           <div className="space-y-6">
-            <div className="bg-[#0D1117] text-white rounded-2xl p-6 shadow-xl relative overflow-hidden">
+            <div className="bg-[var(--dark-card)] text-white rounded-2xl p-6 shadow-xl relative overflow-hidden">
               <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl" />
               <div className="relative z-10">
                 <div className="flex items-center gap-2 mb-5">
@@ -206,7 +206,7 @@ const Dashboard = () => {
                 </div>
 
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="bg-[#0a0a0a]/10 backdrop-blur px-3 py-1.5 rounded-lg font-bold text-lg border border-white/10">
+                  <div className="bg-[var(--dark-bg)]/10 backdrop-blur px-3 py-1.5 rounded-lg font-bold text-lg border border-white/10">
                     {data.ticker}
                   </div>
                   <div className={`text-sm font-bold px-2 py-1 rounded ${forecastChange >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
@@ -217,27 +217,27 @@ const Dashboard = () => {
                 <div className="space-y-5">
                   <div>
                     <div className="flex justify-between text-xs mb-2">
-                      <span className="text-[#76859B] font-medium">Model Accuracy</span>
+                      <span className="text-[var(--gray-blue)] font-medium">Model Accuracy</span>
                       <span className="text-white font-bold">{accuracyPercent.toFixed(1)}%</span>
                     </div>
                     <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
                       <div
-                        className="bg-gradient-to-r from-[#FF6633] to-[#E55A22] h-full rounded-full transition-all duration-1000 ease-out"
+                        className="bg-gradient-to-r from-[var(--orange)] to-[var(--orange-hover)] h-full rounded-full transition-all duration-1000 ease-out"
                         style={{ width: `${accuracyPercent}%` }}
                       />
                     </div>
-                    <p className="text-[11px] text-[#76859B] mt-1.5">RMSE: {data.metrics?.rmse?.toFixed(4) || 'N/A'}</p>
+                    <p className="text-[11px] text-[var(--gray-blue)] mt-1.5">RMSE: {data.metrics?.rmse?.toFixed(4) || 'N/A'}</p>
                   </div>
 
                   <div className="flex justify-between items-center pt-2 border-t border-white/10">
                     <div>
-                      <p className="text-[11px] text-[#76859B] mb-0.5">Trend</p>
+                      <p className="text-[11px] text-[var(--gray-blue)] mb-0.5">Trend</p>
                       <p className={`text-lg font-bold ${data.trend === 'Bullish' ? 'text-emerald-400' : 'text-rose-400'}`}>
                         {data.trend || 'N/A'}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[11px] text-[#76859B] mb-0.5">Target</p>
+                      <p className="text-[11px] text-[var(--gray-blue)] mb-0.5">Target</p>
                       <p className="text-lg font-bold text-white">
                         {data.forecast?.length > 0 ? formatCurrency(data.forecast[data.forecast.length - 1].price) : 'N/A'}
                       </p>
@@ -248,7 +248,7 @@ const Dashboard = () => {
 
               <button
                 onClick={() => navigate(`/analytics/${data.ticker}`)}
-                className="w-full bg-[#FF6633] text-white py-3 rounded-xl font-bold text-sm mt-6 hover:bg-[#E55A22] transition-colors active:scale-[0.98]"
+                className="w-full bg-[var(--orange)] text-white py-3 rounded-xl font-bold text-sm mt-6 hover:bg-[var(--orange-hover)] transition-colors active:scale-[0.98]"
               >
                 View Full Analysis
               </button>
@@ -260,33 +260,33 @@ const Dashboard = () => {
                 { label: 'MSE', value: data.metrics?.mse?.toFixed(4) || 'N/A', sub: 'Squared Error' },
                 { label: 'R-Squared', value: data.metrics?.r_square?.toFixed(3) || 'N/A', sub: 'Fit' },
               ].map((stat, i) => (
-                <div key={i} className="bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl p-4 hover:border-slate-300 transition-colors">
-                  <p className="text-[11px] text-[#888] font-semibold uppercase tracking-wider mb-1">{stat.label}</p>
+                <div key={i} className="bg-[var(--dark-bg)] border border-[var(--dark-border)] rounded-xl p-4 hover:border-slate-300 transition-colors">
+                  <p className="text-[11px] text-[var(--gray-mid)] font-semibold uppercase tracking-wider mb-1">{stat.label}</p>
                   <p className="text-xl font-bold text-white">{stat.value}</p>
-                  <p className="text-[11px] text-[#888]">{stat.sub}</p>
+                  <p className="text-[11px] text-[var(--gray-mid)]">{stat.sub}</p>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        <div className={`bg-[#0a0a0a] border border-[#1e1e1e] rounded-2xl overflow-hidden transition-all duration-700 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <div className="px-6 py-4 border-b border-[#1e1e1e] flex justify-between items-center">
+        <div className={`bg-[var(--dark-bg)] border border-[var(--dark-border)] rounded-2xl overflow-hidden transition-all duration-700 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <div className="px-6 py-4 border-b border-[var(--dark-border)] flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <Activity size={16} className="text-[#555]" />
-              <h3 className="font-bold text-sm tracking-wider text-[#888] uppercase">7-Day Forecast</h3>
+              <Activity size={16} className="text-[var(--gray-dark)]" />
+              <h3 className="font-bold text-sm tracking-wider text-[var(--gray-mid)] uppercase">7-Day Forecast</h3>
             </div>
-            <span className="text-[11px] text-[#888] font-medium">{ticker}</span>
+            <span className="text-[11px] text-[var(--gray-mid)] font-medium">{ticker}</span>
           </div>
           {data.forecast && data.forecast.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-[#1e1e1e]">
-                    <th className="text-left px-6 py-3 text-[#888] font-semibold text-xs tracking-wider">DATE</th>
-                    <th className="text-right px-6 py-3 text-[#888] font-semibold text-xs tracking-wider">PREDICTED</th>
-                    <th className="text-right px-6 py-3 text-[#888] font-semibold text-xs tracking-wider">CHANGE</th>
-                    <th className="text-right px-6 py-3 text-[#888] font-semibold text-xs tracking-wider">TREND</th>
+                  <tr className="border-b border-[var(--dark-border)]">
+                    <th className="text-left px-6 py-3 text-[var(--gray-mid)] font-semibold text-xs tracking-wider">DATE</th>
+                    <th className="text-right px-6 py-3 text-[var(--gray-mid)] font-semibold text-xs tracking-wider">PREDICTED</th>
+                    <th className="text-right px-6 py-3 text-[var(--gray-mid)] font-semibold text-xs tracking-wider">CHANGE</th>
+                    <th className="text-right px-6 py-3 text-[var(--gray-mid)] font-semibold text-xs tracking-wider">TREND</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -295,7 +295,7 @@ const Dashboard = () => {
                     const change = ((point.price - prevPrice) / prevPrice) * 100;
                     const isUp = change >= 0;
                     return (
-                      <tr key={i} className="border-b border-[#1e1e1e] last:border-0 hover:bg-[#111]/50 transition-colors">
+                      <tr key={i} className="border-b border-[var(--dark-border)] last:border-0 hover:bg-[var(--dark-surface)]/50 transition-colors">
                         <td className="px-6 py-3.5 text-sm font-medium text-white">{point.date}</td>
                         <td className="px-6 py-3.5 text-right text-sm font-bold text-white">{formatCurrency(point.price)}</td>
                         <td className={`px-6 py-3.5 text-right text-sm font-bold ${isUp ? 'text-emerald-600' : 'text-rose-600'}`}>
@@ -315,12 +315,12 @@ const Dashboard = () => {
               </table>
             </div>
           ) : (
-            <div className="p-12 flex flex-col items-center justify-center text-[#888]">
-              <div className="w-12 h-12 bg-[#111] rounded-xl flex items-center justify-center mb-4 border border-[#1e1e1e]">
-                <Activity size={24} className="text-[#555]" />
+            <div className="p-12 flex flex-col items-center justify-center text-[var(--gray-mid)]">
+              <div className="w-12 h-12 bg-[var(--dark-surface)] rounded-xl flex items-center justify-center mb-4 border border-[var(--dark-border)]">
+                <Activity size={24} className="text-[var(--gray-dark)]" />
               </div>
               <p className="font-medium">No forecast data available</p>
-              <p className="text-sm text-[#555] mt-1">Search for a ticker to generate predictions.</p>
+              <p className="text-sm text-[var(--gray-dark)] mt-1">Search for a ticker to generate predictions.</p>
             </div>
           )}
         </div>

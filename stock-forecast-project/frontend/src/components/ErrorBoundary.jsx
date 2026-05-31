@@ -22,7 +22,7 @@ class ErrorBoundary extends React.Component {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#0a0a0a',
+          background: 'var(--dark-bg)',
           color: '#fff',
           fontFamily: 'var(--font-ui, sans-serif)',
         }}>
@@ -36,14 +36,14 @@ class ErrorBoundary extends React.Component {
             <h2 style={{ fontSize: 20, fontWeight: 500, marginBottom: 12 }}>
               Something went wrong
             </h2>
-            <p style={{ fontSize: 14, color: '#888', marginBottom: 28, lineHeight: 1.5 }}>
+            <p style={{ fontSize: 14, color: 'var(--gray-mid)', marginBottom: 28, lineHeight: 1.5 }}>
               An unexpected error occurred. Please try refreshing the page or return to the dashboard.
             </p>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
               <button
                 onClick={() => window.location.reload()}
                 style={{
-                  background: '#FF6633', color: '#fff', border: 'none',
+                  background: 'var(--orange)', color: '#fff', border: 'none',
                   padding: '12px 24px', cursor: 'pointer', fontSize: 13, fontWeight: 500,
                 }}
               >
@@ -52,7 +52,7 @@ class ErrorBoundary extends React.Component {
               <button
                 onClick={() => { this.setState({ hasError: false }); window.location.href = '/dashboard'; }}
                 style={{
-                  background: 'transparent', color: '#888', border: '1px solid #1e1e1e',
+                  background: 'transparent', color: 'var(--gray-mid)', border: '1px solid var(--dark-border)',
                   padding: '12px 24px', cursor: 'pointer', fontSize: 13, fontWeight: 500,
                 }}
               >

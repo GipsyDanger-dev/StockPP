@@ -14,13 +14,6 @@ from typing import Tuple, Dict, Any, Optional
 logger = logging.getLogger(__name__)
 
 
-def direction_aware_loss(y_true, y_pred):
-    """Combined Huber + direction penalty. Wrong-direction predictions on large moves get penalized heavily."""
-    huber = tf.keras.losses.huber(y_true, y_pred)
-    dir_match = tf.sign(y_true) * tf.sign(y_pred)
-    move_mag = tf.abs(y_true)
-    dir_penalty = tf.where(dir_match < 0, move_mag * 2.0, 0.0)
-    return huber + dir_penalty
 
 
 class LSTMModel:
@@ -64,12 +57,12 @@ class LSTMModel:
 
             model.compile(
                 optimizer=Adam(learning_rate=0.0008),
-                loss=direction_aware_loss,
+                loss='huber',
                 metrics=['mae']
             )
 
             self.model = model
-            logger.info(f"LSTM model built: window={self.window_size}, features={self.num_features}, loss=direction_aware")
+            logger.info(f"LSTM model built: window={self.window_size}, features={self.num_features}")
             return model
 
         except Exception as e:
@@ -98,7 +91,7 @@ class LSTMModel:
             model.add(Dense(units=16, activation='relu'))
             model.add(Dense(units=1))
 
-            model.compile(optimizer=Adam(learning_rate=learning_rate), loss=direction_aware_loss, metrics=['mae'])
+            model.compile(optimizer=Adam(learning_rate=learning_rate), loss='huber', metrics=['mae'])
             self.model = model
             return model
         except Exception as e:
@@ -295,7 +288,7 @@ class LSTMModel:
             if not os.path.exists(load_path):
                 raise FileNotFoundError(f"Model not found at {load_path}")
 
-            self.model = keras.models.load_model(load_path, custom_objects={'direction_aware_loss': direction_aware_loss})
+            self.model = keras.models.load_model(load_path)
             self.is_trained = True
             logger.info(f"Model loaded from {load_path}")
 

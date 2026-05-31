@@ -191,12 +191,12 @@ class ForecastingService:
 
             recent_returns = df_with_indicators['Close'].pct_change().dropna().iloc[-30:]
             daily_vol = float(recent_returns.std()) if len(recent_returns) > 1 else 0.02
-            max_daily_move = daily_vol * 3
-            total_max_move = max_daily_move * days_ahead
+            max_daily_return = min(daily_vol * 3, 0.10)  # cap at ±10% per step
+            total_max_move = max_daily_return * days_ahead
             price_min = current_price * (1 - total_max_move)
             price_max = current_price * (1 + total_max_move)
-            price_min = max(price_min, current_price * 0.40)
-            price_max = min(price_max, current_price * 1.60)
+            price_min = max(price_min, current_price * 0.80)  # floor: -20%
+            price_max = min(price_max, current_price * 1.30)  # ceiling: +30%
 
             recent_prices = df_with_indicators['Close'].iloc[-50:].tolist()
             future_predictions = []
@@ -238,6 +238,7 @@ class ForecastingService:
                 else:
                     pred_return = lstm_return
 
+                pred_return = float(np.clip(pred_return, -max_daily_return, max_daily_return))
                 pred_price = last_price * (1 + pred_return)
 
                 pred_price = np.clip(pred_price, price_min, price_max)

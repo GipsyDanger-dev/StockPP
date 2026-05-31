@@ -588,10 +588,25 @@ def list_users() -> dict:
 def insert_prediction(user_id: str, ticker: str, current_price: float,
                       predicted_prices: list, trend: str, predicted_change_percent: float,
                       days_ahead: int = 7) -> dict:
-    """Save a prediction to prediction_history table"""
+    """Save a prediction to prediction_history table. Deduplicates by user+ticker+date."""
     try:
         client = SupabaseClient.get_client()
         ensure_ticker_exists(ticker)
+
+        from datetime import date as date_type
+        today = date_type.today().isoformat()
+
+        existing = client.table("prediction_history") \
+            .select("id") \
+            .eq("user_id", user_id) \
+            .eq("ticker", ticker.upper()) \
+            .gte("created_at", today) \
+            .limit(1) \
+            .execute()
+
+        if existing.data:
+            logger.info(f"Prediction already exists for {ticker} today (user {user_id}), skipping insert")
+            return existing.data[0]
 
         data = {
             "user_id": user_id,

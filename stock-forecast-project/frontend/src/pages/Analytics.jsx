@@ -43,16 +43,9 @@ const AnalyticsOverview = () => {
 
   return (
     <div className="min-h-screen bg-white text-[var(--light-text)]">
-      <header className="bg-[var(--light-surface)] px-6 lg:px-12 py-10 border-b border-[var(--light-border-alt)]">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
-            <Activity className="text-white" size={28} />
-          </div>
-          <div>
-            <h1 className="text-5xl lg:text-7xl font-bold tracking-tighter text-black mb-4">ANALYTICS OVERVIEW</h1>
-            <p className="text-[var(--light-text-secondary)] text-xl lg:text-2xl mt-1">Select a stock to view detailed analysis with technical indicators</p>
-          </div>
-        </div>
+      <header className="bg-[var(--light-surface)] px-6 lg:px-12 py-10 border-b border-[var(--light-border)]">
+        <h1 className="text-5xl lg:text-7xl font-bold text-black mb-4 tracking-tighter">Analytics Overview</h1>
+        <p className="text-[var(--light-text-secondary)] text-xl lg:text-2xl">Select a stock to view detailed analysis with technical indicators</p>
       </header>
 
       <main className="p-6 lg:p-12 max-w-7xl mx-auto">
@@ -325,15 +318,13 @@ const AnalyticsDetail = ({ ticker }) => {
 
   return (
     <div className="min-h-screen bg-white text-[var(--light-text)]">
-      <header className="bg-[var(--light-surface)] px-6 lg:px-12 py-10 flex items-center border-b border-[var(--light-border-alt)]">
+      <header className="bg-[var(--light-surface)] px-6 lg:px-12 py-10 flex items-center border-b border-[var(--light-border)]">
         <button onClick={() => navigate('/analytics')} className="mr-6 p-2 hover:bg-slate-200 rounded-full transition-colors" aria-label="Back to Analytics Overview">
           <ChevronLeft size={32} />
         </button>
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
-            <Activity className="text-white" size={28} />
-          </div>
-          <h1 className="text-5xl lg:text-7xl font-bold tracking-tighter text-black mb-4">PRECISION ANALYTICS</h1>
+        <div>
+          <h1 className="text-5xl lg:text-7xl font-bold tracking-tighter text-black mb-4">{ticker} Analysis</h1>
+          <p className="text-[var(--light-text-secondary)] text-xl lg:text-2xl">Detailed technical analysis and forecast</p>
         </div>
         <button onClick={fetchLiveQuote} className="ml-auto p-3 hover:bg-slate-200 rounded-full transition-colors" title="Refresh live price" aria-label="Refresh live price">
           <RefreshCw size={24} className={quoteLoading ? 'animate-spin' : ''} />

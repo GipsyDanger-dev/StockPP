@@ -107,7 +107,7 @@ const Market = () => {
                       {showSearchResults && <th className="p-6 text-right">Action</th>}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-[var(--light-border)]">
                     {showSearchResults ? (
                       searchResults.length > 0 ? (
                         searchResults.map((result) => (

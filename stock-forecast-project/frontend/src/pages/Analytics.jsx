@@ -49,7 +49,7 @@ const AnalyticsOverview = () => {
             <Activity className="text-white" size={28} />
           </div>
           <div>
-            <h1 className="text-5xl lg:text-7xl font-bold tracking-tighter text-black">ANALYTICS OVERVIEW</h1>
+            <h1 className="text-5xl lg:text-7xl font-bold tracking-tighter text-black mb-4">ANALYTICS OVERVIEW</h1>
             <p className="text-[var(--light-text-secondary)] text-xl lg:text-2xl mt-1">Select a stock to view detailed analysis with technical indicators</p>
           </div>
         </div>
@@ -72,7 +72,7 @@ const AnalyticsOverview = () => {
           {showSearchResults && (
             <div className="mt-4 bg-white border-2 border-[var(--light-border-alt)] rounded-xl overflow-hidden shadow-sm max-w-2xl">
               {searchResults.length > 0 ? (
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-[var(--light-border)]">
                   {searchResults.map((result) => (
                     <div
                       key={result.symbol}
@@ -116,12 +116,12 @@ const AnalyticsOverview = () => {
                     <h3 className="font-bold text-emerald-700 tracking-widest text-sm">TOP GAINERS</h3>
                   </div>
                 </div>
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-[var(--light-border)]">
                   {topGainers.map((stock) => (
                     <div
                       key={stock.ticker}
                       onClick={() => navigate(`/analytics/${stock.ticker}`)}
-                      className="flex justify-between items-center p-5 px-6 hover:bg-slate-50 cursor-pointer transition-colors"
+                      className="flex justify-between items-center p-6 px-6 hover:bg-slate-50 cursor-pointer transition-colors"
                       role="button"
                       aria-label={`View ${stock.ticker} analysis`}
                       tabIndex={0}
@@ -146,12 +146,12 @@ const AnalyticsOverview = () => {
                     <h3 className="font-bold text-rose-700 tracking-widest text-sm">TOP LOSERS</h3>
                   </div>
                 </div>
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-[var(--light-border)]">
                   {topLosers.map((stock) => (
                     <div
                       key={stock.ticker}
                       onClick={() => navigate(`/analytics/${stock.ticker}`)}
-                      className="flex justify-between items-center p-5 px-6 hover:bg-slate-50 cursor-pointer transition-colors"
+                      className="flex justify-between items-center p-6 px-6 hover:bg-slate-50 cursor-pointer transition-colors"
                       role="button"
                       aria-label={`View ${stock.ticker} analysis`}
                       tabIndex={0}
@@ -178,15 +178,15 @@ const AnalyticsOverview = () => {
                 <table className="w-full text-left">
                   <thead className="bg-[var(--light-surface)] text-[var(--light-text-secondary)] font-bold text-sm tracking-widest uppercase border-b border-[var(--light-border-alt)]">
                     <tr>
-                      <th className="p-5">Ticker</th>
-                      <th className="p-5">Company</th>
-                      <th className="p-5">Sector</th>
-                      <th className="p-5">Price</th>
-                      <th className="p-5 text-right">Change</th>
-                      <th className="p-5 text-right">Action</th>
+                      <th className="p-6">Ticker</th>
+                      <th className="p-6">Company</th>
+                      <th className="p-6">Sector</th>
+                      <th className="p-6">Price</th>
+                      <th className="p-6 text-right">Change</th>
+                      <th className="p-6 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-[var(--light-border)]">
                     {stocks.map((stock) => (
                       <tr
                         key={stock.ticker}
@@ -194,14 +194,14 @@ const AnalyticsOverview = () => {
                         className="hover:bg-indigo-50 cursor-pointer transition-colors"
                         aria-label={`View ${stock.ticker} analysis`}
                       >
-                        <td className="p-5 font-bold text-lg">{stock.ticker}</td>
-                        <td className="p-5 text-[var(--light-text-secondary)]">{stock.name}</td>
-                        <td className="p-5 text-[var(--light-text-secondary)]">{stock.sector || 'N/A'}</td>
-                        <td className="p-5 font-bold">${stock.price?.toFixed(2) || 'N/A'}</td>
-                        <td className={`p-5 text-right font-bold ${stock.change_percent >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        <td className="p-6 font-bold text-lg">{stock.ticker}</td>
+                        <td className="p-6 text-[var(--light-text-secondary)]">{stock.name}</td>
+                        <td className="p-6 text-[var(--light-text-secondary)]">{stock.sector || 'N/A'}</td>
+                        <td className="p-6 font-bold">${stock.price?.toFixed(2) || 'N/A'}</td>
+                        <td className={`p-6 text-right font-bold ${stock.change_percent >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                           {stock.change_percent >= 0 ? '+' : ''}{stock.change_percent?.toFixed(2) || '0'}%
                         </td>
-                        <td className="p-5 text-right">
+                        <td className="p-6 text-right">
                           <span className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg font-bold text-sm">
                             Analyze
                           </span>
@@ -333,7 +333,7 @@ const AnalyticsDetail = ({ ticker }) => {
           <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
             <Activity className="text-white" size={28} />
           </div>
-          <h1 className="text-5xl lg:text-7xl font-bold tracking-tighter text-black">PRECISION ANALYTICS</h1>
+          <h1 className="text-5xl lg:text-7xl font-bold tracking-tighter text-black mb-4">PRECISION ANALYTICS</h1>
         </div>
         <button onClick={fetchLiveQuote} className="ml-auto p-3 hover:bg-slate-200 rounded-full transition-colors" title="Refresh live price" aria-label="Refresh live price">
           <RefreshCw size={24} className={quoteLoading ? 'animate-spin' : ''} />

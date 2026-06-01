@@ -53,11 +53,11 @@ const Reports = () => {
   };
 
   return (
-    <div className="bg-white text-[var(--light-text)]">
+    <div className="min-h-screen bg-white text-[var(--light-text)]">
       <header className="bg-[var(--light-surface)] px-6 lg:px-12 py-10 border-b border-[var(--light-border)]">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-5xl lg:text-7xl font-bold text-black mb-4">
+            <h1 className="text-5xl lg:text-7xl font-bold text-black mb-4 tracking-tighter">
               Reports Management
             </h1>
             <p className="text-[var(--light-text-secondary)] text-xl lg:text-2xl">
@@ -115,7 +115,7 @@ const Reports = () => {
           <StatCard title="PROCESSING" value={processingReports.toString()} color="text-blue-600" />
         </div>
 
-        <div className="bg-white border-2 border-[var(--light-border)] rounded-xl overflow-hidden shadow-sm">
+        <div className="bg-white border-2 border-[var(--light-border-alt)] rounded-xl overflow-hidden shadow-sm">
           {isFetching && !isLoading && (
             <div className="bg-blue-50 border-b border-blue-100 px-4 py-2 flex items-center gap-2">
               <Loader className="w-3 h-3 animate-spin text-blue-500" />
@@ -141,7 +141,7 @@ const Reports = () => {
             </div>
           ) : (
             <>
-              <div className="bg-[var(--light-section)] grid grid-cols-4 p-6 border-b border-[var(--light-border)] font-bold text-[var(--light-text-secondary)] tracking-widest text-sm">
+              <div className="bg-[var(--light-section)] grid grid-cols-4 p-6 border-b border-[var(--light-border-alt)] font-bold text-[var(--light-text-secondary)] tracking-widest text-sm">
                 <div className="col-span-2 md:col-span-1">REPORT NAME</div>
                 <div className="hidden md:block">METRICS</div>
                 <div className="hidden md:block">STATUS</div>
@@ -194,7 +194,7 @@ const Reports = () => {
                 ))}
               </div>
 
-              <div className="p-6 border-t border-[var(--light-border)] flex items-center bg-[var(--light-surface)]">
+              <div className="p-6 border-t border-[var(--light-border-alt)] flex items-center bg-[var(--light-surface)]">
                 <p className="text-[var(--light-text-secondary)]">Showing {filteredReports.length} of {totalReports}</p>
               </div>
             </>
@@ -206,7 +206,7 @@ const Reports = () => {
 };
 
 const StatCard = ({ title, value, color }) => (
-  <div className="bg-white border-2 border-[var(--light-border)] p-8 rounded-xl shadow-sm">
+  <div className="bg-white border-2 border-[var(--light-border-alt)] p-8 rounded-xl shadow-sm">
     <p className="text-[var(--light-text-secondary)] font-bold text-xs tracking-widest mb-4">
       {title}
     </p>

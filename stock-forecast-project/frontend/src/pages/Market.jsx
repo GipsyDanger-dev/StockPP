@@ -44,7 +44,7 @@ const Market = () => {
   const showSearchResults = searchTerm.length >= 2;
 
   return (
-    <div className="bg-white text-[var(--light-text)]">
+    <div className="min-h-screen bg-white text-[var(--light-text)]">
       <header className="bg-[var(--light-surface)] px-6 lg:px-12 py-10 border-b border-[var(--light-border)]">
         <h1 className="text-5xl lg:text-7xl font-bold text-black mb-4 tracking-tighter">Market Explorer</h1>
         <p className="text-[var(--light-text-secondary)] text-xl lg:text-2xl">Real-time equities overview. Search any ticker.</p>

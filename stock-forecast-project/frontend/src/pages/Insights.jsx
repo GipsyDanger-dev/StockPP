@@ -57,7 +57,7 @@ const Insights = () => {
   };
 
   return (
-    <div className="bg-white text-[var(--light-text)]">
+    <div className="min-h-screen bg-white text-[var(--light-text)]">
       <header className="bg-[var(--light-surface)] px-6 lg:px-12 py-10 border-b border-[var(--light-border)]">
         <h1 className="text-5xl lg:text-7xl font-bold text-black mb-4 tracking-tighter">Market Insights</h1>
         <p className="text-[var(--light-text-secondary)] text-xl lg:text-2xl max-w-4xl">
@@ -140,7 +140,7 @@ const Insights = () => {
                     onClick={() => setSelectedCategory(null)}
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                       !selectedCategory
-                        ? 'bg-[#131B2E] text-white'
+                        ? 'bg-[var(--dark-navy)] text-white'
                         : 'bg-[var(--light-surface)] text-[var(--light-text-secondary)] border border-[var(--light-border-alt)] hover:bg-[#E8EAED]'
                     }`}
                   >
@@ -152,7 +152,7 @@ const Insights = () => {
                       onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
                       className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                         selectedCategory === cat
-                          ? 'bg-[#131B2E] text-white'
+                          ? 'bg-[var(--dark-navy)] text-white'
                           : 'bg-[var(--light-surface)] text-[var(--light-text-secondary)] border border-[var(--light-border-alt)] hover:bg-[#E8EAED]'
                       }`}
                     >

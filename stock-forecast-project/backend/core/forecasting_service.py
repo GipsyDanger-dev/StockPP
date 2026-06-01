@@ -128,7 +128,8 @@ class ForecastingService:
             if feature_scalers is None:
                 return _error_response(ticker_upper, "Feature scalers not available. Retrain the model.")
 
-            logger.info(f"Model ready for {ticker_upper}. Starting prediction...")
+            logger.info(f"Predicting {ticker_upper}...")
+            logger.info(f"  -> Model loaded | Scalers ready | SVM: {'yes' if svm_model else 'no'}")
 
             if progress:
                 progress.emit_sync("step", {"step": "fetching_data", "label": f"Fetching market data for {ticker_upper}...", "status": "running"})
@@ -137,10 +138,13 @@ class ForecastingService:
             if df is None or len(df) < 70:
                 return _error_response(ticker_upper, "Market API is currently down or undergoing maintenance.")
 
+            logger.info(f"  -> Fetched {len(df)} days of data")
+
             if progress:
                 progress.emit_sync("step", {"step": "indicators", "label": "Computing technical indicators + market context...", "status": "running"})
 
             df_with_indicators = self.data_engine._add_technical_indicators(df)
+            logger.info(f"  -> {len(df_with_indicators.columns)} features computed")
 
             if len(df_with_indicators) < 35:
                 return _error_response(ticker_upper, f"Insufficient data after computing indicators for {ticker_upper}")
@@ -380,6 +384,8 @@ class ForecastingService:
             last_forecast = future_prices[-1]
             trend = "Bullish" if last_forecast > current_price else "Bearish"
             change_percent = ((last_forecast - current_price) / current_price * 100)
+            logger.info(f"  -> Current: ${current_price:.2f} | Forecast ({days_ahead}d): ${last_forecast:.2f} | {trend} ({change_percent:+.1f}%)")
+            logger.info(f"  -> RSI: {current_rsi:.1f} | MA20: ${current_ma20:.2f} | MACD: {current_macd:.4f}")
 
             response = {
                 "ticker": ticker_upper,

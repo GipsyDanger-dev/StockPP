@@ -131,7 +131,7 @@ class RetrainingOrchestrator:
             if progress:
                 progress.emit_sync("train_step", {"step": "fetching_data", "label": f"Fetching {period} historical data for {ticker_upper}...", "status": "running"})
 
-            logger.info(f"Fetching data for {ticker_upper}...")
+            logger.info(f"[1/7] Fetching {period} data for {ticker_upper}...")
             df = self.data_engine.fetch_data(ticker_upper, period=period)
 
             if df is None or len(df) < 70:
@@ -139,11 +139,15 @@ class RetrainingOrchestrator:
                 logger.error(result["error"])
                 return result
 
+            date_range = f"{df.index[0].strftime('%Y-%m-%d')} to {df.index[-1].strftime('%Y-%m-%d')}"
+            logger.info(f"  -> Got {len(df)} rows | Date: {date_range} | Columns: {list(df.columns[:5])}...")
+
             if progress:
                 progress.emit_sync("train_step", {"step": "indicators", "label": "Computing 11 technical indicators...", "status": "running"})
 
-            logger.info("Preparing data with technical indicators...")
+            logger.info("[2/7] Computing technical indicators...")
             df_with_indicators = self.data_engine._add_technical_indicators(df)
+            logger.info(f"  -> {len(df_with_indicators.columns)} features: {list(df_with_indicators.columns[-6:])}")
 
             old_metrics = self.model_manager.get_model_metrics(ticker_upper)
 
@@ -175,28 +179,30 @@ class RetrainingOrchestrator:
             X_train, X_test = X[:seq_split], X[seq_split:]
             y_train, y_test = y[:seq_split], y[seq_split:]
 
-            logger.info(f"Data split - Train: {len(X_train)}, Test: {len(X_test)}")
+            logger.info(f"[3/7] Scaling & sequences done")
+            logger.info(f"  -> Total: {len(X)} sequences | Train: {len(X_train)} | Test: {len(X_test)}")
 
             if progress:
                 progress.emit_sync("train_step", {"step": "building", "label": "Building prediction model...", "status": "running"})
 
             tuned_params = None
 
-            logger.info("Building new model...")
+            logger.info("[4/7] Building LSTM model...")
             model = LSTMModel(window_size=30, num_features=NUM_FEATURES)
             model.build_model()
+            logger.info(f"  -> Window: 30 | Features: {NUM_FEATURES} | Layers: LSTM(64) -> LSTM(32) -> Dense(16) -> Dense(1)")
 
             if progress:
                 progress.emit_sync("train_step", {"step": "training", "label": f"Training model ({epochs} epochs)...", "status": "running"})
 
-            logger.info(f"Training model ({epochs} epochs, early stopping enabled)...")
+            logger.info(f"[5/7] Training LSTM ({epochs} epochs, early stopping, batch_size={batch_size})...")
             epoch_callback = (lambda ep, total, loss, vloss: progress.emit_epoch_sync(ep, total, loss, vloss)) if progress else None
             model.train(X_train, y_train, epochs=epochs, batch_size=batch_size, progress_callback=epoch_callback)
 
             if progress:
                 progress.emit_sync("train_step", {"step": "evaluating", "label": "Evaluating model accuracy...", "status": "running"})
 
-            logger.info("Evaluating model on original dollar scale...")
+            logger.info("[6/7] Evaluating on original dollar scale...")
             original_prices = self.data_engine.original_close_prices
             new_metrics = model.evaluate_on_original_scale(
                 X_test, y_test, close_scaler,
@@ -208,6 +214,7 @@ class RetrainingOrchestrator:
             if progress:
                 progress.emit_sync("train_step", {"step": "svm_training", "label": "Training SVM ensemble model...", "status": "running"})
 
+            logger.info("[7/7] Training SVM ensemble...")
             svm_model = SVMModel(window_size=30, num_features=NUM_FEATURES)
             svm_model.train(X_train, y_train)
             svm_metrics = svm_model.evaluate_on_original_scale(
@@ -265,7 +272,13 @@ class RetrainingOrchestrator:
 
                 result["model_saved"] = saved
                 result["status"] = "success"
-                logger.info(f"Model successfully retrained and saved for {ticker_upper}")
+                logger.info(f"DONE! {ticker_upper} retrained successfully")
+                logger.info(f"  -> LSTM RMSE: ${new_metrics['rmse']:.2f} | MAE: ${new_metrics['mae']:.2f}")
+                logger.info(f"  -> SVM  RMSE: ${svm_metrics['rmse']:.2f} | MAE: ${svm_metrics['mae']:.2f}")
+                logger.info(f"  -> Ensemble: LSTM={ensemble_weights['lstm_weight']:.2%} SVM={ensemble_weights['svm_weight']:.2%}")
+                if old_metrics:
+                    delta = new_metrics['rmse'] - old_metrics.get('rmse', 0)
+                    logger.info(f"  -> RMSE change: {'+' if delta > 0 else ''}{delta:.2f} vs previous model")
 
             else:
                 result["status"] = "validation_failed"

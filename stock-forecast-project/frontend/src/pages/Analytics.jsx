@@ -43,14 +43,14 @@ const AnalyticsOverview = () => {
 
   return (
     <div className="min-h-screen bg-white text-[var(--light-text)]">
-      <header className="bg-[var(--light-surface)] px-6 lg:px-12 py-8 border-b border-[var(--light-border)]">
+      <header className="bg-[var(--light-surface)] px-6 lg:px-12 py-10 border-b border-[var(--light-border-alt)]">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
             <Activity className="text-white" size={28} />
           </div>
           <div>
-            <h1 className="text-3xl lg:text-5xl font-bold tracking-tight text-black">ANALYTICS OVERVIEW</h1>
-            <p className="text-[var(--light-text-secondary)] text-lg mt-1">Select a stock to view detailed analysis with technical indicators</p>
+            <h1 className="text-5xl lg:text-7xl font-bold tracking-tighter text-black">ANALYTICS OVERVIEW</h1>
+            <p className="text-[var(--light-text-secondary)] text-xl lg:text-2xl mt-1">Select a stock to view detailed analysis with technical indicators</p>
           </div>
         </div>
       </header>
@@ -109,8 +109,8 @@ const AnalyticsOverview = () => {
         ) : (
           <>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-              <div className="bg-white border-2 border-[var(--light-border)] rounded-xl overflow-hidden shadow-sm">
-                <div className="bg-[var(--light-section-alt)] p-6 border-b border-[var(--light-border)]">
+              <div className="bg-white border-2 border-[var(--light-border-alt)] rounded-xl overflow-hidden shadow-sm">
+                <div className="bg-[var(--light-section-alt)] p-6 border-b border-[var(--light-border-alt)]">
                   <div className="flex items-center gap-3">
                     <TrendingUp className="text-emerald-600" size={24} />
                     <h3 className="font-bold text-emerald-700 tracking-widest text-sm">TOP GAINERS</h3>
@@ -139,8 +139,8 @@ const AnalyticsOverview = () => {
                 </div>
               </div>
 
-              <div className="bg-white border-2 border-[var(--light-border)] rounded-xl overflow-hidden shadow-sm">
-                <div className="bg-rose-50 p-6 border-b border-[var(--light-border)]">
+              <div className="bg-white border-2 border-[var(--light-border-alt)] rounded-xl overflow-hidden shadow-sm">
+                <div className="bg-rose-50 p-6 border-b border-[var(--light-border-alt)]">
                   <div className="flex items-center gap-3">
                     <TrendingDown className="text-rose-600" size={24} />
                     <h3 className="font-bold text-rose-700 tracking-widest text-sm">TOP LOSERS</h3>
@@ -170,13 +170,13 @@ const AnalyticsOverview = () => {
               </div>
             </div>
 
-            <div className="bg-white border-2 border-[var(--light-border)] rounded-xl overflow-hidden shadow-sm">
-              <div className="bg-[var(--light-section)] p-6 border-b border-[var(--light-border)]">
+            <div className="bg-white border-2 border-[var(--light-border-alt)] rounded-xl overflow-hidden shadow-sm">
+              <div className="bg-[var(--light-section)] p-6 border-b border-[var(--light-border-alt)]">
                 <h3 className="font-bold tracking-widest text-[var(--light-text-secondary)]">ALL WATCHLIST STOCKS</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
-                  <thead className="bg-[var(--light-surface)] text-[var(--light-text-secondary)] font-bold text-sm tracking-widest uppercase border-b border-[var(--light-border)]">
+                  <thead className="bg-[var(--light-surface)] text-[var(--light-text-secondary)] font-bold text-sm tracking-widest uppercase border-b border-[var(--light-border-alt)]">
                     <tr>
                       <th className="p-5">Ticker</th>
                       <th className="p-5">Company</th>
@@ -325,7 +325,7 @@ const AnalyticsDetail = ({ ticker }) => {
 
   return (
     <div className="min-h-screen bg-white text-[var(--light-text)]">
-      <header className="bg-[var(--light-surface)] px-6 lg:px-12 py-8 flex items-center border-b border-[var(--light-border)]">
+      <header className="bg-[var(--light-surface)] px-6 lg:px-12 py-10 flex items-center border-b border-[var(--light-border-alt)]">
         <button onClick={() => navigate('/analytics')} className="mr-6 p-2 hover:bg-slate-200 rounded-full transition-colors" aria-label="Back to Analytics Overview">
           <ChevronLeft size={32} />
         </button>
@@ -333,7 +333,7 @@ const AnalyticsDetail = ({ ticker }) => {
           <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
             <Activity className="text-white" size={28} />
           </div>
-          <h1 className="text-3xl lg:text-5xl font-bold tracking-tight text-black">PRECISION ANALYTICS</h1>
+          <h1 className="text-5xl lg:text-7xl font-bold tracking-tighter text-black">PRECISION ANALYTICS</h1>
         </div>
         <button onClick={fetchLiveQuote} className="ml-auto p-3 hover:bg-slate-200 rounded-full transition-colors" title="Refresh live price" aria-label="Refresh live price">
           <RefreshCw size={24} className={quoteLoading ? 'animate-spin' : ''} />
@@ -459,7 +459,7 @@ const AnalyticsDetail = ({ ticker }) => {
         </div>
 
         {scoreData && !scoreData.error && (
-          <div className="bg-white border-2 border-[var(--light-border)] rounded-xl p-6 mb-12 shadow-sm">
+          <div className="bg-white border-2 border-[var(--light-border-alt)] rounded-xl p-6 mb-12 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="font-bold text-black text-xl">Stock Score</h3>
@@ -508,7 +508,7 @@ const AnalyticsDetail = ({ ticker }) => {
         )}
 
         {data.sentiment && (data.sentiment.news_available || data.sentiment.social_available) && (
-          <div className="bg-white border-2 border-[var(--light-border)] rounded-xl p-6 mb-12 shadow-sm">
+          <div className="bg-white border-2 border-[var(--light-border-alt)] rounded-xl p-6 mb-12 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="font-bold text-black text-xl">Market Sentiment</h3>
@@ -555,8 +555,8 @@ const AnalyticsDetail = ({ ticker }) => {
           </div>
         )}
 
-        <div className="bg-white border-2 border-[var(--light-border)] rounded-xl overflow-hidden mb-12 shadow-sm">
-          <div className="bg-[var(--light-section)] p-6 flex justify-between items-center border-b border-[var(--light-border)]">
+        <div className="bg-white border-2 border-[var(--light-border-alt)] rounded-xl overflow-hidden mb-12 shadow-sm">
+          <div className="bg-[var(--light-section)] p-6 flex justify-between items-center border-b border-[var(--light-border-alt)]">
             <div className="flex gap-8">
               <span className="font-bold text-black text-lg border-b-4 border-indigo-600 pb-1">Actual vs Forecast</span>
               <span className="text-[var(--light-text-secondary)] text-lg">Indigo = Actual &bull; Green dashed = Forecast &bull; Orange = MA20 &bull; Cyan = MA50 &bull; Purple = EWMA20</span>
@@ -573,7 +573,7 @@ const AnalyticsDetail = ({ ticker }) => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12">
-          <div className="bg-white border-2 border-[var(--light-border)] p-10 rounded-xl shadow-sm">
+          <div className="bg-white border-2 border-[var(--light-border-alt)] p-10 rounded-xl shadow-sm">
             <p className="text-[var(--light-text-secondary)] font-bold tracking-widest text-sm mb-6">MODEL METRICS</p>
             <div className="space-y-6">
               <div>
@@ -588,7 +588,7 @@ const AnalyticsDetail = ({ ticker }) => {
                 <p className="text-[var(--light-text-secondary)] text-sm font-medium mb-1">MSE (Mean Squared Error)</p>
                 <p className="text-4xl font-bold text-black">{data.metrics?.mse?.toFixed(4) || 'N/A'}</p>
               </div>
-              <div className="pt-4 border-t border-[var(--light-border)]">
+              <div className="pt-4 border-t border-[var(--light-border-alt)]">
                 <p className="text-[var(--light-text-secondary)] text-sm font-medium mb-1">Model Source</p>
                 <span className={`inline-block px-4 py-1 rounded-lg font-bold text-sm ${
                   data.model_source === 'persisted'
@@ -601,8 +601,8 @@ const AnalyticsDetail = ({ ticker }) => {
             </div>
           </div>
 
-          <div className="bg-white border-2 border-[var(--light-border)] rounded-xl overflow-hidden shadow-sm">
-            <div className="bg-[var(--light-section)] p-6 border-b border-[var(--light-border)]">
+          <div className="bg-white border-2 border-[var(--light-border-alt)] rounded-xl overflow-hidden shadow-sm">
+            <div className="bg-[var(--light-section)] p-6 border-b border-[var(--light-border-alt)]">
               <p className="font-bold text-black tracking-widest text-sm">FORECAST SUMMARY</p>
             </div>
             <div className="divide-y divide-[var(--light-border)]">
@@ -653,7 +653,7 @@ const Analytics = () => {
 };
 
 const LiveCard = ({ label, value, positive }) => (
-  <div className="bg-[var(--light-surface)] border-2 border-[var(--light-border)] rounded-xl p-4 text-center">
+  <div className="bg-[var(--light-surface)] border-2 border-[var(--light-border-alt)] rounded-xl p-4 text-center">
     <p className="text-[var(--light-text-secondary)] text-sm font-medium mb-1">{label}</p>
     <p className={`text-lg font-bold ${positive === true ? 'text-emerald-600' : positive === false ? 'text-rose-600' : 'text-black'}`}>{value}</p>
   </div>

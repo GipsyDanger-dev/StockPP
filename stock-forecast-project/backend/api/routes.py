@@ -683,7 +683,7 @@ async def trigger_batch_retrain(
 
 
 @router.get("/market/summary")
-async def get_market_summary(user: dict = Depends(get_current_user)):
+async def get_market_summary():
     """
     Get market summary with all active tickers and latest data
 
